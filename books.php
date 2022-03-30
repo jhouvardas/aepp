@@ -24,8 +24,8 @@ $page->displayMenu();
     </div>
     <div class="row">
         <div class="col">
-            <a href="/aepp/resources/book.pdf">
-                <img  src="/aepp/images/book.png" class="img-fluid" >
+            <a href="../resources/book.pdf">
+                <img  src="../images/book.png" class="img-fluid" >
             </a>
         </div>
         <div class="col">

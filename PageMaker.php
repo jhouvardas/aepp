@@ -65,13 +65,12 @@ class PageMaker {
                                 </a>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item" href="askisisKopsinis1.php">Κοψίνης Τεύχος 1</a>
-                                    <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>
-                                    <!--<a class="dropdown-item" href="domesDedomenon.php">Στοίβα</a>-->
+                                    <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>                                    
                                 </div>
 
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="pages/books.php">Ύλη - Βιβλία</a>
+                                <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
                             </li> 
                             <li class="nav-item">
                                 <a class="nav-link" href="page.php">Links</a>
