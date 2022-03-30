@@ -1,8 +1,6 @@
 <?php
 
-function __autoload($name) {
-    include_once $name . '.php';
-}
+include_once 'PageMaker.php';
 
 $page = new PageMaker();
 $page->displayHeadMatter();
