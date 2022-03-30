@@ -71,7 +71,7 @@ class PageMaker {
 
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
+                                <a class="nav-link" href="pages/books.php">Ύλη - Βιβλία</a>
                             </li> 
                             <li class="nav-item">
                                 <a class="nav-link" href="page.php">Links</a>
