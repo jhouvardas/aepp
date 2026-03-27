@@ -388,4 +388,36 @@ class DbHandler
         $conn->close();
         return $result;
     }
+
+    public function getTutorStudents($userYear)
+    {
+        // Στοιχεία σύνδεσης για τη βάση tutor
+        $servername = "jhouv.eu";
+        $username = "jhouvardas";
+        $password = "Jhouv@1957";
+        $dbname = "tutor";
+
+        $connTutor = new mysqli($servername, $username, $password, $dbname);
+        mysqli_set_charset($connTutor, "utf8");
+
+        if ($connTutor->connect_error) {
+            return false;
+        }
+
+        // Φιλτράρουμε με status=1 και το συγκεκριμένο user (έτος)
+        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
+        $stmt = $connTutor->prepare($sql);
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $students = [];
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+
+        $stmt->close();
+        $connTutor->close();
+        return $students;
+    }
 }

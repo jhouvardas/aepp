@@ -467,4 +467,125 @@ class AdminDbHandler extends DbHandler
         $stmt->execute();
         return $stmt->get_result();
     }
+
+    // 1. Φέρνει τους μαθητές από την tutor (μόνο για το admin)
+    public function getTutorStudents($userYear)
+    {
+        $servername = "jhouv.eu";
+        $username = "jhouvardas";
+        $password = "Jhouv@1957";
+        $dbname = "tutor";
+
+        $connTutor = new mysqli($servername, $username, $password, $dbname);
+        mysqli_set_charset($connTutor, "utf8");
+
+
+        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY name ASC";
+        $stmt = $connTutor->prepare($sql);
+        $stmt->bind_param("s", $userYear); // Εδώ μπαίνει το $userYear που έρχεται από το session
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $students = $result->fetch_all(MYSQLI_ASSOC);
+
+        $stmt->close();
+        $connTutor->close();
+        return $students;
+    }
+
+    // 2. Αποθηκεύει τον βαθμό στη familyDB
+    public function saveMezeGrade($studentId, $mezeId, $grade, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Η εντολή τώρα θα ξέρει: Αν υπάρχει ήδη ο συνδυασμός student_id + meze_id, 
+        // απλώς άλλαξε (update) τον βαθμό.
+        $stmt = $conn->prepare("INSERT INTO meze_grades (student_id, meze_id, grade_value, user_year) 
+                            VALUES (?, ?, ?, ?) 
+                            ON DUPLICATE KEY UPDATE grade_value = VALUES(grade_value)");
+
+        $stmt->bind_param("iids", $studentId, $mezeId, $grade, $userYear);
+        $success = $stmt->execute();
+
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getMezeNumberById($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT mezeNumber FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $row ? $row['mezeNumber'] : $id; // Αν δεν το βρει, ας δείξει το id
+    }
+
+    public function getGradesForMeze($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT student_id, grade_value FROM meze_grades WHERE meze_id = ?");
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $grades = [];
+        while ($row = $result->fetch_assoc()) {
+            $grades[$row['student_id']] = $row['grade_value'];
+        }
+
+        $stmt->close();
+        $conn->close();
+        return $grades; // Επιστρέφει array με format [studentId => grade]
+    }
+
+    public function getFullGradesReport($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Φέρνουμε τους βαθμούς μαζί με τον αριθμό από το μεζεδάκι
+        $sql = "SELECT g.student_id, g.grade_value, m.mezeNumber 
+            FROM meze_grades g 
+            JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
+            WHERE g.user_year = ? 
+            ORDER BY m.mezeNumber ASC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $report = [];
+        while ($row = $result->fetch_assoc()) {
+            $report[$row['student_id']][$row['mezeNumber']] = $row['grade_value'];
+        }
+        $stmt->close();
+        $conn->close();
+        return $report;
+    }
+
+    public function getStudentGrades($studentId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT g.grade_value, m.mezeNumber, m.mezeDate 
+            FROM meze_grades g 
+            JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
+            WHERE g.student_id = ? AND g.user_year = ? 
+            ORDER BY m.mezeNumber ASC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $studentId, $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $grades = [];
+        while ($row = $result->fetch_assoc()) {
+            $grades[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $grades;
+    }
 }

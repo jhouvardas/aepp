@@ -1,4 +1,8 @@
 <?php
+session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 // Προσαρμοσμένο autoload για να βρίσκει κλάσεις και στον πάνω φάκελο
 function __autoload($name)
 {
@@ -222,6 +226,61 @@ switch ($action) {
             $db->updateMezedaki($_POST, $_FILES); // Προσθήκη $_FILES
             header("Location: index.php?action=listMezedakia");
             exit();
+        }
+        break;
+    case 'manageGrades':
+        if (isset($_GET['id'])) {
+            // Χρήση του tutor_user από το session
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+            $students = $db->getTutorStudents($userYear);
+            $displayNumber = $db->getMezeNumberById($_GET['id']);
+            $existingGrades = $db->getGradesForMeze($_GET['id']);
+
+            if ($students) {
+                $fm->showGradesForm($students, $_GET['id'], $displayNumber, $existingGrades);
+            } else {
+                echo "<div class='container mt-3'><div class='alert alert-warning'>Παρακαλώ ορίστε πρώτα το 'Username Tutor' πάνω δεξιά (π.χ. jhouv2026).</div></div>";
+            }
+        }
+        break;
+
+    case 'saveGrades':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $mezeId = $_POST['meze_id'];
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $count = 0;
+            foreach ($_POST['grades'] as $studentId => $grade) {
+                if ($grade !== '') { // Αποθηκεύουμε μόνο αν έχει μπει βαθμός
+                    $db->saveMezeGrade($studentId, $mezeId, $grade, $userYear);
+                    $count++;
+                }
+            }
+            echo "<div class='container mt-3'><div class='alert alert-success shadow'>Επιτυχής αποθήκευση $count βαθμολογιών!</div></div>";
+            // Επιστροφή στη λίστα
+            $result = $db->getAllMezedakia();
+            $fm->listMezedakia($result);
+        }
+        break;
+    case 'setYear':
+        if (isset($_POST['tutor_user'])) {
+            $_SESSION['tutor_user'] = $_POST['tutor_user'];
+            echo "<div class='container mt-2'><div class='alert alert-info'>Το έτος εργασίας ορίστηκε σε: " . $_SESSION['tutor_user'] . "</div></div>";
+        }
+        // Επιστροφή στο dashboard
+        $fm->listMezedakia($db->getAllMezedakia());
+        break;
+    case 'fullReport':
+        $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+        $students = $db->getTutorStudents($userYear);
+        $gradesReport = $db->getFullGradesReport($userYear);
+        $fm->showFullGradesTable($students, $gradesReport);
+        break;
+    case 'studentReport':
+        if (isset($_GET['studentId']) && isset($_GET['name'])) {
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $grades = $db->getStudentGrades($_GET['studentId'], $userYear);
+            $fm->showStudentReport($_GET['name'], $grades);
         }
         break;
 

@@ -634,10 +634,10 @@ class AdminFormMaker extends FormMaker
             <table class="table table-bordered table-striped shadow-sm">
                 <thead class="thead-dark text-center">
                     <tr>
-                        <th style="width: 10%">#</th>
-                        <th style="width: 20%">Ημερομηνία</th>
-                        <th style="width: 45%">Εκφώνηση (Preview)</th>
-                        <th style="width: 25%">Ενέργειες</th>
+                        <th style="width: 8%">#</th>
+                        <th style="width: 15%">Ημερομηνία</th>
+                        <th style="width: 40%">Εκφώνηση (Preview)</th>
+                        <th style="width: 37%">Ενέργειες</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -648,6 +648,11 @@ class AdminFormMaker extends FormMaker
                                 <td class="text-center"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
                                 <td><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?></td>
                                 <td class="text-center">
+                                    <a href="index.php?action=manageGrades&id=<?php echo $row['mezeId']; ?>"
+                                        class="btn btn-primary btn-sm">
+                                        <i class="fa fa-graduation-cap"></i> Βαθμοί
+                                    </a>
+
                                     <a href="index.php?action=editMezedaki&id=<?php echo $row['mezeId']; ?>"
                                         class="btn btn-info btn-sm">
                                         <i class="fa fa-edit"></i> Διόρθωση
@@ -794,6 +799,169 @@ class AdminFormMaker extends FormMaker
                     </div>
                 </div>
             </form>
+        </div>
+    <?php
+    }
+
+    public function showGradesForm($students, $mezeId, $displayNumber, $existingGrades = [])
+    {
+    ?>
+        <div class="container mt-4 border p-4 bg-white shadow-sm">
+            <h3 class="text-primary"><i class="fa fa-pencil"></i> Βαθμολόγιο για το Μεζεδάκι #<?php echo $displayNumber; ?></h3>
+            <hr>
+            <form action="index.php?action=saveGrades" method="post">
+                <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Ονοματεπώνυμο Μαθητή</th>
+                            <th style="width: 200px;">Βαθμός (0-20)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($students as $student):
+                            // Βρίσκουμε αν υπάρχει ήδη βαθμός για αυτόν τον μαθητή
+                            $currentGrade = isset($existingGrades[$student['studentId']]) ? $existingGrades[$student['studentId']] : "";
+                        ?>
+                            <tr>
+                                <td><?php echo $student['name'] . " " . $student['lastName']; ?></td>
+                                <td>
+                                    <input type="number"
+                                        name="grades[<?php echo $student['studentId']; ?>]"
+                                        class="form-control"
+                                        step="0.1" min="0" max="20"
+                                        value="<?php echo $currentGrade; ?>"
+                                        placeholder="-">
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                        <i class="fa fa-save"></i> Ενημέρωση Βαθμών
+                    </button>
+                    <a href="index.php?action=listMezedakia" class="btn btn-secondary btn-lg ml-2">Επιστροφή</a>
+                </div>
+            </form>
+        </div>
+    <?php
+    }
+
+    public function showFullGradesTable($students, $gradesReport)
+    {
+    ?>
+        <div class="container-fluid mt-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0"><i class="fa fa-table"></i> Συγκεντρωτικό Βαθμολόγιο</h3>
+                    <button onclick="window.print();" class="btn btn-light btn-sm font-weight-bold d-print-none">
+                        <i class="fa fa-print"></i> Εκτύπωση / PDF
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered table-hover text-center">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-left">Ονοματεπώνυμο Μαθητή</th>
+                                <?php
+                                $allMezeNumbers = [];
+                                foreach ($gradesReport as $stGrades) {
+                                    foreach ($stGrades as $num => $val) {
+                                        $allMezeNumbers[$num] = true;
+                                    }
+                                }
+                                ksort($allMezeNumbers);
+                                foreach (array_keys($allMezeNumbers) as $mNum): ?>
+                                    <th>Μ<?php echo $mNum; ?></th>
+                                <?php endforeach; ?>
+                                <th class="bg-warning">Μ.Ο.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($students as $student):
+                                $stId = $student['studentId'];
+                                $fullName = $student['name'] . " " . $student['lastName'];
+                                $sum = 0;
+                                $count = 0;
+                            ?>
+                                <tr>
+                                    <td class="text-left font-weight-bold">
+                                        <?php echo $fullName; ?>
+                                        <a href="index.php?action=studentReport&studentId=<?php echo $stId; ?>&name=<?php echo urlencode($fullName); ?>"
+                                            class="ml-2 d-print-none text-info" title="Ατομική Καρτέλα">
+                                            <i class="fa fa-external-link"></i>
+                                        </a>
+                                    </td>
+                                    <?php foreach (array_keys($allMezeNumbers) as $mNum):
+                                        $grade = isset($gradesReport[$stId][$mNum]) ? $gradesReport[$stId][$mNum] : "-";
+                                        if (is_numeric($grade)) {
+                                            $sum += $grade;
+                                            $count++;
+                                        }
+                                    ?>
+                                        <td><?php echo $grade; ?></td>
+                                    <?php endforeach; ?>
+                                    <td class="font-weight-bold text-danger">
+                                        <?php echo ($count > 0) ? number_format($sum / $count, 2) : "-"; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php
+    }
+
+    // ΠΡΟΣΘΕΣΕ ΚΑΙ ΑΥΤΗ ΤΗ ΣΥΝΑΡΤΗΣΗ ΣΤΟ ΤΕΛΟΣ ΤΟΥ ΑΡΧΕΙΟΥ (πριν το τελευταίο })
+    public function showStudentReport($studentName, $grades)
+    {
+    ?>
+        <div class="container mt-5 p-4 bg-white shadow border">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="text-dark">Ατομική Καρτέλα Μαθητή</h2>
+                    <h4 class="text-secondary"><?php echo $studentName; ?></h4>
+                </div>
+                <button onclick="window.print();" class="btn btn-outline-dark d-print-none">
+                    <i class="fa fa-print"></i> Εκτύπωση Καρτέλας
+                </button>
+            </div>
+            <hr>
+            <table class="table table-bordered table-striped mt-3 text-center">
+                <thead class="thead-light">
+                    <tr>
+                        <th># Μεζεδάκι</th>
+                        <th>Ημερομηνία</th>
+                        <th>Βαθμός (0-20)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $sum = 0;
+                    $count = 0;
+                    foreach ($grades as $row):
+                        $sum += $row['grade_value'];
+                        $count++;
+                    ?>
+                        <tr>
+                            <td>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
+                            <td class="font-weight-bold"><?php echo number_format($row['grade_value'], 1); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot class="bg-light">
+                    <tr>
+                        <th colspan="2" class="text-right">Γενικός Μέσος Όρος:</th>
+                        <th class="text-danger h5">
+                            <?php echo ($count > 0) ? number_format($sum / $count, 2) : "-"; ?>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
 <?php
     }

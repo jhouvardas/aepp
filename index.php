@@ -48,6 +48,27 @@ switch ($action) {
         $result = $db->getAllMezedakia();
         $page->displayMezedakiaList($result);
         break;
+
+    case 'manageGrades':
+        // Παίρνουμε τους μαθητές για το τρέχον έτος (π.χ. από το session)
+        $userYear = $_SESSION['name'];
+        $students = $db->getTutorStudents($userYear);
+        $mezeId = $_GET['meze_id']; // Το ID από το μεζεδάκι που βαθμολογούμε
+        $fm->showGradesForm($students, $mezeId);
+        break;
+
+    case 'saveGrades':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $mezeId = $_POST['meze_id'];
+            $userYear = $_SESSION['name'];
+            foreach ($_POST['grades'] as $studentId => $grade) {
+                if ($grade !== '') {
+                    $db->saveMezeGrade($studentId, $mezeId, $grade, $userYear);
+                }
+            }
+            echo "<div class='alert alert-success'>Οι βαθμοί αποθηκεύτηκαν!</div>";
+        }
+        break;
     case 'home':
     default:
 ?>
