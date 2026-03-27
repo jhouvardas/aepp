@@ -284,6 +284,17 @@ switch ($action) {
         }
         break;
 
+    case 'deleteSpecificGrade':
+        if (isset($_GET['studentId']) && isset($_GET['mezeId'])) {
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $db->deleteSpecificGrade($_GET['studentId'], $_GET['mezeId'], $userYear);
+
+            // Αντί για header, χρησιμοποιούμε JavaScript για να γυρίσουμε πίσω
+            echo "<script>window.location.href='index.php?action=manageGrades&id=" . $_GET['mezeId'] . "';</script>";
+            exit();
+        }
+        break;
+
     default:
         echo "<div class='container mt-5'><h3>Καλωσήρθες, Γιάννη.</h3><p>Επίλεξε μια ενέργεια από το μενού.</p></div>";
         break;

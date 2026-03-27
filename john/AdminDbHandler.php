@@ -588,4 +588,15 @@ class AdminDbHandler extends DbHandler
         $conn->close();
         return $grades;
     }
+
+    public function deleteSpecificGrade($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?");
+        $stmt->bind_param("iis", $studentId, $mezeId, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
 }

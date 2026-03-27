@@ -815,23 +815,33 @@ class AdminFormMaker extends FormMaker
                     <thead class="thead-dark">
                         <tr>
                             <th>Ονοματεπώνυμο Μαθητή</th>
-                            <th style="width: 200px;">Βαθμός (0-20)</th>
+                            <th style="width: 250px;">Βαθμός (0-20)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($students as $student):
-                            // Βρίσκουμε αν υπάρχει ήδη βαθμός για αυτόν τον μαθητή
-                            $currentGrade = isset($existingGrades[$student['studentId']]) ? $existingGrades[$student['studentId']] : "";
+                            $stId = $student['studentId'];
+                            $currentGrade = isset($existingGrades[$stId]) ? $existingGrades[$stId] : "";
                         ?>
                             <tr>
                                 <td><?php echo $student['name'] . " " . $student['lastName']; ?></td>
                                 <td>
-                                    <input type="number"
-                                        name="grades[<?php echo $student['studentId']; ?>]"
-                                        class="form-control"
-                                        step="0.1" min="0" max="20"
-                                        value="<?php echo $currentGrade; ?>"
-                                        placeholder="-">
+                                    <div class="input-group">
+                                        <input type="number" name="grades[<?php echo $stId; ?>]"
+                                            class="form-control" step="0.1" min="0" max="20"
+                                            value="<?php echo $currentGrade; ?>" placeholder="-">
+
+                                        <?php if ($currentGrade !== ""): ?>
+                                            <div class="input-group-append">
+                                                <a href="index.php?action=deleteSpecificGrade&studentId=<?php echo $stId; ?>&mezeId=<?php echo $mezeId; ?>"
+                                                    class="btn btn-outline-danger"
+                                                    onclick="return confirm('Διαγραφή βαθμού για τον μαθητή <?php echo $student['name']; ?>;')"
+                                                    title="Διαγραφή βαθμού">
+                                                    <i class="fa fa-times"></i>
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
