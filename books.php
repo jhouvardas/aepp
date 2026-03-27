@@ -13,7 +13,7 @@ $page->displayMenu();
                 θα υπάρχουν και αυτά που αφαιρέθηκαν.</p>
             <p>Είναι μόνο θεωρία και αρκετά ενοχλητική.</p>
             <ul>
-                <li><a class="nav-item" target="_blank" href="resources/yli.pdf">Ύλη</a></li>
+                <li><a class="nav-item" target="_blank" href="resources/yli2022.pdf">Ύλη</a></li>
             </ul>        
         </div>
     </div>
@@ -24,7 +24,7 @@ $page->displayMenu();
     </div>
     <div class="row">
         <div class="col">
-            <a href="resources/book.pdf">
+            <a href="resources/bookA.pdf">
                 <img  src="images/book.png" class="img-fluid" >
             </a>
         </div>
@@ -34,7 +34,7 @@ $page->displayMenu();
     </div>
     <div class="row">
         <div class="col">
-            <a href="resources/book2.pdf">
+            <a href="resources/bookB.pdf">
                 <img  src="images/complementaryBookAepp.png" class="img-fluid">
             </a>
         </div>

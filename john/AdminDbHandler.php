@@ -1,0 +1,470 @@
+<?php
+include_once '../DbHandler.php';
+
+class AdminDbHandler extends DbHandler
+{
+
+
+
+    // Μέθοδος για Διαγραφή (Χρήσιμη για σένα)
+    public function deleteTheoryQuestion($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM theory_questions WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // Σημείωση: Η saveTheory() κάνει το ίδιο με την insertTheoryItem, 
+    // οπότε μπορείς να κρατήσεις μόνο μία από τις δύο για να είναι καθαρός ο κώδικας.
+
+    // Προσθήκη νέου βιβλίου
+    public function insertBook($title)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO theory_books (title) VALUES (?)");
+        $stmt->bind_param("s", $title);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // Διαγραφή βιβλίου
+    public function deleteBook($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM theory_books WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // Ενημέρωση τίτλου βιβλίου
+    public function updateBook($id, $newTitle)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("UPDATE theory_books SET title = ? WHERE id = ?");
+        $stmt->bind_param("si", $newTitle, $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // Φέρνει μία συγκεκριμένη ερώτηση για επεξεργασία
+    public function getQuestionById($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM theory_questions WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $data;
+    }
+
+    // Λήψη όλων των ερωτήσεων για τον πίνακα διαχείρισης (Admin Table)
+    public function getAllTheoryQuestions()
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT q.*, b.title as book_title 
+                FROM theory_questions q 
+                JOIN theory_books b ON q.book_id = b.id 
+                ORDER BY q.chapter_num ASC, q.id ASC";
+        $result = $conn->query($sql);
+        $conn->close();
+        return $result;
+    }
+
+    // Βοηθητική μέθοδος για το upload
+    private function uploadImage($file)
+    {
+        if (isset($file) && $file['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = '../uploads/';
+            // Δημιουργία μοναδικού ονόματος για να μην υπάρχουν διπλότυπα
+            $fileName = time() . '_' . basename($file['name']);
+            $targetPath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                return $fileName;
+            }
+        }
+        return null;
+    }
+
+    public function insertTheoryItem($book_id, $chapter, $question, $answer, $page, $q_file = null, $a_file = null)
+    {
+        $q_image = $this->uploadImage($q_file); // Ανέβασμα εικόνας ερώτησης
+        $a_image = $this->uploadImage($a_file); // Ανέβασμα εικόνας απάντησης
+
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO theory_questions (book_id, chapter_num, question_text, answer_text, page_number, question_image, answer_image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssiss", $book_id, $chapter, $question, $answer, $page, $q_image, $a_image);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function updateTheoryItem($id, $book_id, $chapter, $question, $answer, $page, $q_file = null, $a_file = null)
+    {
+        $q_image = $this->uploadImage($q_file);
+        $a_image = $this->uploadImage($a_file);
+
+        $conn = $this->connectToFamilyDB();
+
+        // Δυναμικό χτίσιμο του Query ανάλογα με το αν ανέβηκαν νέες εικόνες
+        $sql = "UPDATE theory_questions SET book_id=?, chapter_num=?, question_text=?, answer_text=?, page_number=?";
+        $params = [$book_id, $chapter, $question, $answer, $page];
+        $types = "isssi";
+
+        if ($q_image) {
+            $sql .= ", question_image=?";
+            $params[] = $q_image;
+            $types .= "s";
+        }
+        if ($a_image) {
+            $sql .= ", answer_image=?";
+            $params[] = $a_image;
+            $types .= "s";
+        }
+
+        $sql .= " WHERE id=?";
+        $params[] = $id;
+        $types .= "i";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getMultipleQuestionsByIds($ids_array)
+    {
+        if (empty($ids_array)) return false;
+
+        $conn = $this->connectToFamilyDB();
+        // Δημιουργούμε μια λίστα από ερωτηματικά (?,?,?) για το query
+        $placeholders = implode(',', array_fill(0, count($ids_array), '?'));
+
+        $sql = "SELECT q.*, b.title as book_title 
+                FROM theory_questions q 
+                JOIN theory_books b ON q.book_id = b.id 
+                WHERE q.id IN ($placeholders)
+                ORDER BY FIELD(q.id, $placeholders)"; // Διατηρεί τη σειρά επιλογής
+
+        $stmt = $conn->prepare($sql);
+
+        // Δυναμικό binding των IDs (δύο φορές λόγω του ORDER BY FIELD)
+        $full_ids = array_merge($ids_array, $ids_array);
+        $types = str_repeat('i', count($full_ids));
+        $stmt->bind_param($types, ...$full_ids);
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+        $conn->close();
+        return $result;
+    }
+
+    public function handleKenaUpload($postData, $fileData)
+    {
+        $conn = $this->connectToFamilyDB();
+        $exerciseHtml = !empty($postData['exerciseHtml']) ? $postData['exerciseHtml'] : null;
+        $newFileName = "";
+
+        // Αν δεν έδωσες HTML, προσπάθησε να ανεβάσεις εικόνα
+        if (!$exerciseHtml && isset($fileData["exerciseImage"]) && $fileData["exerciseImage"]["error"] == 0) {
+            $targetDir = "../images/themata/kenaNew/";
+            if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+
+            $fileExtension = pathinfo($fileData["exerciseImage"]["name"], PATHINFO_EXTENSION);
+            $newFileName = "Kena_" . $postData['exerciseYear'] . "_" . time() . "." . $fileExtension;
+            move_uploaded_file($fileData["exerciseImage"]["tmp_name"], $targetDir . $newFileName);
+        }
+
+        $sql = "INSERT INTO kena_exercises (exerciseYear, examType, schoolType, exerciseDescription, exerciseHtml, imageName) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        // Προσθέσαμε το exerciseHtml (s) στις παραμέτρους
+        $stmt->bind_param(
+            "isssss",
+            $postData['exerciseYear'],
+            $postData['examType'],
+            $postData['schoolType'],
+            $postData['exerciseDescription'],
+            $exerciseHtml,
+            $newFileName
+        );
+
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function deleteKenaExercise($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Πρώτα βρίσκουμε το όνομα του αρχείου για να το σβήσουμε από το δίσκο
+        $stmt = $conn->prepare("SELECT imageName FROM kena_exercises WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            unlink("../images/themata/kenaNew/" . $row['imageName']);
+        }
+
+        $stmt = $conn->prepare("DELETE FROM kena_exercises WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getAllKena()
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT * FROM kena_exercises ORDER BY exerciseYear DESC, id DESC";
+        $result = $conn->query($sql);
+        $conn->close();
+        return $result;
+    }
+
+    public function deleteKena($id)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // 1. Βρίσκουμε το όνομα του αρχείου για να το διαγράψουμε από τον server
+        $stmt = $conn->prepare("SELECT imageName FROM kena_exercises WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $filePath = "../images/themata/kenaNew/" . $row['imageName'];
+            if (file_exists($filePath)) {
+                unlink($filePath); // Διαγραφή αρχείου
+            }
+        }
+        $stmt->close();
+
+        // 2. Διαγραφή της εγγραφής από τη βάση
+        $stmt = $conn->prepare("DELETE FROM kena_exercises WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function insertThemaG($data, $file)
+    {
+        $conn = $this->connectToFamilyDB();
+        $imageName = "";
+
+        // Λογική για την εικόνα (ανέβασμα αν υπάρχει)
+        if (isset($file['eikona']) && $file['eikona']['error'] == 0) {
+            $targetDir = "../images/themata/themaG/";
+            if (!file_exists($targetDir)) {
+                mkdir($targetDir, 0777, true);
+            }
+            $imageName = time() . "_" . basename($file['eikona']['name']);
+            move_uploaded_file($file['eikona']['tmp_name'], $targetDir . $imageName);
+        }
+
+        $stmt = $conn->prepare("INSERT INTO aepp_themataG (etos, typosSxoleiou, typosEksetaseon, ekfonisi, lysi, eikonaPath) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $data['etos'], $data['typosSxoleiou'], $data['typosEksetaseon'], $data['ekfonisi'], $data['lysi'], $imageName);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getAllThemataG()
+    {
+        $conn = $this->connectToFamilyDB();
+        $result = $conn->query("SELECT * FROM aepp_themataG ORDER BY etos DESC, id DESC");
+        $conn->close();
+        return $result;
+    }
+
+    public function deleteThemaG($id)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Διαγραφή αρχείου εικόνας αν υπάρχει
+        $stmt = $conn->prepare("SELECT eikonaPath FROM aepp_themataG WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            if (!empty($row['eikonaPath'])) {
+                @unlink("../images/themata/themaG/" . $row['eikonaPath']);
+            }
+        }
+
+        $stmt = $conn->prepare("DELETE FROM aepp_themataG WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function addMezedakiForm()
+    {
+?>
+        <div class="container mt-4 border p-4 bg-light shadow">
+            <h3><i class="fa fa-coffee"></i> Νέο Μεζεδάκι</h3>
+            <form action="index.php?action=saveMezedaki" method="post" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Αριθμός Μεζεδακίου</label>
+                        <input type="number" name="mezeNumber" class="form-control" placeholder="π.χ. 1" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Ημερομηνία Εμφάνισης</label>
+                        <input type="date" name="mezeDate" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Κείμενο / Κώδικας (HTML/Bootstrap)</label>
+                    <textarea name="mezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Φωτογραφία (Προαιρετικά)</label>
+                    <input type="file" name="mezeImage" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
+                    <textarea name="mezeSolution" class="form-control" rows="4" placeholder="Γράψε τη λύση εδώ..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-warning btn-block font-weight-bold">Αποθήκευση Μεζεδακίου</button>
+            </form>
+        </div>
+<?php
+    }
+
+    public function deleteMezedaki($id)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // 1. Βρίσκουμε τα ονόματα των αρχείων
+        $stmt = $conn->prepare("SELECT mezeImage, mezeSolutionImage FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            // Διαγραφή εικόνας εκφώνησης
+            if (!empty($row['mezeImage'])) {
+                @unlink("../images/mezedakia/" . $row['mezeImage']);
+            }
+            // Διαγραφή εικόνας λύσης
+            if (!empty($row['mezeSolutionImage'])) {
+                @unlink("../images/mezedakia/" . $row['mezeSolutionImage']);
+            }
+        }
+
+        // 2. Διαγραφή από τη βάση
+        $stmtDel = $conn->prepare("DELETE FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmtDel->bind_param("i", $id);
+        $success = $stmtDel->execute();
+        $conn->close();
+        return $success;
+    }
+
+    public function insertMezedaki($data, $file)
+    {
+        $conn = $this->connectToFamilyDB();
+        $imageName = "";
+        $solImageName = "";
+
+        // Εικόνα Εκφώνησης
+        if (!empty($file['mezeImage']['name'])) {
+            $imageName = time() . '_q_' . $file['mezeImage']['name']; // Προσθήκη _q_ για διάκριση
+            move_uploaded_file($file['mezeImage']['tmp_name'], "../images/mezedakia/" . $imageName);
+        }
+
+        // Εικόνα Λύσης
+        if (!empty($file['mezeSolutionImage']['name'])) {
+            $solImageName = time() . '_a_' . $file['mezeSolutionImage']['name']; // Προσθήκη _a_ για διάκριση
+            move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $solImageName);
+        }
+
+        // Προσθήκη του mezeSolutionImage στα πεδία
+        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeSolution, mezeSolutionImage) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issssss", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $imageName, $data['mezeText'], $data['mezeSolution'], $solImageName);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function updateMezedaki($data, $file)
+    {
+        $conn = $this->connectToFamilyDB();
+        $mezeId = $data['mezeId'];
+
+        // Φέρνουμε τα τρέχοντα ονόματα εικόνων
+        $stmtQuery = $conn->prepare("SELECT mezeImage, mezeSolutionImage FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmtQuery->bind_param("i", $mezeId);
+        $stmtQuery->execute();
+        $currentRes = $stmtQuery->get_result();
+        $currentRow = $currentRes->fetch_assoc();
+        $stmtQuery->close();
+
+        $newImageName = $currentRow['mezeImage'];
+        $newSolImageName = $currentRow['mezeSolutionImage'];
+
+        // 1. Διαχείριση Εικόνας Εκφώνησης
+        if (!empty($file['mezeImage']['name'])) {
+            // Σβήσιμο παλιάς
+            if (!empty($currentRow['mezeImage'])) {
+                @unlink("../images/mezedakia/" . $currentRow['mezeImage']);
+            }
+            // Ανέβασμα νέας
+            $newImageName = time() . '_q_' . $file['mezeImage']['name'];
+            move_uploaded_file($file['mezeImage']['tmp_name'], "../images/mezedakia/" . $newImageName);
+        }
+
+        // 2. Διαχείριση Εικόνας Λύσης
+        if (!empty($file['mezeSolutionImage']['name'])) {
+            // Σβήσιμο παλιάς
+            if (!empty($currentRow['mezeSolutionImage'])) {
+                @unlink("../images/mezedakia/" . $currentRow['mezeSolutionImage']);
+            }
+            // Ανέβασμα νέας
+            $newSolImageName = time() . '_a_' . $file['mezeSolutionImage']['name'];
+            move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $newSolImageName);
+        }
+
+        // 3. Εκτέλεση του Update
+        $stmt = $conn->prepare("UPDATE aepp_mezedakia SET mezeNumber=?, mezeDate=?, solutionDate=?, mezeText=?, mezeSolution=?, mezeImage=?, mezeSolutionImage=? WHERE mezeId=?");
+        $stmt->bind_param("issssssi", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $data['mezeText'], $data['mezeSolution'], $newImageName, $newSolImageName, $mezeId);
+
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getMezedakiById($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+}

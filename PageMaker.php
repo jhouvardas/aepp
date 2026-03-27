@@ -1,97 +1,140 @@
 <?php
 
-class PageMaker {
+class PageMaker
+{
 
-    public function displayHeadMatter() {
-        ?>
+    public function displayHeadMatter()
+    {
+?>
         <!DOCTYPE html>
         <html lang="el">
-            <head>
-                <title>ΑΕΠΠ</title>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">   
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-                <link rel="icon" href="images/favicon.jpg" sizes="16x16" type="image/jpg">
-            </head>
-            <body>
-                <?php
-            }
 
-            public function displayMenu() {
-                ?>
-                <nav class="navbar navbar-expand-md bg-dark navbar-dark">
-                    <a class="navbar-brand" href="#" id="menu">ΑΕΠΠ</a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link" href="index.php#max">Μεγαλύτερος</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="index.php#akatalili">Ακατάλληλη τιμή</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="index.php#egirotita">Έλεγχος εγκυρότητας</a>
-                            </li>                            
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
-                                    Δομές Δεδομένων
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="index.php#1d">Πίνακες Μονοδιάστατοι</a>
-                                    <a class="dropdown-item" href="index.php#2d">Πίνακες 2 διαστάσεων</a>
-                                    <a class="dropdown-item" href="domesDedomenon.php">Στοίβα</a>
-                                </div>
+        <head>
+            <title>ΑΕΠΠ</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+            <link rel="icon" href="images/favicon.jpg" sizes="16x16" type="image/jpg">
+            <link rel="stylesheet" href="aepp.css">
+        </head>
 
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" href="index.php#diagrammata">Διαγράμματα</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="index.php#theoria">Θεωρία</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="select.php">Επίλεξε</a>
-                            </li>                            
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle"  id="navbardrop" data-toggle="dropdown">
-                                    Ασκήσεις
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="askisisKopsinis1.php">Κοψίνης Τεύχος 1</a>
-                                    <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>                                    
-                                </div>
-
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
-                            </li> 
-                            <li class="nav-item">
-                                <a class="nav-link" href="page.php">Links</a>
-                            </li>
-                        </ul>
-                    </div>  
-                </nav>
-                <br>
-
-                <?php
-            }
-
-            public function displayEndMatter() {
-                ?>
-            </body>
-        </html>
+        <body>
         <?php
     }
 
-    public function displayLinks() {
+    public function displayMenu()
+    {
         ?>
+            <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+                <a class="navbar-brand" href="#" id="menu">ΑΕΠΠ</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                    <ul class="navbar-nav">
+
+                        <li class="nav-item">
+                            <a class="nav-link text-warning font-weight-bold" href="index.php?action=viewMezedakia">
+                                <i class="fa fa-star"></i> Μεζεδάκια
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php#max">Μεγαλύτερος</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php#akatalili">Ακατάλληλη τιμή</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php#egirotita">Έλεγχος εγκυρότητας</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                                Δομές Δεδομένων
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="index.php#1d">Πίνακες Μονοδιάστατοι</a>
+                                <a class="dropdown-item" href="index.php#2d">Πίνακες 2 διαστάσεων</a>
+                                <a class="dropdown-item" href="domesDedomenon.php">Στοίβα</a>
+                            </div>
+
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                                Πανελλήνιες 2025
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="instructions.php">Οδηγίες</a>
+                                <a class="dropdown-item" href="epanalipsi.php">Ασκήσεις Επανάληψης</a>
+                                <a class="dropdown-item" href="askisi2025.php">Η τελευταία μας άσκηση</a>
+                            </div>
+
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php#diagrammata">Διαγράμματα</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                                Πανελλήνιες
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="kena.php">Αλγόριθμοι για συμπλήρωση κενών από Α και Β θέματα</a>
+                                <a class="dropdown-item" href="c.php">Γ θέματα από 2008 μέχρι 2022 </a>
+                                <a class="dropdown-item" href="a_a.php">Σωστό - Λάθός από όλα τα θέματα από 2008 μέχρι 2022</a>
+                                <a class="dropdown-item" href="a_anaptyxis.php">Όλες οι ερωτήσεις ανάπτυξης από 2008 μέχρι 2022</a>
+                                <a class="dropdown-item" href="index.php?action=listKenaDynamic">Αλγόριθμοι για Συμπλήρωση κενών 2</a>
+                                <a class="dropdown-item" href="index.php?action=showThemaGDForm">Θέματα Γ & Δ</a>
+                            </div>
+
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php#theoria">Θεωρία</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="select.php">Επίλεξε</a>
+                        </li>
+                        <!--                            <li class="nav-item">
+                                                            <a class="nav-link" href="https://docs.google.com/presentation/d/e/2PACX-1vTZ7yLiJJmucUygqXXydM9R2W5VqlM0gaUJdembo_04YAriQ3QYJW3Wo0Q1TanxZqDFN5xzA0ZYCIpO/pub?start=false&loop=false&delayms=5000">Εκσφαλμάτωση</a>
+                                                        </li>   -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="navbardrop" data-toggle="dropdown">
+                                Ασκήσεις
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="askisisKopsinis1.php">Κοψίνης Τεύχος 1</a>
+                                <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>
+                            </div>
+
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="page.php">Links</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <br>
+
+        <?php
+    }
+
+    public function displayEndMatter()
+    {
+        ?>
+        </body>
+
+        </html>
+    <?php
+    }
+
+    public function displayLinks()
+    {
+    ?>
         <div class="container-fluid">
             <div class="row">
                 <div class="col">
@@ -115,7 +158,7 @@ class PageMaker {
             </div>
             <div class="row">
                 <div class="col">
-                    <a class="nav-link" href="https://aepp.edu.gr/palaiotera-themata/imerisia-lykeia/" target="_blank">Ημερήσια Λύκεια</a>
+                    <a class="nav-link" href="https://www.panellinies.net/%CE%B1%CE%B5%CF%80%CF%80-%CE%B1%CE%BD%CE%AC%CF%80%CF%84%CF%85%CE%BE%CE%B7-%CE%B5%CF%86%CE%B1%CF%81%CE%BC%CE%BF%CE%B3%CF%8E%CE%BD-%CF%83%CE%B5-%CF%80%CF%81%CE%BF%CE%B3%CF%81%CE%B1%CE%BC%CE%BC%CE%B1/" target="_blank">Ημερήσια Λύκεια</a>
                 </div>
             </div>
             <div class="row">
@@ -124,225 +167,283 @@ class PageMaker {
                 </div>
             </div>
         </div>
-        <?php
+    <?php
     }
 
-    public function megaliteros() {
-        ?>
-
-        <!--<div class="container-fluid">-->
-        <div class="row justify-content-start">
-            <div class="col-sm">
-                <h4 id ="max">Μεγαλύτερος - Μικρότερος</h4>
-                <p>Για να βρούμε τον μεγαλύτερο (ή τον μικρότερο) από δύο η περισσότερους αριθμούς
-                    βάζουμε τον πρώτο μέσα στο max (ή στο min) και συγκρίνουμε το max (ή το min) με όλους τους άλλους</p> 
-                <p><b>ΠΡΟΣΟΧΗ: Χρησιμοποιούμε μόνο ΔΟΜΗ ΑΠΛΗΣ ΕΠΙΛΟΓΗΣ</b></p>
-                <p>Σε περίπτωση που γνωρίζουμε το διάστημα των τιμών μπορούμε να βάλουμε
-                    στον max την μικρότερη πιθανή τιμή -1 και στο min την μεγαλύτερη πιθανή τιμή +1 
-                    (πχ αν οι τιμές είναι από 1 έως 20 τότε βάζουμε στο max το 0 και στο min το 21)</p>
-                <h5>Μεγαλύτερος από 3</h5>
-                <pre>
-                ΔΙΑΒΑΣΕ α,β,γ                            
-                μεγ <-- α
-                ΑΝ β > μεγ ΤΟΤΕ
-                    μεγ <-- β
-                ΤΕΛΟΣ_ΑΝ
-                ΑΝ γ > μεγ ΤΟΤΕ
-                    μεγ <-- γ
-                ΤΕΛΟΣ_ΑΝ
-                </pre>
-                <h5>Άγνωστο διάστημα τιμών</h5>
-                <pre>
-                ΔΙΑΒΑΣΕ χ
-                max <-- χ
-                ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
-                    ΔΙΑΒΑΣΕ χ
-                    ΑΝ (χ > max) ΤΟΤΕ
-                        max <-- χ
-                    ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                </pre>
-                <pre>
-                ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
-                    ΔΙΑΒΑΣΕ χ
-                    ΑΝ (i = 1) ΤΟΤΕ
-                        max <-- χ
-                    ΤΕΛΟΣ_ΑΝ
-                    ΑΝ (χ > max) ΤΟΤΕ
-                        max <-- χ
-                    ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                </pre>
-                <p> Η καλύτερα</p>
-                <pre>
-                ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
-                    ΔΙΑΒΑΣΕ χ
-                    ΑΝ (i = 1) ΤΟΤΕ
-                        max <-- χ
-                    ΑΛΛΙΩΣ
-                        ΑΝ (χ > max) ΤΟΤΕ
-                            max <-- χ
-                        ΤΕΛΟΣ_ΑΝ
-                    ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                </pre>
-                <h5>Τιμές [1,20]</h5>
-                <pre>
-                max <-- 0
-                ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
-                    ΔΙΑΒΑΣΕ χ
-                    ΑΝ (χ > max) ΤΟΤΕ
-                        max <-- χ
-                    ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ                            
-                </pre>
-
-                <h5> Μεγαλύτερος άρτιος από 30 ακεραίους</h5>
-                <pre>
-                πρώτος <-- ΑΛΗΘΗΣ
-                ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
-                    ΔΙΑΒΑΣΕ χ
-                    ΑΝ χ mod 2 = 0  ΤΟΤΕ
-                        ΑΝ πρώτος = ΑΛΗΘΗΣ ΤΟΤΕ
-                            max <-- χ
-                            πρώτος <-- ΨΕΥΔΗΣ
-                        ΑΛΛΙΩΣ_ΑΝ χ > max ΤΟΤΕ
-                            max <-- χ
-                        ΤΕΛΟΣ_ΑΝ
-                    ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
-                ΑΝ πρώτος = ΨΕΥΔΗΣ ΤΟΤΕ
-                    ΓΡΑΨΕ 'Μεγαλύτερος άρτιος ο',max
-                ΑΛΛΙΩΣ
-                    ΓΡΑΨΕ 'Δεν δώθηκε κανένας άρτιος'
-                ΤΕΛΟΣ_ΑΝ                           
-                </pre>
-
-                <h5> Μεγαλύτερος άρτιος μέχρι να δωθεί το 0</h5>
-                <pre>
-                πρώτος <-- ΑΛΗΘΗΣ
-                ΔΙΑΒΑΣΕ χ
-                ΟΣΟ χ <> 0 ΕΠΑΝΑΛΑΒΕ    
-                    ΑΝ χ mod 2 = 0  ΤΟΤΕ
-                        ΑΝ πρώτος = ΑΛΗΘΗΣ ΤΟΤΕ
-                            max <-- χ
-                            πρώτος <-- ΨΕΥΔΗΣ
-                        ΑΛΛΙΩΣ_ΑΝ χ > max ΤΟΤΕ
-                            max <-- χ
-                        ΤΕΛΟΣ_ΑΝ
-                    ΤΕΛΟΣ_ΑΝ
-                    ΔΙΑΒΑΣΕ χ
-                ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
-                ΑΝ πρώτος = ΨΕΥΔΗΣ ΤΟΤΕ
-                    ΓΡΑΨΕ 'Μεγαλύτερος άρτιος ο',max
-                ΑΛΛΙΩΣ
-                    ΓΡΑΨΕ 'Δεν δώθηκε κανένας άρτιος'
-                ΤΕΛΟΣ_ΑΝ                           
-                </pre>
-
-                <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό <b>θετικών</b> ακεραίων</h5>
-                <pre>
-                ΠΡΟΓΡΑΜΜΑ μεγαλύτεροι
-                ΜΕΤΑΒΛΗΤΕΣ
-                  ΑΚΕΡΑΙΕΣ: χ, μαξμαξ, μαξ
-                ΑΡΧΗ
-                  μαξμαξ <- -1
-                  μαξ <- -1
-                  ΓΡΑΨΕ 'Δώστε ακέραιο αριθμό'
-                  ΔΙΑΒΑΣΕ χ
-                  ΟΣΟ χ <> -1 ΕΠΑΝΑΛΑΒΕ
-                    ΑΝ χ > μαξμαξ ΤΟΤΕ
-                      μαξ <- μαξμαξ
-                      μαξμαξ <- χ
-                    ΑΛΛΙΩΣ_ΑΝ χ > μαξ ΚΑΙ χ <> μαξμαξ ΤΟΤΕ
-                      μαξ <- χ
-                    ΤΕΛΟΣ_ΑΝ
-                    ΓΡΑΨΕ 'Δώστε ακέραιο αριθμό'
-                    ΔΙΑΒΑΣΕ χ
-                  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                  ΑΝ μαξμαξ <> -1 ΚΑΙ μαξ <> -1 ΤΟΤΕ
-                    ΓΡΑΨΕ 'Μεγαλύτερος είναι ο ', μαξμαξ
-                    ΓΡΑΨΕ 'Επόμενος είναι ο ', μαξ
-                  ΑΛΛΙΩΣ_ΑΝ μαξ = -1 ΤΟΤΕ
-                    ΓΡΑΨΕ 'Δώθηκε μόνο ένας αριθμός ο ', μαξ
-                  ΑΛΛΙΩΣ
-                    ΓΡΑΨΕ 'Δεν δώθηκε κανένας έγκυρος αριθμός'
-                  ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ                         </pre>
-
-                <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό ακεραίων και <b>άγνωστο διάστημα τιμών</b></h5>
-                <pre>
-                ΠΡΟΓΡΑΜΜΑ δύοΜεγαλύτεροι
-                ΜΕΤΑΒΛΗΤΕΣ
-                  ΑΚΕΡΑΙΕΣ: χ, μαξ, μαξμαξ
-                  ΛΟΓΙΚΕΣ: πρώτος, δεύτερος
-                ΑΡΧΗ
-                  μαξ <- -1
-                  μαξμαξ <- -1
-                  πρώτος <- ΑΛΗΘΗΣ
-                  δεύτερος <- ΨΕΥΔΗΣ
-                  ΓΡΑΨΕ 'Δώστε ακέραιο η -1 για τέλος'
-                  ΔΙΑΒΑΣΕ χ
-                  ΟΣΟ χ <> -1 ΕΠΑΝΑΛΑΒΕ
-                    ΑΝ πρώτος = ΑΛΗΘΗΣ ΤΟΤΕ
-                      μαξμαξ <- χ
-                      πρώτος <- ΨΕΥΔΗΣ
-                      δεύτερος <- ΑΛΗΘΗΣ
-                    ΑΛΛΙΩΣ_ΑΝ δεύτερος = ΑΛΗΘΗΣ ΤΟΤΕ
-                      ΑΝ χ > μαξμαξ ΤΟΤΕ
-                        μαξ <- μαξμαξ
-                        μαξμαξ <- χ
-                      ΑΛΛΙΩΣ
-                        μαξ <- χ
-                      ΤΕΛΟΣ_ΑΝ
-                      δεύτερος <- ΨΕΥΔΗΣ
-                    ΑΛΛΙΩΣ
-                      ΑΝ χ > μαξμαξ ΤΟΤΕ
-                        μαξ <- μαξμαξ
-                        μαξμαξ <- χ
-                      ΑΛΛΙΩΣ_ΑΝ χ > μαξ ΤΟΤΕ
-                        μαξ <- χ
-                      ΤΕΛΟΣ_ΑΝ
-                    ΤΕΛΟΣ_ΑΝ
-                    ΓΡΑΨΕ 'Δώστε ακέραιο η -1 για τέλος'
-                    ΔΙΑΒΑΣΕ χ
-                  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                  ΑΝ δεύτερος = ΑΛΗΘΗΣ ΤΟΤΕ
-                    ΓΡΑΨΕ 'δώθηκε μόνο ένας αριθμός ο ', μαξμαξ
-                  ΑΛΛΙΩΣ
-                    ΓΡΑΨΕ 'μεγαλύτερος ο ', μαξμαξ
-                    ΓΡΑΨΕ 'επόμενος ο ', μαξ
-                  ΤΕΛΟΣ_ΑΝ
-                ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ 
-                </pre>
-                <h5>Πόσοι μαθητές είχαν τον μεγαλύτερο βαθμό</h5>
-                <pre>
-                ΠΡΟΓΡΑΜΜΑ πόσεςΦορέςΟΜεγαλύτεροςΒαθμός
-                ΣΤΑΘΕΡΕΣ
-                  ν = 5
-                ΜΕΤΑΒΛΗΤΕΣ
-                  ΑΚΕΡΑΙΕΣ: βαθ, μαξ, πλήθος, ι
-                ΑΡΧΗ
-                  μαξ <- 0
-                  ΓΙΑ ι ΑΠΟ 1 ΜΕΧΡΙ ν
-                    ΓΡΑΨΕ 'Δώστε βαθμό'
-                    ΔΙΑΒΑΣΕ βαθ
-                    ΑΝ βαθ > μαξ ΤΟΤΕ
-                      μαξ <- βαθ
-                      πλήθος <- 1
-                    ΑΛΛΙΩΣ_ΑΝ βαθ = μαξ ΤΟΤΕ
-                      πλήθος <- πλήθος + 1
-                    ΤΕΛΟΣ_ΑΝ
-                  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-                  ΓΡΑΨΕ 'Τον μεγαλύτερο βαθμό είχαν ', πλήθος, ' μαθητές'
-                ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ 
-                </pre>
-                <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+    public function displayKenaGallery($result)
+    {
+    ?>
+        <div class="container-fluid mt-4 px-2">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="display-4">Αλγόριθμοι για Συμπλήρωση Κενών</h2>
+                    <p class="lead text-muted">Θέματα από τις Πανελλήνιες Εξετάσεις</p>
+                    <hr>
+                </div>
             </div>
 
-        </div>  
-        <!--</div>-->
+            <div class="row mx-n2"> <?php if ($result && $result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4 px-2">
+                            <div class="card h-100 shadow-sm border-0 exercise-card">
+                                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2 px-3">
+                                    <span class="badge badge-warning"><?php echo $row['exerciseYear']; ?></span>
+                                    <small class="font-weight-bold"><?php echo $row['examType']; ?></small>
+                                </div>
+                                <div class="card-body d-flex flex-column exercise-body">
+                                    <div class="px-3 pt-2">
+                                        <h6 class="card-title font-weight-bold text-primary mb-1">
+                                            <?php echo $row['schoolType']; ?>
+                                        </h6>
+
+                                        <?php if (!empty($row['exerciseDescription'])): ?>
+                                            <p class="card-text small text-muted mb-2 italic">
+                                                <i class="fa fa-info-circle"></i> <?php echo $row['exerciseDescription']; ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        <?php if (!empty($row['exerciseHtml'])): ?>
+                                            <div class="html-content-wrapper bg-white shadow-inner">
+                                                <div class="table-responsive">
+                                                    <?php echo $row['exerciseHtml']; ?>
+                                                </div>
+                                            </div>
+                                        <?php elseif (!empty($row['imageName'])): ?>
+                                            <div class="text-center p-2">
+                                                <a target="_blank" href="images/themata/kenaNew/<?php echo $row['imageName']; ?>">
+                                                    <img class="img-fluid rounded border hover-zoom"
+                                                        src="images/themata/kenaNew/<?php echo $row['imageName']; ?>"
+                                                        alt="Άσκηση <?php echo $row['exerciseYear']; ?>">
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="alert alert-info text-center shadow-sm mx-2">
+                            <i class="fa fa-info-circle"></i> Δεν έχουν προστεθεί ακόμα ασκήσεις.
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <style>
+            .exercise-card {
+                transition: transform 0.2s ease-in-out;
+            }
+
+            .exercise-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .hover-zoom:hover {
+                cursor: zoom-in;
+                opacity: 0.9;
+            }
+
+            .italic {
+                font-style: italic;
+            }
+
+            /* Default ρυθμίσεις */
+            .exercise-body {
+                padding: 0;
+            }
+
+            /* Μηδενίζουμε το padding της κάρτας */
+
+            .html-content-wrapper {
+                font-size: 0.85rem;
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            .html-content-wrapper pre {
+                white-space: pre-wrap !important;
+                word-wrap: break-word !important;
+                background-color: #f8f9fa !important;
+                border-top: 1px solid #dee2e6 !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                border-left: none !important;
+                border-right: none !important;
+                padding: 15px !important;
+                margin: 0 !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                width: 100% !important;
+            }
+
+            /* ΕΙΔΙΚΕΣ ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΚΙΝΗΤΑ (max 576px) */
+            @media (max-width: 576px) {
+                .container-fluid {
+                    padding-left: 5px !important;
+                    padding-right: 5px !important;
+                }
+
+                .row.mx-n2 {
+                    margin-left: -5px !important;
+                    margin-right: -5px !important;
+                }
+
+                .px-2 {
+                    padding-left: 5px !important;
+                    padding-right: 5px !important;
+                }
+
+                .html-content-wrapper pre {
+                    padding: 8px 5px !important;
+                    /* Πολύ μικρό padding μέσα στον κώδικα */
+                    font-size: 0.78rem !important;
+                    border-radius: 0 !important;
+                    /* Κατάργηση γωνιών για να πιάνει όλο το πλάτος */
+                }
+
+                .card-header {
+                    padding: 8px 10px !important;
+                }
+            }
+
+            /* Καθαρισμός εσωτερικών Bootstrap στοιχείων από το paste */
+            .html-content-wrapper .container-fluid,
+            .html-content-wrapper .row,
+            .html-content-wrapper .col-sm {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+        </style>
         <?php
     }
 
+    public function displayThemaGD($result)
+    {
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                // Δημιουργούμε ένα μοναδικό ID για κάθε accordion
+                $uniqueID = $row['id'];
+        ?>
+                <div class="container-fluid p-0 mt-4 mb-5">
+                    <div class="card shadow-sm mobile-friendly-card border-0">
+                        <div class="card-header bg-dark text-white p-2">
+                            <h5 class="mb-0" style="font-size: 1.1rem;">
+                                Θέμα <?php echo $row['thema_type']; ?> - <?php echo $row['etos']; ?>
+                            </h5>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="html-content-wrapper mb-3">
+                                <?php echo $row['ekfonisi']; ?>
+                            </div>
+
+                            <?php if (!empty($row['lysi'])): ?>
+                                <div id="accordion<?php echo $uniqueID; ?>">
+                                    <div class="card border-success">
+                                        <div class="card-header p-0">
+                                            <button class="btn btn-success btn-block btn-sm"
+                                                data-toggle="collapse"
+                                                data-target="#collapseLysi<?php echo $uniqueID; ?>">
+                                                Εμφάνιση Λύσης
+                                            </button>
+                                        </div>
+                                        <div id="collapseLysi<?php echo $uniqueID; ?>" class="collapse" data-parent="#accordion<?php echo $uniqueID; ?>">
+                                            <div class="card-body p-1 bg-light">
+                                                <pre class="aepp-code" style="white-space: pre-wrap; margin:0;"><?php echo htmlspecialchars($row['lysi']); ?></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php
+            }
+        } else {
+            echo "<div class='container mt-4'><div class='alert alert-info'>Δεν βρέθηκαν θέματα.</div></div>";
+        }
+    }
+
+    public function displayMezedakiaList($result)
+    {
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $mId = $row['mezeId'];
+
+                // Διαχείριση Ημερομηνιών για το Deadline
+                $now = new DateTime();
+                $solDate = new DateTime($row['solutionDate']);
+                $isPastDeadline = ($now > $solDate);
+            ?>
+                <div class="container-fluid p-0 mt-4 mb-4">
+                    <div class="card shadow-sm mobile-friendly-card border-warning">
+                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong></h6>
+                            <small class="font-weight-bold"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></small>
+                        </div>
+                        <div class="card-body p-2">
+                            <?php if (!empty($row['mezeImage'])): ?>
+                                <div class="text-center mb-3">
+                                    <img src="images/mezedakia/<?php echo $row['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-width: 100%;">
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="meze-text px-1">
+                                <?php
+                                // Εδώ επιτρέπουμε HTML στην εκφώνηση
+                                echo $row['mezeText'];
+                                ?>
+                            </div>
+
+                            <?php
+                            // Έλεγχος αν υπάρχει λύση (κείμενο ή εικόνα)
+                            $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
+
+                            if ($hasSolution): ?>
+                                <div id="accMeze<?php echo $mId; ?>" class="mt-3">
+                                    <?php if ($isPastDeadline): ?>
+                                        <button class="btn btn-success btn-block btn-sm font-weight-bold" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
+                                            <i class="fa fa-key"></i> Εμφάνιση Λύσης
+                                        </button>
+                                        <div id="sol<?php echo $mId; ?>" class="collapse mt-2" data-parent="#accMeze<?php echo $mId; ?>">
+                                            <div class="p-2 bg-light border rounded shadow-sm">
+
+                                                <?php if (!empty($row['mezeSolutionImage'])): ?>
+                                                    <div class="text-center mb-3">
+                                                        <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border shadow-sm border-success" style="max-width: 100%;">
+                                                    </div>
+                                                <?php endif; ?>
+
+                                                <?php if (!empty($row['mezeSolution'])): ?>
+                                                    <div class="solution-text" style="font-family: inherit;">
+                                                        <?php
+                                                        // Επιτρέπουμε HTML και μετατρέπουμε τα Enter σε αλλαγές γραμμής
+                                                        echo $row['mezeSolution'];
+                                                        ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="alert alert-secondary mb-0 p-2 text-center" style="font-size: 0.85rem; border-style: dashed;">
+                                            <i class="fa fa-clock-o text-danger"></i>
+                                            Η λύση θα ξεκλειδώσει στις: <br>
+                                            <span class="font-weight-bold"><?php echo $solDate->format('d/m/Y H:i'); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+<?php
+            }
+        } else {
+            echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm'><i class='fa fa-info-circle'></i> Δεν υπάρχουν ακόμη διαθέσιμα μεζεδάκια!</div></div>";
+        }
+    }
 }

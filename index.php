@@ -1,98 +1,137 @@
-
 <?php
 
-function __autoload($name) {
+function __autoload($name)
+{
     include_once $name . '.php';
 }
 
 $page = new PageMaker();
 $theory = new TheoryMaker();
+$fm = new FormMaker();
+$db = new DbHandler();
 $page->displayHeadMatter();
 $page->displayMenu();
 ?>
 
 <!--<div class="container-fluid">-->
 <!--<h1>ΑΕΠΠ</h1>-->
-<?php // $page->megaliteros(); ?>
+<?php // $page->megaliteros(); 
+// Μέσα στο index.php, εκεί που διαχειρίζεσαι τα actions
+$action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id ="max">Μεγαλύτερος - Μικρότερος</h4>
-            <p>Για να βρούμε τον μεγαλύτερο (ή τον μικρότερο) από δύο η περισσότερους αριθμούς
-                βάζουμε τον πρώτο μέσα στο max (ή στο min) και συγκρίνουμε το max (ή το min) με όλους τους άλλους</p> 
-            <p><b>ΠΡΟΣΟΧΗ: Χρησιμοποιούμε μόνο ΔΟΜΗ ΑΠΛΗΣ ΕΠΙΛΟΓΗΣ</b></p>
-            <p>Σε περίπτωση που γνωρίζουμε το διάστημα των τιμών μπορούμε να βάλουμε
-                στον max την μικρότερη πιθανή τιμή -1 και στο min την μεγαλύτερη πιθανή τιμή +1 
-                (πχ αν οι τιμές είναι από 1 έως 20 τότε βάζουμε στο max το 0 και στο min το 21)</p>
-            <h5>Μεγαλύτερος από 3</h5>
-            <pre>
+switch ($action) {
+    case 'listKenaDynamic':
+
+        $exercises = $db->getAllKenaExercises();
+        $page->displayKenaGallery($exercises);
+        break;
+
+    case 'showThemaGDForm': // Το νέο όνομα για το menu
+        $fm->getThemataGDForm();
+        break;
+
+    case 'viewThemaGD': // Το action που στέλνει η φόρμα
+        if (isset($_POST['viewThemaGD'])) {
+            $year = $_POST['year'];
+            $school = $_POST['typosSxoleiou'];
+            $period = $_POST['typosEksetaseon'];
+            $type = $_POST['thema_type']; // Γ ή Δ
+
+            // Καλούμε τη νέα μέθοδο που θα φτιάξουμε στο DbHandler
+            $result = $db->getThemaGDByCriteria($year, $school, $period, $type);
+
+            $fm->getThemataGDForm();
+            $page->displayThemaGD($result); // Το νέο PageMaker display
+        }
+        break;
+    case 'viewMezedakia':
+        $result = $db->getAllMezedakia();
+        $page->displayMezedakiaList($result);
+        break;
+    case 'home':
+    default:
+?>
+
+
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="max">Μεγαλύτερος - Μικρότερος</h4>
+                    <p>Για να βρούμε τον μεγαλύτερο (ή τον μικρότερο) από δύο η περισσότερους αριθμούς
+                        βάζουμε τον πρώτο μέσα στο max (ή στο min) και συγκρίνουμε το max (ή το min) με όλους τους άλλους</p>
+                    <p><b>ΠΡΟΣΟΧΗ: Χρησιμοποιούμε μόνο ΔΟΜΗ ΑΠΛΗΣ ΕΠΙΛΟΓΗΣ</b></p>
+                    <p>Σε περίπτωση που γνωρίζουμε το διάστημα των τιμών μπορούμε να βάλουμε
+                        στον max την μικρότερη πιθανή τιμή -1 και στο min την μεγαλύτερη πιθανή τιμή +1
+                        (πχ αν οι τιμές είναι από 1 έως 20 τότε βάζουμε στο max το 0 και στο min το 21)</p>
+                    <h5>Μεγαλύτερος από 3</h5>
+                    <pre>
 ΔΙΑΒΑΣΕ α,β,γ                            
-μεγ <-- α
+μεγ <- α
 ΑΝ β > μεγ ΤΟΤΕ
-    μεγ <-- β
+    μεγ <- β
 ΤΕΛΟΣ_ΑΝ
 ΑΝ γ > μεγ ΤΟΤΕ
-    μεγ <-- γ
+    μεγ <- γ
 ΤΕΛΟΣ_ΑΝ
             </pre>
-            <h5>Άγνωστο διάστημα τιμών</h5>
-            <pre>
+                    <h5>Άγνωστο διάστημα τιμών</h5>
+                    <pre>
 ΔΙΑΒΑΣΕ χ
-max <-- χ
+max <- χ
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
     ΔΙΑΒΑΣΕ χ
-    ΑΝ (χ > max) ΤΟΤΕ
-        max <-- χ
+    ΑΝ χ > max ΤΟΤΕ
+        max <- χ
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-            <pre>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
     ΔΙΑΒΑΣΕ χ
-    ΑΝ (i = 1) ΤΟΤΕ
-        max <-- χ
+    ΑΝ i = 1 ΤΟΤΕ
+        max <- χ
     ΤΕΛΟΣ_ΑΝ
-    ΑΝ (χ > max) ΤΟΤΕ
-        max <-- χ
+    ΑΝ χ > max ΤΟΤΕ
+        max <- χ
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-            <p> Η καλύτερα</p>
-            <pre>
+                    <p> Η καλύτερα</p>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
     ΔΙΑΒΑΣΕ χ
-    ΑΝ (i = 1) ΤΟΤΕ
-        max <-- χ
+    ΑΝ i = 1 ΤΟΤΕ
+        max <- χ
     ΑΛΛΙΩΣ
-        ΑΝ (χ > max) ΤΟΤΕ
-            max <-- χ
+        ΑΝ χ > max ΤΟΤΕ
+            max <- χ
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-            <h5>Τιμές [1,20]</h5>
-            <pre>
-max <-- 0
+                    <h5>Τιμές [1,20]</h5>
+                    <pre>
+max <- 0
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
     ΔΙΑΒΑΣΕ χ
-    ΑΝ (χ > max) ΤΟΤΕ
-        max <-- χ
+    ΑΝ χ > max ΤΟΤΕ
+        max <- χ
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ                            
             </pre>
 
-            <h5> Μεγαλύτερος άρτιος από 30 ακεραίους</h5>
-            <pre>
-πρώτος <-- ΑΛΗΘΗΣ
+                    <h5> Μεγαλύτερος άρτιος από 30 ακεραίους</h5>
+                    <pre>
+πρώτος <- ΑΛΗΘΗΣ
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 30
     ΔΙΑΒΑΣΕ χ
     ΑΝ χ mod 2 = 0  ΤΟΤΕ
         ΑΝ πρώτος = ΑΛΗΘΗΣ ΤΟΤΕ
-            max <-- χ
-            πρώτος <-- ΨΕΥΔΗΣ
+            max <- χ
+            πρώτος <- ΨΕΥΔΗΣ
         ΑΛΛΙΩΣ_ΑΝ χ > max ΤΟΤΕ
-            max <-- χ
+            max <- χ
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
@@ -103,17 +142,17 @@ max <-- 0
 ΤΕΛΟΣ_ΑΝ                           
             </pre>
 
-            <h5> Μεγαλύτερος άρτιος μέχρι να δωθεί το 0</h5>
-            <pre>
-πρώτος <-- ΑΛΗΘΗΣ
+                    <h5> Μεγαλύτερος άρτιος μέχρι να δωθεί το 0</h5>
+                    <pre>
+πρώτος <- ΑΛΗΘΗΣ
 ΔΙΑΒΑΣΕ χ
 ΟΣΟ χ <> 0 ΕΠΑΝΑΛΑΒΕ    
     ΑΝ χ mod 2 = 0  ΤΟΤΕ
         ΑΝ πρώτος = ΑΛΗΘΗΣ ΤΟΤΕ
-            max <-- χ
-            πρώτος <-- ΨΕΥΔΗΣ
+            max <- χ
+            πρώτος <- ΨΕΥΔΗΣ
         ΑΛΛΙΩΣ_ΑΝ χ > max ΤΟΤΕ
-            max <-- χ
+            max <- χ
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΑΝ
     ΔΙΑΒΑΣΕ χ
@@ -125,8 +164,8 @@ max <-- 0
 ΤΕΛΟΣ_ΑΝ                           
             </pre>
 
-            <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό <b>θετικών</b> ακεραίων</h5>
-            <pre>
+                    <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό <b>θετικών</b> ακεραίων</h5>
+                    <pre>
 ΠΡΟΓΡΑΜΜΑ μεγαλύτεροι
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: χ, μαξμαξ, μαξ
@@ -155,8 +194,8 @@ max <-- 0
   ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ                         </pre>
 
-            <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό ακεραίων και <b>άγνωστο διάστημα τιμών</b></h5>
-            <pre>
+                    <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό ακεραίων και <b>άγνωστο διάστημα τιμών</b></h5>
+                    <pre>
 ΠΡΟΓΡΑΜΜΑ δύοΜεγαλύτεροι
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: χ, μαξ, μαξμαξ
@@ -200,8 +239,8 @@ max <-- 0
   ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ 
             </pre>
-            <h5>Πόσοι μαθητές είχαν τον μεγαλύτερο βαθμό</h5>
-            <pre>
+                    <h5>Πόσοι μαθητές είχαν τον μεγαλύτερο βαθμό</h5>
+                    <pre>
 ΠΡΟΓΡΑΜΜΑ πόσεςΦορέςΟΜεγαλύτεροςΒαθμός
 ΣΤΑΘΕΡΕΣ
   ν = 5
@@ -222,20 +261,20 @@ max <-- 0
   ΓΡΑΨΕ 'Τον μεγαλύτερο βαθμό είχαν ', πλήθος, ' μαθητές'
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ 
             </pre>
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
-        </div>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id="akatalili">Ακατάλληλη Τιμή</h4>
-            <p>Όταν ένας αλγόριθμος τελειώνει με "Ακατάλληλη Τιμή" (τιμή φρουρό)
-                τότε μπορούμε να χρησιμοποιήσουμε το ΟΣΟ (συνθήκη) ΕΠΑΝΑΛΑΒΕ και
-                διαβάζουμε τιμή: μια φορά πριν μπούμε και μια φορά πριν βγούμε</p> 
-            <h6>Παράδειγμα</h6>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="akatalili">Ακατάλληλη Τιμή</h4>
+                    <p>Όταν ένας αλγόριθμος τελειώνει με "Ακατάλληλη Τιμή" (τιμή φρουρό)
+                        τότε μπορούμε να χρησιμοποιήσουμε το ΟΣΟ (συνθήκη) ΕΠΑΝΑΛΑΒΕ και
+                        διαβάζουμε τιμή: μια φορά πριν μπούμε και μια φορά πριν βγούμε</p>
+                    <h6>Παράδειγμα</h6>
+                    <pre>
 ΠΡΟΓΡΑΜΜΑ ακατάλληλη_Τιμή
 ΜΕΤΑΒΛΗΤΕΣ
 ΑΚΕΡΑΙΕΣ:μ
@@ -259,8 +298,8 @@ max <-- 0
 ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
             </pre>
-            <h5>Διαθέσιμες Ποσότητες (όχι ακατάλληλη τιμή αλλά μοιάζει)</h5>
-            <pre>
+                    <h5>Διαθέσιμες Ποσότητες (όχι ακατάλληλη τιμή αλλά μοιάζει)</h5>
+                    <pre>
 ΠΡΟΓΡΑΜΜΑ άσκηση14_28Κοψίνης1
 ΜΕΤΑΒΛΗΤΕΣ
   ΠΡΑΓΜΑΤΙΚΕΣ: τιμή, τσέπη, υπόλοιπο
@@ -295,16 +334,16 @@ max <-- 0
   ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
             </pre>
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
-        </div>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4 id="egirotita">Έλεγχος εγκυρότητας με ΟΣΟ</h4>
-            <pre>  
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4 id="egirotita">Έλεγχος εγκυρότητας με ΟΣΟ</h4>
+                    <pre>
 ΓΡΑΨΕ 'Δώστε βαθμό'
 ΔΙΑΒΑΣΕ βαθμό
 ΟΣΟ βαθμό < 1 Η βαθμό > 20 ΕΠΑΝΑΛΑΒΕ
@@ -312,29 +351,29 @@ max <-- 0
     ΔΙΑΒΑΣΕ βαθμό
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ</h4>
+                    <pre>
 ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
     ΓΡΑΨΕ 'Δώσε βαθμό'
     ΔΙΑΒΑΣΕ βαθμό
 ΜΕΧΡΙΣ_ΟΤΟΥ βαθμό >= 1 ΚΑΙ βαθμό <= 20
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ και μήνυμα λάθους 1</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ και μήνυμα λάθους 1</h4>
+                    <pre>
 ΓΡΑΨΕ 'Δώσε βαθμό'
 ΔΙΑΒΑΣΕ βαθμό
 ΑΝ βαθμό < 1 Η βαθμό > 20 ΤΟΤΕ
@@ -344,15 +383,15 @@ max <-- 0
     ΜΕΧΡΙΣ_ΟΤΟΥ βαθμό >= 1 ΚΑΙ βαθμό <= 20
 ΤΕΛΟΣ_ΑΝ
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ και μήνυμα λάθους 2</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Έλεγχος εγκυρότητας με ΜΕΧΡΙΣ_ΟΤΟΥ και μήνυμα λάθους 2</h4>
+                    <pre>
 ΓΡΑΨΕ 'Δώσε βαθμό'
 ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
     ΔΙΑΒΑΣΕ βαθμό
@@ -362,605 +401,708 @@ max <-- 0
 ΜΕΧΡΙΣ_ΟΤΟΥ βαθμό >= 1 ΚΑΙ βαθμό <= 20
 ΤΕΛΟΣ_ΑΝ
             </pre>
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
+
+            </div>
         </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="1d">Εισαγωγή στους πίνακες </h4>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id="1d">Εισαγωγή στους πίνακες </h4>
-
-            <p>Εισαγωγή στους πίνακες <a href="https://youtu.be/vzbXXgeuh5U"><b>στο YouTube</b></a></p>
-        </div>                     
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id="1d">Διάβασμα πίνακα </h4>
-            <pre>
+                    <p>Εισαγωγή στους πίνακες <a href="https://youtu.be/vzbXXgeuh5U"><b>στο YouTube</b></a></p>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="1d">Διάβασμα πίνακα </h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
     ΔΙΑΒΑΣΕ Π[i]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ  
             </pre>
-            <p>Παρουσίαση του διαβάσματος μονοδιάστατου πίνακα <a href="https://youtu.be/bJ_fF1VM7YQ"><b>στο YouTube</b></a></p>
-        </div>                     
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Άθροισμα πίνακα </h4>
-            <pre>
-Σ <-- 0
+                    <p>Παρουσίαση του διαβάσματος μονοδιάστατου πίνακα <a href="https://youtu.be/bJ_fF1VM7YQ"><b>στο YouTube</b></a></p>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Άθροισμα πίνακα </h4>
+                    <pre>
+Σ <- 0
 ΓΙΑ i ΑΠΌ 1 ΜΕΧΡΙ 20
-    Σ <-- Σ + Π[i]
+    Σ <- Σ + Π[i]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ  
-            </pre> 
-        </div>
+            </pre>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Μέσος Όρος πίνακα </h4>
-            <pre>
-Σ <-- 0
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Μέσος Όρος πίνακα </h4>
+                    <pre>
+Σ <- 0
 ΓΙΑ i ΑΠΌ 1 ΜΕΧΡΙ 20
-    Σ <-- Σ + Π[i]
+    Σ <- Σ + Π[i]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
-ΜΟ <-- Σ/20  
-            </pre> 
-            <p>Μέσος όρος μονοδιάστατου πίνακα <a href="https://youtu.be/rMOs-0Uep2Y"><b>στο YouTube</b></a></p>
-            <p>Πόσοι είναι πάνω από τον μέσο όρο <a href="https://youtu.be/cyAFX7s61Qw"><b>στο YouTube</b></a></p>
+ΜΟ <- Σ/20  
+            </pre>
+                    <p>Μέσος όρος μονοδιάστατου πίνακα <a href="https://youtu.be/rMOs-0Uep2Y"><b>στο YouTube</b></a></p>
+                    <p>Πόσοι είναι πάνω από τον μέσο όρο <a href="https://youtu.be/cyAFX7s61Qw"><b>στο YouTube</b></a></p>
+                </div>
+            </div>
         </div>
-    </div>  
-</div>
 
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 >Σειριακή Αναζήτηση </h4>
-            <pre>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Σειριακή Αναζήτηση </h4>
+                    <pre>
 ΔΙΑΒΑΣΕ χ
-βρέθηκε <-- ΨΕΥΔΗΣ
-i <-- 1
+βρέθηκε <- ΨΕΥΔΗΣ
+i <- 1
 ΟΣΟ i <= 50 ΚΑΙ βρέθηκε = ΨΕΥΔΗΣ ΕΠΑΝΑΛΑΒΕ
-    ΑΝ (Π[i] = χ) ΤΟΤΕ
-        βρέθηκε <-- ΑΛΗΘΗΣ
-        θέση <-- i
+    ΑΝ Π[i] = χ ΤΟΤΕ
+        βρέθηκε <- ΑΛΗΘΗΣ
+        θέση <- i
     ΑΛΛΙΩΣ
-        i <-- i + 1
+        i <- i + 1
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ     
-            </pre> 
-        </div>
+            </pre>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Ταξινόμηση Ευθείας Ανταλλαγής</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ταξινόμηση Ευθείας Ανταλλαγής</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
     ΓΙΑ j ΑΠΟ 30 ΜΕΧΡΙ i ME BHMA -1
         AN Π[j-1] > Π[j] ΤΟΤΕ
-            temp <-- Π[j-1]
-            Π[j-1] <-- Π[j]
-            Π[j] <-- temp
+            temp <- Π[j-1]
+            Π[j-1] <- Π[j]
+            Π[j] <- temp
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ     
-            </pre> 
-        </div>
+            </pre>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Μεγαλύτερος Πίνακα</h4>                      
-            <pre>
-max <-- Π[1]
-ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
-    ΑΝ (Π[i] > max) TOTE
-        max <-- Π[i]
-    ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ     
-            </pre> 
-            <!-- <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>comment -->
+            </div>
         </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Μεγαλύτερος Πίνακα</h4>
+                    <pre>
+ΠΡΟΓΡΑΜΜΑ μεγαλύτεροςΠίνακα
+ΜΕΤΑΒΛΗΤΕΣ
+  ΑΚΕΡΑΙΕΣ: π[5], ι, μαξ, θμαξ
+ΑΡΧΗ
+  ΓΙΑ ι ΑΠΟ 1 ΜΕΧΡΙ 5
+      ΔΙΑΒΑΣΕ π[ι] 
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Το όνομα του καλύτερου μαθητή</h4>                      
-            <pre>
+
+  !βρίσκω τον μεγαλύτερο
+  μαξ <- π[1] 
+  ΓΙΑ ι ΑΠΟ 2 ΜΕΧΡΙ 5
+      ΑΝ π[ι] > μαξ ΤΟΤΕ
+         μαξ <- π[ι] 
+      ΤΕΛΟΣ_ΑΝ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΓΡΑΨΕ 'Μεγαλύτερος είναι ο  ', μαξ
+
+
+
+  !βρίσκω την θέση του μεγαλύτερου
+  θμαξ <- 1
+  ΓΙΑ ι ΑΠΟ 2 ΜΕΧΡΙ 5
+      ΑΝ π[ι] > π[θμαξ] ΤΟΤΕ
+         θμαξ <- ι
+      ΤΕΛΟΣ_ΑΝ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΓΡΑΨΕ 'Μεγαλύτερος είναι ξανά ο  ', π[θμαξ]
+ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ      
+            </pre>
+                    <!-- <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>comment -->
+                </div>
+
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Το όνομα του καλύτερου μαθητή</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
     ΔΙΑΒΑΣΕ όνομα[i],βαθμός[i]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ  
-max <-- βαθμός[1]
-όνομαMax <-- όνομα[1]
+max <- βαθμός[1]
+όνομαMax <- όνομα[1]
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
-    ΑΝ (βαθμός[i] > max) TOTE
-        max <-- βαθμός[i]
-        όνομαMax <-- όνομα[i]
+    ΑΝ βαθμός[i] > max TOTE
+        max <- βαθμός[i]
+        όνομαMax <- όνομα[i]
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
 ΓΡΑΨΕ 'Καλύτερος μαθητής ο',όνομαMax    
-            </pre> 
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
-        </div>
+            </pre>
+                    <!-- <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a> -->
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id="2d">Διάβασμα πίνακα δύο διαστάσεων</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Τα ονόματα των μαθητών με τον μεγαλύτερο βαθμό</h4>
+                    <pre>
+ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
+    ΔΙΑΒΑΣΕ όνομα[i],βαθμός[i]
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ  
+max <- βαθμός[1]
+ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 20
+    ΑΝ βαθμός[i] > max TOTE
+        max <- βαθμός[i]       
+    ΤΕΛΟΣ_ΑΝ
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
+ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
+    ΑΝ βαθμός[i] = max TOTE
+        ΓΡΑΨΕ όνομα[ι]
+    ΤΕΛΟΣ_ΑΝ
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ    
+            </pre>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
+
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="2d">Διάβασμα πίνακα δύο διαστάσεων μαζί με μονοδιάστατο</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
+    ΔΙΑΒΑΣΕ ΟΝ[i]
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
         ΔΙΑΒΑΣΕ Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-            </pre> 
+            </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
 
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Άθροισμα και Μέσος Όρος Πίνακα</h4>
-            <pre>
-Σ <-- 0
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Άθροισμα και Μέσος Όρος Πίνακα</h4>
+                    <pre>
+Σ <- 0
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10        
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
-        Σ <-- Σ + Π[i,j]
+        Σ <- Σ + Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-μο <-- Σ/80
+μο <- Σ/80
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Άθροισμα γραμμών</h4>
-            <pre>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Άθροισμα γραμμών</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-    Σ[i] <-- 0
+    Σ[i] <- 0
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
-        Σ[i] <-- Σ[i] + Π[i,j]
+        Σ[i] <- Σ[i] + Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μέσος όρος γραμμών</h4>
-            <pre>    
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μέσος όρος γραμμών</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-    Σ <-- 0
+    Σ <- 0
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
-        Σ <-- Σ + Π[i,j]
+        Σ <- Σ + Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    μο[i] <-- Σ/8
+    μο[i] <- Σ/8
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <img src="images/athrismaMoGrammon.webp" class="img-fluid" alt="...">
+            </div>
         </div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Άθροισμα Στηλών</h4>
-            <pre>    
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <img src="images/athrismaMoGrammon.webp" class="img-fluid" alt="...">
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Άθροισμα Στηλών</h4>
+                    <pre>
 ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8    
-    Σ[j] <-- 0
+    Σ[j] <- 0
     ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-        Σ[j] <-- Σ[j] + Π[i,j]
+        Σ[j] <- Σ[j] + Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μέσος όρος στηλών</h4>
-            <pre>    
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μέσος όρος στηλών</h4>
+                    <pre>
 ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8 
-    Σ <-- 0
+    Σ <- 0
     ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-        Σ <-- Σ + Π[i,j]
+        Σ <- Σ + Π[i,j]
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    μο[j] <-- Σ/10
+    μο[j] <- Σ/10
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+            </div>
         </div>
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <img src="images/mesosOrosStilon.webp" class="img-fluid" alt="...">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <img src="images/mesosOrosStilon.webp" class="img-fluid" alt="...">
+                </div>
+            </div>
         </div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος πίνακα</h4>
-            <pre>    
-max <-- Π[1,1]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος πίνακα</h4>
+                    <pre>
+max <- Π[1,1]
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
         ΑΝ Π[i,j] > max TOTE
-            max <-- Π[i,j]
+            max <- Π[i,j]
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <img src="images/maxPinaka.webp" class="img-fluid" alt="...">
+                </div>
+            </div>
         </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <img src="images/maxPinaka.webp" class="img-fluid" alt="...">
-        </div>
-    </div>
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτεροι γραμμών</h4>
-            <pre>    
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτεροι γραμμών</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-    max[i] <-- Π[i,1]
+    max[i] <- Π[i,1]
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
         ΑΝ Π[i,j] > max[i] ΤΟΤΕ
-            max[i] <-- Π[i,j]
+            max[i] <- Π[i,j]
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτεροι στηλών</h4>
-            <pre>    
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτεροι στηλών</h4>
+                    <pre>
 ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
-    max[j] <-- Π[1,j]
+    max[j] <- Π[1,j]
     ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-        ΑΝ Π[i,j] > max[i] ΤΟΤΕ
-            max[j] <-- Π[i,j]
+        ΑΝ Π[i,j] > max[j] ΤΟΤΕ
+            max[j] <- Π[i,j]
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος 3ης γραμμής (Π[5,10])</h4>
-            <pre>    
-max <-- Π[3,1]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος 3ης γραμμής (Π[5,10])</h4>
+                    <pre>
+max <- Π[3,1]
 ΓΙΑ j ΑΠΟ 2 ΜΕΧΡΙ 8
     ΑΝ Π[3,j] > max ΤΟΤΕ
-        max[i] <-- Π[3,j]
+        max[i] <- Π[3,j]
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος 3ης στήλης (Π[5,10])</h4>
-            <pre>    
-max <-- Π[1,3]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος 3ης στήλης (Π[5,10])</h4>
+                    <pre>
+max <- Π[1,3]
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 10
     ΑΝ Π[i,3] > max ΤΟΤΕ
-        max[i] <-- Π[i,3]
+        max[i] <- Π[i,3]
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μέσος όρος 3ης γραμμής (Π[5,10])</h4>
-            <pre>    
-Σ <-- 0
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μέσος όρος 3ης γραμμής (Π[5,10])</h4>
+                    <pre>
+Σ <- 0
 ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 8
-    Σ <-- Σ + Π[3,j]
+    Σ <- Σ + Π[3,j]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-MO <-- Σ/8
+MO <- Σ/8
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μέσος όρος 3ης στήλης (Π[5,10])</h4>
-            <pre>    
-Σ <-- 0
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μέσος όρος 3ης στήλης (Π[5,10])</h4>
+                    <pre>
+Σ <- 0
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10
-    Σ <-- Σ + Π[i,3]
+    Σ <- Σ + Π[i,3]
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-MO <-- Σ/10
+MO <- Σ/10
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
 
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος διαγωνίου i = j (Π[5,5]) Α Τρόπος</h4>
-            <pre>    
-max <-- Π[1,1]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος διαγωνίου i = j (Π[5,5]) Α Τρόπος</h4>
+                    <pre>
+max <- Π[1,1]
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 5
     ΑΝ Π[i,i] > max
-        max <-- Π[i,i]
+        max <- Π[i,i]
     ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος διαγωνίου i = j (Π[5,5]) Β Τρόπος</h4>
-            <pre>    
-max <-- Π[1,1]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος διαγωνίου i = j (Π[5,5]) Β Τρόπος</h4>
+                    <pre>
+max <- Π[1,1]
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 5
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 5
         ΑΝ Π[i,j] > max ΚΑΙ i = j ΤΟΤΕ
-            max <-- Π[i,j]
+            max <- Π[i,j]
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Μεγαλύτερος διαγωνίου  i + j = 6 (Π[5,5])</h4>
-            <pre>    
-max <-- Π[1,5]
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Μεγαλύτερος διαγωνίου i + j = 6 (Π[5,5])</h4>
+                    <pre>
+max <- Π[1,5]
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 5
     ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 5
         ΑΝ Π[i,j] > max ΚΑΙ i + j = 6 ΤΟΤΕ
-            max <-- Π[i,j]
+            max <- Π[i,j]
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
-        </div>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h4>Σειριακή αναζήτηση του Χ σε πίνακα δύο διαστάσεων Π[20,30]</h4>
-            <pre>    
-βρέθηκε <-- ΨΕΥΔΗΣ
-i <-- 1
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <h4>Σειριακή αναζήτηση του Χ σε πίνακα δύο διαστάσεων Π[20,30]</h4>
+                    <pre>
+βρέθηκε <- ΨΕΥΔΗΣ
+i <- 1
 ΟΣΟ i <= 20 και βρέθηκε = ΨΕΥΔΗΣ ΕΠΑΝΑΛΑΒΕ
-    j <-- 1
+    j <- 1
     ΟΣΟ j <= 30 ΚΑΙ βρέθηκε = ΨΕΥΔΗΣ ΕΠΑΝΑΛΑΒΕ
         ΑΝ Π[i,j] = Χ ΤΟΤΕ
-            βρέθηκε <-- ΑΛΗΘΗΣ
+            βρέθηκε <- ΑΛΗΘΗΣ
         ΑΛΛΙΩΣ
-            j <-- j + 1
+            j <- j + 1
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    i <-- i + 1
+    i <- i + 1
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
             </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Ταξινόμηση Ευθείας Ανταλλαγής όλων των γραμμών πίνακα (Π[20,30])</h4>
-            <pre>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ταξινόμηση Ευθείας Ανταλλαγής όλων των γραμμών πίνακα (Π[20,30])</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
     ΓΙΑ k ΑΠΟ 2 ΜΕΧΡΙ 30
         ΓΙΑ j ΑΠΟ 30 ΜΕΧΡΙ k ME BHMA -1
             AN Π[i,j-1] > Π[i,j] ΤΟΤΕ
-                temp <-- Π[i,j-1]
-                Π[i,j-1] <-- Π[i,j]
-                Π[i,j] <-- temp
+                temp <- Π[i,j-1]
+                Π[i,j-1] <- Π[i,j]
+                Π[i,j] <- temp
             ΤΕΛΟΣ_ΑΝ
         ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ    
-            </pre> 
+            </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Ταξινόμηση Ευθείας Ανταλλαγής όλων των στηλών πίνακα (Π[20,30])</h4>
-            <pre>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ταξινόμηση Ευθείας Ανταλλαγής όλων των στηλών πίνακα (Π[20,30])</h4>
+                    <pre>
 ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 30
     ΓΙΑ k ΑΠΟ 2 ΜΕΧΡΙ 20
         ΓΙΑ i ΑΠΟ 20 ΜΕΧΡΙ k ME BHMA -1
             AN Π[i-1,j] > Π[i,j] ΤΟΤΕ
-                temp <-- Π[i-1,j]
-                Π[i-1,j] <-- Π[i,j]
-                Π[i,j] <-- temp
+                temp <- Π[i-1,j]
+                Π[i-1,j] <- Π[i,j]
+                Π[i,j] <- temp
             ΤΕΛΟΣ_ΑΝ
         ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ    
-            </pre> 
+            </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Ταξινόμηση Ευθείας Ανταλλαγής 3η γραμμή (Π[20,30])</h4>
-            <pre>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ταξινόμηση Ευθείας Ανταλλαγής 3η γραμμή (Π[20,30])</h4>
+                    <pre>
 ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 30
     ΓΙΑ j ΑΠΟ 30 ΜΕΧΡΙ i ME BHMA -1
         AN Π[3,j-1] > Π[3,j] ΤΟΤΕ
-            temp <-- Π[3,j-1]
-            Π[3,j-1] <-- Π[3,j]
-            Π[3,j] <-- temp
+            temp <- Π[3,j-1]
+            Π[3,j-1] <- Π[3,j]
+            Π[3,j] <- temp
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ     
-            </pre> 
+            </pre>
+                </div>
+
+            </div>
         </div>
 
-    </div>  
-</div>
-
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4>Ταξινόμηση Ευθείας Ανταλλαγής 3η στήλη (Π[20,30])</h4>
-            <pre>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ταξινόμηση Ευθείας Ανταλλαγής 3η στήλη (Π[20,30])</h4>
+                    <pre>
 ΓΙΑ k ΑΠΟ 2 ΜΕΧΡΙ 20
     ΓΙΑ i ΑΠΟ 20 ΜΕΧΡΙ k ME BHMA -1
         AN Π[i-1,3] > Π[i,3] ΤΟΤΕ
-            temp <-- Π[i-1,3]
-            Π[i-1,3] <-- Π[i,3]
-            Π[i,3] <-- temp
+            temp <- Π[i-1,3]
+            Π[i-1,3] <- Π[i,3]
+            Π[i,3] <- temp
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ     
-            </pre> 
-            <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
-        </div>
+            </pre>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
 
-    </div>  
-</div>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm ">
-            <h4 id="diagrammata">Διαγράμματα Ροής</h4>
-            <p>Όταν σε ένα διάγραμμα ροής συναντήσουμε <b>ρόμβο</b> (συνθήκη) τότε
-                αυτό που ακολουθάει είναι <b>Δομή Επιλογής</b> Η <strong> Δομή Επανάληψης</strong> και:     
-            </p> 
-            <ol>
-                <li>Αν το <b>ΝΑΙ και το ΟΧΙ βρίσκονται</b>, τότε είναι <b>δομή επιλογής</b>
-                    και στο σημείο που συναντόνται γράφουμε ΤΕΛΟΣ_ΑΝ</li>
-                <li>Αν το <b>ΝΑΙ και το ΟΧΙ δεν βρίσκονται</b> ποτέ, τότε είναι
-                    <b>δομή επανάληψης</b> και:</li>
-                <ul>
-                    <li>Αν η επανάληψη <b>τελειώνει με ΟΧΙ</b>, τότε είναι <b>ΟΣΟ</b></li>
-                    <li>Αν η επανάληψη <b>τελειώνει με ΝΑΙ</b> τότε είναι <b>ΜΕΧΡΙΣ_ΟΤΟΥ</b> και
-                        στο σημείο που επιστρέφει, γράφουμε <b>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ</b></li>
-                </ul>
-            </ol>
-            <p><b>Προσοχή:</b> Η δομή επανάληψης <b>ΓΙΑ..ΑΠΟ..ΜΕΧΡΙ..</b> δεν έχει δικό της διάγραμμα ροής
-                πρέπει να μετατρέψουμε σε <b>ΟΣΟ..ΕΠΑΝΑΛΑΒΕ</b> και να κάνουμε το αντίστοιχο διάγραμμα ροής.</p>
-            <!--<a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>-->
-        </div>
-
-    </div>  
-</div>
-<?php
-$theory->chapter01();
-$theory->chapter02();
-$theory->chapter03();
-$theory->enotita01();
-$theory->chapter06();
-$theory->chapter07();
-$theory->chapter08();
-$theory->chapter09();
-$theory->chapter10();
-$theory->chapter13();
-$theory->domi();
-?>
-
-<div class="container-fluid">
-    <h4 id="moreAlgorithms">Άλγόριθμοι Αναζήτησης - Ταξινόμησης - Συγχώνευσης</h4>
-    <p><strong>Προσοχή:</strong> </p>
-    <div id="accordion">
-        <div class="card">
-            <div class="card-header">
-                <a class="card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-                    Δυαδική Αναζήτηση
-                </a>
             </div>
-            <div id="collapseOne" class="collapse show">
-                <div class="card-body">
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4>Ανταλλαγή στοιχείων της δεύτερης γραμμής με αυτά της πέμπτης γραμμής</h4>
                     <pre>
+ΠΡΟΓΡΑΜΜΑ αντιμετάθεση_2_με_5_γραμμή
+ΜΕΤΑΒΛΗΤΕΣ
+  ΑΚΕΡΑΙΕΣ: π[5, 6], ι, ξ, τεμπ
+ΑΡΧΗ
+  ΓΙΑ ι ΑΠΟ 1 ΜΕΧΡΙ 5
+     ΓΙΑ ξ ΑΠΟ 1 ΜΕΧΡΙ 6
+         ΔΙΑΒΑΣΕ π[ι, ξ] 
+     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΓΙΑ ξ ΑΠΟ 1 ΜΕΧΡΙ 6
+     τεμπ <- π[2, ξ] 
+     π[2, ξ] <- π[5, ξ] 
+     π[5, ξ] <- τεμπ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ      
+            </pre>
+                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                </div>
+
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm ">
+                    <h4 id="diagrammata">Διαγράμματα Ροής</h4>
+                    <p>Όταν σε ένα διάγραμμα ροής συναντήσουμε <b>ρόμβο</b> (συνθήκη) τότε
+                        αυτό που ακολουθάει είναι <b>Δομή Επιλογής</b> Η <strong> Δομή Επανάληψης</strong> και:
+                    </p>
+                    <ol>
+                        <li>Αν το <b>ΝΑΙ και το ΟΧΙ βρίσκονται</b>, τότε είναι <b>δομή επιλογής</b>
+                            και στο σημείο που συναντόνται γράφουμε <b>ΤΕΛΟΣ_ΑΝ</b></li>
+                        <li>Αν το <b>ΝΑΙ και το ΟΧΙ δεν βρίσκονται</b> ποτέ, τότε είναι
+                            <b>δομή επανάληψης</b> και:
+                        </li>
+                        <ul>
+                            <li>Αν η επανάληψη <b>τελειώνει με ΟΧΙ</b>, τότε είναι <b>ΟΣΟ</b></li>
+                            <li>Αν η επανάληψη <b>τελειώνει με ΝΑΙ</b> τότε είναι <b>ΜΕΧΡΙΣ_ΟΤΟΥ</b> και
+                                στο σημείο που επιστρέφει, γράφουμε <b>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ</b></li>
+                        </ul>
+                    </ol>
+                    <p><b>Προσοχή:</b> Η δομή επανάληψης <b>ΓΙΑ..ΑΠΟ..ΜΕΧΡΙ..</b> δεν έχει δικό της διάγραμμα ροής
+                        πρέπει να μετατρέψουμε σε <b>ΟΣΟ..ΕΠΑΝΑΛΑΒΕ</b> και να κάνουμε το αντίστοιχο διάγραμμα ροής.</p>
+                    <!--<a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>-->
+                </div>
+
+            </div>
+        </div>
+        <?php
+        $theory->chapter01();
+        $theory->chapter02();
+        $theory->chapter03();
+        $theory->enotita01();
+        $theory->chapter06();
+        $theory->chapter07();
+        $theory->chapter08();
+        $theory->chapter09();
+        $theory->chapter10();
+        $theory->chapter13();
+
+
+
+
+        // --- ΔΥΝΑΜΙΚΟ ΥΛΙΚΟ ΟΜΑΔΟΠΟΙΗΜΕΝΟ ΑΝΑ ΚΕΦΑΛΑΙΟ ---
+        include_once 'DbHandler.php';
+        $dbDynamic = new DbHandler();
+        $questions = $dbDynamic->getAllQuestionsOrdered();
+
+        if ($questions && $questions->num_rows > 0) {
+            $current_chapter = null;
+            $chapter_data = [];
+
+            // Ομαδοποίηση των ερωτήσεων ανά κεφάλαιο σε ένα array
+            while ($row = $questions->fetch_assoc()) {
+                $chapter_data[$row['chapter_num']][] = $row;
+            }
+
+            // Προβολή κάθε κεφαλαίου ξεχωριστά
+            foreach ($chapter_data as $chapter_name => $items) {
+                // Καλούμε τη μέθοδο για κάθε κεφάλαιο
+                $theory->displayDynamicChapter($items, "Κεφάλαιο " . $chapter_name);
+            }
+        }
+
+
+        $theory->enotita01();
+        $theory->domi();
+        ?>
+
+        <div class="container-fluid">
+            <h4 id="moreAlgorithms">Άλγόριθμοι Αναζήτησης - Ταξινόμησης - Συγχώνευσης</h4>
+            <p><strong>Προσοχή:</strong> </p>
+            <div id="accordion">
+                <div class="card">
+                    <div class="card-header">
+                        <a class="card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                            Δυαδική Αναζήτηση
+                        </a>
+                    </div>
+                    <div id="collapseOne" class="collapse show">
+                        <div class="card-body">
+                            <pre>
 ΓΡΑΨΕ 'Δωσε τιμή για αναζήτηση: '
 ΔΙΑΒΑΣΕ S
 Left <- 1
@@ -986,52 +1128,52 @@ f <- ΨΕΥΔΗΣ
     ΓΡΑΨΕ "Το στοιχείο,", S, " δεν υπάρχει στον πίνακα"
 ΤΕΛΟΣ_ΑΝ                                    
                     </pre>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-                    Έξυπνη ταξινόμηση ευθείας ανταλλαγής
-                </a>
-            </div>
-            <div id="collapseTwo" class="collapse">
-                <div class="card-body">
-                    <P>Η ταξινόμηση ευθείας ανταλλαγής όπως την ξέρουμε δεν είναι και τόσο
-                        έξυπνη αφού ακόμα και αν ο πίνακας είναι ήδη ταξινομημένος θα δουλέψει όσες 
-                        φορές ορίζουν τα δύο ΓΙΑ. Τον κάνουμε λίγο πιο έξυπνο μετατρέποντας την εξωτερική
-                        ΓΙΑ σε ΟΣΟ και προσθέτοντας μια λογική μεταβλητή που τον σταματάει αν σε κάποιο πέρασμα του πίνακα
-                        δεν γίνει αντιμετάθεση (ο πίνακας θα έχει ταξινομηθεί)</P>
-                    <pre>
-i <-- 2
-αντιμετάθεση <-- ΑΛΗΘΗΣ
+                <div class="card">
+                    <div class="card-header">
+                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                            Έξυπνη ταξινόμηση ευθείας ανταλλαγής
+                        </a>
+                    </div>
+                    <div id="collapseTwo" class="collapse">
+                        <div class="card-body">
+                            <P>Η ταξινόμηση ευθείας ανταλλαγής όπως την ξέρουμε δεν είναι και τόσο
+                                έξυπνη αφού ακόμα και αν ο πίνακας είναι ήδη ταξινομημένος θα δουλέψει όσες
+                                φορές ορίζουν τα δύο ΓΙΑ. Τον κάνουμε λίγο πιο έξυπνο μετατρέποντας την εξωτερική
+                                ΓΙΑ σε ΟΣΟ και προσθέτοντας μια λογική μεταβλητή που τον σταματάει αν σε κάποιο πέρασμα του πίνακα
+                                δεν γίνει αντιμετάθεση (ο πίνακας θα έχει ταξινομηθεί)</P>
+                            <pre>
+i <- 2
+αντιμετάθεση <- ΑΛΗΘΗΣ
 ΟΣΟ i <= 30 KAI αντιμετάθεση = ΑΛΗΘΗΣ ΕΠΑΝΑΛΑΒΕ
-    αντιμετάθεση <-- ΨΕΥΔΗΣ
+    αντιμετάθεση <- ΨΕΥΔΗΣ
     ΓΙΑ j ΑΠΟ 30 ΜΈΧΡΙ i ΜΕ ΒΗΜΑ -1
         ΑΝ Π[j-1] < Π[j] ΤΟΤΕ
-            temp <-- Π[j-1]
-            Π[j-1]<-- Π[j]
-            Π[j] <-- temp
-            αντιμεταθεση <-- ΑΛΗΘΗΣ
+            temp <- Π[j-1]
+            Π[j-1]<- Π[j]
+            Π[j] <- temp
+            αντιμεταθεση <- ΑΛΗΘΗΣ
         ΤΕΛΟΣ_ΑΝ
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    i <-- i + 1
+    i <- i + 1
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
                     </pre>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-                    Ταξινόμηση με επιλογή
-                </a>
-            </div>
-            <div id="collapseThree" class="collapse">
-                <div class="card-body">
-                    <p>Πως κάνει την ταξινόμηση?</p>
-                    <pre>
+                <div class="card">
+                    <div class="card-header">
+                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                            Ταξινόμηση με επιλογή
+                        </a>
+                    </div>
+                    <div id="collapseThree" class="collapse">
+                        <div class="card-body">
+                            <p>Πως κάνει την ταξινόμηση?</p>
+                            <pre>
 ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 19
     θ <- i
     x <- A[i]
@@ -1045,20 +1187,20 @@ i <-- 2
     A[i] <- x
 ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ                                    
                     </pre>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
 
-        <div class="card">
-            <div class="card-header">
-                <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
-                    Συγχώνευση
-                </a>
-            </div>
-            <div id="collapseFour" class="collapse">
-                <div class="card-body">
-                    <pre>
+                <div class="card">
+                    <div class="card-header">
+                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+                            Συγχώνευση
+                        </a>
+                    </div>
+                    <div id="collapseFour" class="collapse">
+                        <div class="card-body">
+                            <pre>
 ! Συγχώνευση πινάκων
 ! I είναι ο δείκτης για τον πίνακα Α
 ! J είναι ο δείκτης για τον πίνακα Β
@@ -1091,10 +1233,10 @@ J <- 1
     ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ 
 ΤΕΛΟΣ_ΑΝ                                   
                     </pre>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <!--                    <div class="card">
+                <!--                    <div class="card">
                                 <div class="card-header">
                                     <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
                                         Ταξινόμηση με επιλογή
@@ -1108,14 +1250,19 @@ J <- 1
                                     </div>
                                 </div>
                             </div>-->
-    </div>
-</div>
-
+            </div>
+        </div>
+<?php
+        break; // Εδώ τελειώνει το default case
+} // Εδώ κλείνει το switch
+?>
 <!--</div>-->
 <footer>
     <div class="container">Αντώνης Χουβαρδάς 2021-22.
         <p>Όποιος θέλει μπορεί ελεύθερα να το μοιράσει,
             να το αλλάξει, να το παρουσιάσει σαν δικό του</p>
-    </div></footer>
+    </div>
+</footer>
 </body>
+
 </html>

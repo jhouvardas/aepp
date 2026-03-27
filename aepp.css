@@ -1,0 +1,91 @@
+/* aepp.css */
+
+/* Κλάση για το πλαίσιο <pre> του αλγορίθμου */
+.aepp-code {
+    /* Βασικά Bootstrap στυλ που θέλουμε να κρατήσουμε */
+    background-color: #f8f9fa;
+    /* bg-light */
+    padding: 1rem;
+    /* p-3 */
+    border: 1px solid #dee2e6;
+    /* border */
+    border-radius: 0.25rem;
+    /* rounded */
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* text-monospace */
+
+    /* Οι δικές μας ειδικές ρυθμίσεις για κινητά */
+    font-size: 0.8rem;
+    /* Πολύ μικρή γραμματοσειρά */
+    letter-spacing: -0.7px;
+    /* Μικρή απόσταση μεταξύ των γραμμάτων/λέξεων */
+    line-height: 1.3;
+    /* Συμπαγές ύψος γραμμής */
+    white-space: pre;
+    /* Αποφυγή αλλαγής γραμμής */
+    overflow-x: auto;
+    /* Οριζόντιο scroll αν χρειαστεί */
+}
+
+
+/* Η κλάση για το κενό που συμπληρώνει ο μαθητής */
+.aepp-blank {
+    display: inline-block;
+    /* Απαραίτητο */
+    min-width: 60px;
+    /* Ελάχιστο πλάτος */
+    height: 24px;
+    /* Ύψος που ταιριάζει με τη γραμματοσειρά του αλγορίθμου */
+    padding: 0 4px;
+    /* Εσωτερικό περιθώριο */
+    margin: 0 2px;
+    /* Εξωτερικό περιθώριο */
+    border-bottom: 2px solid #000;
+    /* Η μαύρη γραμμή από κάτω */
+    background-color: #f8f9fa;
+    /* Ελαφρύ γκρι φόντο */
+    color: #1a73e8;
+    /* Μπλε χρώμα για το κείμενο συμπλήρωσης */
+    font-weight: bold;
+    text-align: center;
+    line-height: 22px;
+    /* Στοίχιση κειμένου κάθετα μέσα στο span */
+
+    /* --- Η ΝΕΑ ΔΙΟΡΘΩΣΗ --- */
+    vertical-align: top;
+    /* Πρώτα στοίχιση στο πάνω μέρος */
+    margin-top: -3px;
+    /* Αρνητικό περιθώριο πάνω: σπρώχνει το span 3px προς τα πάνω, κρύβοντας τη διαφορά ύψους */
+    margin-bottom: -3px;
+    /* Αρνητικό περιθώριο κάτω: τραβάει την επόμενη γραμμή 3px πιο κοντά */
+    position: relative;
+    /* Απαραίτητο για να δουλέψουν τα negative margins */
+    z-index: 1;
+    /* Προαιρετικό: φέρνει το span "πάνω" από άλλα στοιχεία αν χρειαστεί */
+    /* --------------------- */
+}
+
+/* Ρυθμίσεις για μέγιστη αξιοποίηση πλάτους σε κινητά */
+@media (max-width: 576px) {
+    .mobile-friendly-card {
+        margin-left: -10px !important;
+        margin-right: -10px !important;
+        border-radius: 0 !important;
+    }
+
+    .mobile-friendly-card .card-body {
+        padding: 10px !important;
+    }
+
+    .mobile-friendly-card .html-content-wrapper {
+        font-size: 0.92rem !important;
+        line-height: 1.4;
+    }
+
+    /* Μικραίνουμε λίγο και το padding του κεντρικού container */
+    .container,
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+}
