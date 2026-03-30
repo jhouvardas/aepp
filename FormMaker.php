@@ -263,6 +263,58 @@ class FormMaker
                 </form>
             </div>
         </div>
+    <?php
+    }
+
+    public function studentSubmissionForm($studentsArray, $mezeId)
+    {
+    ?>
+        <div class="card mt-4 shadow border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fa fa-upload"></i> Υποβολή Λύσης</h5>
+            </div>
+            <div class="card-body">
+                <form action="index.php?action=submitMezeAnswer" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Επίλεξε το όνομά σου:</label>
+                            <select name="student_id" class="form-control" required>
+                                <option value="">-- Ποιος είσαι; --</option>
+                                <?php
+                                // Χρησιμοποιούμε foreach γιατί το $studentsArray είναι πλέον πίνακας
+                                if (!empty($studentsArray)) {
+                                    foreach ($studentsArray as $student) {
+                                        echo "<option value='" . $student['studentId'] . "'>" . $student['name'] . " " . $student['lastName'] . "</option>";
+                                    }
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>6-ψήφιος Κωδικός:</label>
+                            <input type="password" name="pass" class="form-control" maxlength="6" placeholder="******" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Σχόλια ή Απάντηση (αν θέλεις):</label>
+                        <textarea name="student_text" class="form-control" rows="3" placeholder="Γράψε εδώ αν θέλεις να μου πεις κάτι..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ανέβασε τις φωτογραφίες σου (έως 3):</label>
+                        <input type="file" name="files[]" class="form-control-file mb-2" multiple>
+                        <small class="text-muted">Tip: Μπορείς να επιλέξετε 2 ή 3 αρχεία μαζί κρατώντας πατημένο το Ctrl.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block shadow">
+                        <i class="fa fa-paper-plane"></i> Αποστολή στον Δάσκαλο
+                    </button>
+                </form>
+            </div>
+        </div>
 <?php
     }
 }

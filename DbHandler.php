@@ -420,4 +420,73 @@ class DbHandler
         $connTutor->close();
         return $students;
     }
+
+    public function saveMezeSubmission($studentId, $mezeId, $text, $files)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Προετοιμασία ονομάτων αρχείων (έως 3)
+        $f = [null, null, null];
+        $uploadDir = 'uploads/submissions/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+        if (!empty($files['name'][0])) {
+            foreach ($files['name'] as $key => $name) {
+                if ($key > 2) break;
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                $newName = "meze_" . $mezeId . "_st_" . $studentId . "_" . time() . "_" . $key . "." . $ext;
+                if (move_uploaded_file($files['tmp_name'][$key], $uploadDir . $newName)) {
+                    $f[$key] = $newName;
+                }
+            }
+        }
+
+        $stmt = $conn->prepare("INSERT INTO aepp_meze_submissions (student_id, meze_id, student_text, file1, file2, file3) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iissss", $studentId, $mezeId, $text, $f[0], $f[1], $f[2]);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // Μέθοδος για έλεγχο password (στη βάση tutor)
+    public function checkStudentPassword($studentId, $password)
+    {
+        $conn = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
+
+        // Προσθέτουμε το trim για ασφάλεια
+        $password = trim($password);
+
+        // Χρησιμοποιούμε "s" για το password για να το δει ως κείμενο (VARCHAR)
+        $stmt = $conn->prepare("SELECT studentId FROM student WHERE studentId = ? AND student_password = ?");
+        $stmt->bind_param("is", $studentId, $password);
+
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $isValid = ($res->num_rows > 0);
+
+        $stmt->close();
+        $conn->close();
+        return $isValid;
+    }
+
+    public function getCurrentTutorYear()
+    {
+        $connTutor = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
+        mysqli_set_charset($connTutor, "utf8");
+
+        if ($connTutor->connect_error) {
+            return "jhouv2026";
+        }
+
+        $sql = "SELECT username FROM user ORDER BY id DESC LIMIT 1";
+        $result = $connTutor->query($sql);
+
+        $year = "jhouv2026";
+        if ($result && $row = $result->fetch_assoc()) {
+            $year = $row['username'];
+        }
+        $connTutor->close();
+        return $year;
+    }
 }

@@ -90,6 +90,10 @@ class AdminPageMaker extends PageMaker
                                 <a class="dropdown-item" href="index.php?action=listMezedakia">
                                     <i class="fa fa-tasks text-secondary"></i> 2. Λίστα / Διαγραφή
                                 </a>
+                                <a href="index.php?action=viewSubmissions&id=<?php echo $row['mezeId']; ?>" class="btn btn-info btn-sm">
+                                    <i class="fa fa-eye"></i> Υποβολές (<?php // Εδώ θα μπορούσαμε να βάλουμε και count αργότερα 
+                                                                        ?>)
+                                </a>
                                 <a class="dropdown-item" href="index.php?action=fullReport">3. Συγκεντρωτικό Βαθμολόγιο</a>
                             </div>
                         </li>

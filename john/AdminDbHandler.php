@@ -471,25 +471,30 @@ class AdminDbHandler extends DbHandler
     // 1. Φέρνει τους μαθητές από την tutor (μόνο για το admin)
     public function getTutorStudents($userYear)
     {
-        $servername = "jhouv.eu";
-        $username = "jhouvardas";
-        $password = "Jhouv@1957";
-        $dbname = "tutor";
-
-        $connTutor = new mysqli($servername, $username, $password, $dbname);
+        // Στοιχεία σύνδεσης για τη βάση tutor
+        $connTutor = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
         mysqli_set_charset($connTutor, "utf8");
 
+        if ($connTutor->connect_error) {
+            return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
+        }
 
-        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY name ASC";
+        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
         $stmt = $connTutor->prepare($sql);
-        $stmt->bind_param("s", $userYear); // Εδώ μπαίνει το $userYear που έρχεται από το session
+        $stmt->bind_param("s", $userYear);
         $stmt->execute();
         $result = $stmt->get_result();
-        $students = $result->fetch_all(MYSQLI_ASSOC);
+
+        $students = [];
+        // Εδώ γίνεται η "μαγεία": Αδειάζουμε το mysqli_result σε έναν πίνακα
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
 
         $stmt->close();
         $connTutor->close();
-        return $students;
+
+        return $students; // Επιστρέφει ΕΤΟΙΜΟ ΠΙΝΑΚΑ (Array)
     }
 
     // 2. Αποθηκεύει τον βαθμό στη familyDB
@@ -598,5 +603,67 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return $success;
+    }
+
+    public function getSubmissionsByMeze($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Φέρνουμε τα στοιχεία της υποβολής και το όνομα του μαθητή από τη βάση tutor
+        // Σημείωση: Επειδή οι μαθητές είναι σε άλλη βάση, θα κάνουμε το JOIN προσεκτικά
+        $sql = "SELECT s.* FROM aepp_meze_submissions s WHERE s.meze_id = ? ORDER BY s.submission_date DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $submissions = [];
+        while ($row = $result->fetch_assoc()) {
+            $submissions[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $submissions;
+    }
+
+    public function updateOrInsertGrade($studentId, $mezeId, $grade, $userYear, $comments = "")
+    {
+        $conn = $this->connectToFamilyDB();
+
+        $checkSql = "SELECT grade_id FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+        $stmtCheck = $conn->prepare($checkSql);
+        $stmtCheck->bind_param("iis", $studentId, $mezeId, $userYear);
+        $stmtCheck->execute();
+        $res = $stmtCheck->get_result();
+
+        if ($res->num_rows > 0) {
+            // UPDATE: Προσθέτουμε και το teacher_comments
+            $updateSql = "UPDATE meze_grades SET grade_value = ?, teacher_comments = ? WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+            $stmtUpdate = $conn->prepare($updateSql);
+            $stmtUpdate->bind_param("dsiis", $grade, $comments, $studentId, $mezeId, $userYear);
+            $success = $stmtUpdate->execute();
+        } else {
+            // INSERT: Προσθέτουμε και το teacher_comments
+            $insertSql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, teacher_comments, user_year) VALUES (?, ?, ?, ?, ?)";
+            $stmtInsert = $conn->prepare($insertSql);
+            $stmtInsert->bind_param("iidss", $studentId, $mezeId, $grade, $comments, $userYear);
+            $success = $stmtInsert->execute();
+        }
+        $conn->close();
+        return $success;
+    }
+
+    public function getStudentAverage($studentId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT AVG(grade_value) as average FROM meze_grades WHERE student_id = ? AND user_year = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $studentId, $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $avg = $row['average'] ? $row['average'] : 0;
+        $stmt->close();
+        $conn->close();
+        return round($avg, 2);
     }
 }

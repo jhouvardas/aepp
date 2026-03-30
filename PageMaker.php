@@ -371,10 +371,22 @@ class PageMaker
     public function displayMezedakiaList($result)
     {
         if ($result && $result->num_rows > 0) {
+            $db = new DbHandler();
+            $fm = new FormMaker();
+
+            // 1. Δυναμική λήψη του τρέχοντος έτους από τη βάση (τελευταία εγγραφή στον user)
+            $userYear = $db->getCurrentTutorYear();
+
+            // 2. Φέρνουμε τους μαθητές (Η getTutorStudents σου επιστρέφει πλέον έτοιμο Array)
+            $studentsArray = $db->getTutorStudents($userYear);
+
+            // Ασφάλεια: Αν η μέθοδος επιστρέψει false ή null, ορίζουμε κενό array για να μην "σκάσει" η foreach
+            if (!$studentsArray) {
+                $studentsArray = [];
+            }
+
             while ($row = $result->fetch_assoc()) {
                 $mId = $row['mezeId'];
-
-                // Διαχείριση Ημερομηνιών για το Deadline
                 $now = new DateTime();
                 $solDate = new DateTime($row['solutionDate']);
                 $isPastDeadline = ($now > $solDate);
@@ -383,8 +395,16 @@ class PageMaker
                     <div class="card shadow-sm mobile-friendly-card border-warning">
                         <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                             <h6 class="mb-0"><strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong></h6>
-                            <small class="font-weight-bold"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></small>
+                            <div class="text-right">
+                                <small class="font-weight-bold d-block">
+                                    <i class="fa fa-calendar"></i> <?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?>
+                                </small>
+                                <small class="text-danger font-weight-bold">
+                                    <i class="fa fa-hourglass-end"></i> Deadline: <?php echo $solDate->format('d/m/Y H:i'); ?>
+                                </small>
+                            </div>
                         </div>
+
                         <div class="card-body p-2">
                             <?php if (!empty($row['mezeImage'])): ?>
                                 <div class="text-center mb-3">
@@ -393,46 +413,54 @@ class PageMaker
                             <?php endif; ?>
 
                             <div class="meze-text px-1">
-                                <?php
-                                // Εδώ επιτρέπουμε HTML στην εκφώνηση
-                                echo $row['mezeText'];
-                                ?>
+                                <?php echo $row['mezeText']; ?>
                             </div>
 
-                            <?php
-                            // Έλεγχος αν υπάρχει λύση (κείμενο ή εικόνα)
-                            $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
+                            <hr>
 
+                            <?php if (!$isPastDeadline): ?>
+                                <div class="mt-2">
+                                    <?php
+                                    if (!empty($studentsArray)) {
+                                        // Περνάμε το έτοιμο array των μαθητών στη φόρμα υποβολής
+                                        $fm->studentSubmissionForm($studentsArray, $mId);
+                                    } else {
+                                        // Μήνυμα αν για το έτος που βρέθηκε δεν υπάρχουν μαθητές στη βάση tutor
+                                        echo "<div class='alert alert-light border text-muted small shadow-sm'>
+                                                <i class='fa fa-exclamation-triangle text-warning'></i> 
+                                                Η φόρμα υποβολής δεν είναι διαθέσιμη (δεν βρέθηκαν ενεργοί μαθητές για το έτος: <b>$userYear</b>).
+                                              </div>";
+                                    }
+                                    ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php
+                            $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
                             if ($hasSolution): ?>
                                 <div id="accMeze<?php echo $mId; ?>" class="mt-3">
                                     <?php if ($isPastDeadline): ?>
-                                        <button class="btn btn-success btn-block btn-sm font-weight-bold" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
+                                        <button class="btn btn-success btn-block btn-sm font-weight-bold shadow-sm" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
                                             <i class="fa fa-key"></i> Εμφάνιση Λύσης
                                         </button>
                                         <div id="sol<?php echo $mId; ?>" class="collapse mt-2" data-parent="#accMeze<?php echo $mId; ?>">
                                             <div class="p-2 bg-light border rounded shadow-sm">
-
                                                 <?php if (!empty($row['mezeSolutionImage'])): ?>
                                                     <div class="text-center mb-3">
                                                         <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border shadow-sm border-success" style="max-width: 100%;">
                                                     </div>
                                                 <?php endif; ?>
-
                                                 <?php if (!empty($row['mezeSolution'])): ?>
-                                                    <div class="solution-text" style="font-family: inherit;">
-                                                        <?php
-                                                        // Επιτρέπουμε HTML και μετατρέπουμε τα Enter σε αλλαγές γραμμής
-                                                        echo $row['mezeSolution'];
-                                                        ?>
+                                                    <div class="solution-text">
+                                                        <?php echo $row['mezeSolution']; ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
                                     <?php else: ?>
-                                        <div class="alert alert-secondary mb-0 p-2 text-center" style="font-size: 0.85rem; border-style: dashed;">
+                                        <div class="alert alert-secondary mb-0 p-2 text-center shadow-sm" style="font-size: 0.85rem; border-style: dashed;">
                                             <i class="fa fa-clock-o text-danger"></i>
-                                            Η λύση θα ξεκλειδώσει στις: <br>
-                                            <span class="font-weight-bold"><?php echo $solDate->format('d/m/Y H:i'); ?></span>
+                                            Η λύση ξεκλειδώνει αυτόματα μετά τη λήξη της προθεσμίας.
                                         </div>
                                     <?php endif; ?>
                                 </div>

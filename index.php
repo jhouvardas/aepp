@@ -49,7 +49,7 @@ switch ($action) {
         $page->displayMezedakiaList($result);
         break;
 
-    case 'manageGrades':
+    /* case 'manageGrades':
         // Παίρνουμε τους μαθητές για το τρέχον έτος (π.χ. από το session)
         $userYear = $_SESSION['name'];
         $students = $db->getTutorStudents($userYear);
@@ -67,6 +67,35 @@ switch ($action) {
                 }
             }
             echo "<div class='alert alert-success'>Οι βαθμοί αποθηκεύτηκαν!</div>";
+        }
+        break; */
+
+    case 'submitMezeAnswer':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $studentId = $_POST['student_id'];
+            $mezeId = $_POST['meze_id'];
+            $pass = $_POST['pass'];
+            $text = $_POST['student_text'];
+
+            // 1. ΠΡΩΤΟΣ ΕΛΕΓΧΟΣ: Είναι ο κωδικός ακριβώς 6 ψηφία;
+            if (strlen($pass) != 6) {
+                echo "<script>alert('Ο κωδικός πρέπει να είναι ακριβώς 6 ψηφία!'); window.history.back();</script>";
+                exit();
+            }
+
+            // 2. ΔΕΥΤΕΡΟΣ ΕΛΕΓΧΟΣ: Είναι ο σωστός κωδικός για αυτόν τον μαθητή;
+            if ($db->checkStudentPassword($studentId, $pass)) {
+                // 3. Αποθήκευση
+                $success = $db->saveMezeSubmission($studentId, $mezeId, $text, $_FILES['files']);
+                if ($success) {
+                    echo "<script>alert('Η απάντησή σου καταχωρήθηκε! Μπράβο.'); window.location.href='index.php';</script>";
+                } else {
+                    echo "<div class='alert alert-danger'>Κάτι πήγε στραβά στην αποθήκευση.</div>";
+                }
+            } else {
+                echo "<script>alert('Λάθος κωδικός! Προσπάθησε ξανά.'); window.history.back();</script>";
+            }
+            exit();
         }
         break;
     case 'home':

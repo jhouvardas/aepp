@@ -630,14 +630,14 @@ class AdminFormMaker extends FormMaker
     {
     ?>
         <div class="container mt-4">
-            <h3 class="mb-4"><i class="fa fa-list"></i> Διαχείριση Μεζεδακίων</h3>
+            <h3 class="mb-4"><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
             <table class="table table-bordered table-striped shadow-sm">
                 <thead class="thead-dark text-center">
                     <tr>
-                        <th style="width: 8%">#</th>
-                        <th style="width: 15%">Ημερομηνία</th>
-                        <th style="width: 40%">Εκφώνηση (Preview)</th>
-                        <th style="width: 37%">Ενέργειες</th>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 12%">Ημερομηνία</th>
+                        <th style="width: 35%">Εκφώνηση (Preview)</th>
+                        <th style="width: 48%">Ενέργειες</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -645,30 +645,35 @@ class AdminFormMaker extends FormMaker
                         <?php while ($row = $result->fetch_assoc()): ?>
                             <tr>
                                 <td class="text-center font-weight-bold"><?php echo $row['mezeNumber']; ?></td>
-                                <td class="text-center"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
-                                <td><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?></td>
+                                <td class="text-center small"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
+                                <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?></td>
                                 <td class="text-center">
+                                    <a href="index.php?action=viewSubmissions&id=<?php echo $row['mezeId']; ?>"
+                                        class="btn btn-info btn-sm">
+                                        <i class="fa fa-eye"></i> Λύσεις Μαθητών
+                                    </a>
+
                                     <a href="index.php?action=manageGrades&id=<?php echo $row['mezeId']; ?>"
                                         class="btn btn-primary btn-sm">
                                         <i class="fa fa-graduation-cap"></i> Βαθμοί
                                     </a>
 
                                     <a href="index.php?action=editMezedaki&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn btn-info btn-sm">
+                                        class="btn btn-warning btn-sm">
                                         <i class="fa fa-edit"></i> Διόρθωση
                                     </a>
 
                                     <a href="index.php?action=deleteMezedaki&id=<?php echo $row['mezeId']; ?>"
                                         class="btn btn-danger btn-sm"
                                         onclick="return confirm('Σίγουρα διαγραφή του μεζεδακίου #<?php echo $row['mezeNumber']; ?>;')">
-                                        <i class="fa fa-trash"></i> Διαγραφή
+                                        <i class="fa fa-trash"></i>
                                     </a>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center">Δεν βρέθηκαν μεζεδάκια.</td>
+                            <td colspan="4" class="text-center p-4 text-muted">Δεν βρέθηκαν μεζεδάκια στη βάση δεδομένων.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -676,7 +681,6 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-
     public function addMezedakiForm()
     {
     ?>
@@ -972,6 +976,123 @@ class AdminFormMaker extends FormMaker
                     </tr>
                 </tfoot>
             </table>
+        </div>
+    <?php
+    }
+
+    public function showSubmissionsForGrading($submissions, $students, $mezeNumber)
+    {
+    ?>
+        <div class="container mt-4">
+            <h3 class="text-primary">
+                <i class="fa fa-mortar-board"></i> Απαντήσεις για το Μεζεδάκι #<?php echo $mezeNumber; ?>
+            </h3>
+            <hr>
+            <?php if (empty($submissions)): ?>
+                <div class="alert alert-info">Δεν έχουν υποβληθεί ακόμη απαντήσεις από μαθητές.</div>
+            <?php else: ?>
+                <?php foreach ($submissions as $sub):
+                    // Εύρεση ονόματος μαθητή από το array students
+                    $studentName = "Άγνωστος Μαθητής";
+                    foreach ($students as $st) {
+                        if ($st['studentId'] == $sub['student_id']) {
+                            $studentName = $st['name'] . " " . $st['lastName'];
+                            break;
+                        }
+                    }
+                ?>
+                    <div class="card mb-4 shadow-sm border-info">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <strong><i class="fa fa-user"></i> <?php echo $studentName; ?></strong>
+                            <span><i class="fa fa-calendar"></i> <?php echo date('d/m/Y H:i', strtotime($sub['submission_date'])); ?></span>
+                        </div>
+                        <div class="card-body">
+                            <h6><strong>Σχόλια Μαθητή:</strong></h6>
+                            <p class="bg-light p-2 border rounded" style="font-style: italic;">
+                                <?php echo !empty($sub['student_text']) ? nl2br($sub['student_text']) : "<i>Χωρίς σχόλια.</i>"; ?>
+                            </p>
+
+                            <h6><strong>Αρχεία Λύσης:</strong></h6>
+                            <div class="row mb-3">
+                                <?php for ($i = 1; $i <= 3; $i++): $file = "file" . $i; ?>
+                                    <?php if (!empty($sub[$file])): ?>
+                                        <div class="col-md-4 text-center">
+                                            <a href="../uploads/submissions/<?php echo $sub[$file]; ?>" target="_blank">
+                                                <img src="../uploads/submissions/<?php echo $sub[$file]; ?>" class="img-thumbnail mb-1" style="max-height: 180px; transition: 0.3s;">
+                                                <br><span class="badge badge-secondary">Αρχείο <?php echo $i; ?> <i class="fa fa-search-plus"></i></span>
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endfor; ?>
+                            </div>
+
+                            <form action="index.php?action=quickGrade" method="post" class="bg-light p-3 border rounded shadow-sm">
+                                <input type="hidden" name="student_id" value="<?php echo $sub['student_id']; ?>">
+                                <input type="hidden" name="meze_id" value="<?php echo $sub['meze_id']; ?>">
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold text-success"><i class="fa fa-check-circle"></i> Βαθμός (0-20):</label>
+                                            <input type="number" name="grade" step="0.5" min="0" max="20" class="form-control" placeholder="π.χ. 18" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold text-dark"><i class="fa fa-commenting"></i> Σχόλια Δασκάλου (θα τα δει ο μαθητής):</label>
+                                            <textarea name="teacher_comments" class="form-control" rows="2" placeholder="Μπράβο! Πρόσεξε λίγο τη σύνταξη στη γραμμή 5..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fa fa-save"></i> Καταχώρηση Βαθμού & Σχολίου
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    <?php
+    }
+
+    public function showPrintableReport($studentName, $mezeNumber, $grade, $comments, $average)
+    {
+    ?>
+        <div id="printableReport" class="p-5" style="background: white; color: black; font-family: 'DejaVu Sans', sans-serif;">
+            <div class="text-center mb-4">
+                <h2>Αναφορά Προόδου Μαθητή</h2>
+                <h4>Μάθημα: ΑΕΠΠ - Μεζεδάκια</h4>
+                <hr>
+            </div>
+            <div class="mb-4">
+                <p><strong>Μαθητής:</strong> <?php echo $studentName; ?></p>
+                <p><strong>Ημερομηνία:</strong> <?php echo date('d/m/Y'); ?></p>
+            </div>
+            <table class="table table-bordered">
+                <tr class="bg-light">
+                    <th>Δραστηριότητα</th>
+                    <th>Βαθμός</th>
+                </tr>
+                <tr>
+                    <td>Μεζεδάκι #<?php echo $mezeNumber; ?></td>
+                    <td><strong><?php echo $grade; ?> / 20</strong></td>
+                </tr>
+            </table>
+            <div class="mt-3">
+                <strong>Σχόλια Δασκάλου:</strong>
+                <p class="border p-2"><?php echo nl2br($comments); ?></p>
+            </div>
+            <div class="mt-4 p-3 bg-dark text-white text-right">
+                <h5>Συνολικός Μέσος Όρος: <?php echo $average; ?> / 20</h5>
+            </div>
+            <div class="mt-5 text-center">
+                <button onclick="window.print();" class="btn btn-primary d-print-none">
+                    <i class="fa fa-print"></i> Εκτύπωση σε PDF
+                </button>
+            </div>
         </div>
 <?php
     }

@@ -223,9 +223,15 @@ switch ($action) {
 
     case 'updateMezedaki':
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $db->updateMezedaki($_POST, $_FILES); // Προσθήκη $_FILES
-            header("Location: index.php?action=listMezedakia");
-            exit();
+            // Ορίζουμε το $success για να ξέρει το if τι να ελέγξει
+            $success = $db->updateMezedaki($_POST, $_FILES);
+
+            if ($success) {
+                // Χρήση JavaScript αντί για header για να αποφύγουμε το Warning
+                echo "<script>window.location.href='index.php?action=listMezedakia';</script>";
+                exit();
+            }
+            // Αν αποτύχει, θα βγει από το switch και θα συνεχίσει η ροή της σελίδας
         }
         break;
     case 'manageGrades':
@@ -292,6 +298,51 @@ switch ($action) {
             // Αντί για header, χρησιμοποιούμε JavaScript για να γυρίσουμε πίσω
             echo "<script>window.location.href='index.php?action=manageGrades&id=" . $_GET['mezeId'] . "';</script>";
             exit();
+        }
+        break;
+
+    case 'viewSubmissions':
+        if (isset($_GET['id'])) {
+            // 1. Παίρνουμε τα στοιχεία του μεζέ
+            $mezeRes = $db->getMezedakiById($_GET['id']);
+            $meze = $mezeRes->fetch_assoc();
+
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+            // 2. Παίρνουμε τους μαθητές (Επιστρέφει έτοιμο Array από την AdminDbHandler)
+            $studentsList = $db->getTutorStudents($userYear);
+
+            // 3. Παίρνουμε τις υποβολές
+            $submissions = $db->getSubmissionsByMeze($_GET['id']);
+
+            // 4. Εμφάνιση της σελίδας (Προσοχή: περνάμε το $studentsList)
+            $fm->showSubmissionsForGrading($submissions, $studentsList, $meze['mezeNumber']);
+        }
+        break;
+    case 'quickGrade':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $studentId = $_POST['student_id'];
+            $mezeId = $_POST['meze_id'];
+            $grade = $_POST['grade'];
+            $comments = isset($_POST['teacher_comments']) ? $_POST['teacher_comments'] : "";
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+            // 1. Αποθήκευση
+            $db->updateOrInsertGrade($studentId, $mezeId, $grade, $userYear, $comments);
+
+            // 2. Λήψη δεδομένων για το Report
+            $avg = $db->getStudentAverage($studentId, $userYear);
+            $mezeNum = $db->getMezeNumberById($mezeId);
+
+            // Εύρεση ονόματος (χρησιμοποιούμε την getTutorStudents που έχουμε ήδη)
+            $students = $db->getTutorStudents($userYear);
+            $studentName = "";
+            foreach ($students as $s) {
+                if ($s['studentId'] == $studentId) $studentName = $s['name'] . " " . $s['lastName'];
+            }
+
+            // 3. Εμφάνιση του Report αντί για alert
+            $fm->showPrintableReport($studentName, $mezeNum, $grade, $comments, $avg);
         }
         break;
 
