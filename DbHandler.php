@@ -425,30 +425,72 @@ class DbHandler
     {
         $conn = $this->connectToFamilyDB();
 
-        // Προετοιμασία ονομάτων αρχείων (έως 3)
-        $f = [null, null, null];
-        $uploadDir = 'uploads/submissions/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        // 1. Έλεγχος για προηγούμενη υποβολή και διαγραφή παλιών αρχείων
+        $checkSql = "SELECT file1, file2, file3 FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
+        $stmtCheck = $conn->prepare($checkSql);
+        $stmtCheck->bind_param("ii", $studentId, $mezeId);
+        $stmtCheck->execute();
+        $res = $stmtCheck->get_result();
 
-        if (!empty($files['name'][0])) {
+        if ($row = $res->fetch_assoc()) {
+            $oldTargetDir = "uploads/submissions/"; // Σιγουρέψου ότι εδώ είναι σωστό το path
+            for ($i = 1; $i <= 3; $i++) {
+                $f = "file" . $i;
+                if (!empty($row[$f])) {
+                    $filePath = $oldTargetDir . $row[$f];
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                }
+            }
+            $delSql = "DELETE FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
+            $stmtDel = $conn->prepare($delSql);
+            $stmtDel->bind_param("ii", $studentId, $mezeId);
+            $stmtDel->execute();
+            $stmtDel->close();
+        }
+        $stmtCheck->close();
+
+        // 2. Ανέβασμα των νέων αρχείων
+        $uploadedFiles = [null, null, null];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'glo', 'txt'];
+        $targetDir = "uploads/submissions/"; // ΔΙΟΡΘΩΣΗ: Χωρίς κενά μπροστά
+
+        $fileCounter = 0;
+
+        if (isset($files['name']) && is_array($files['name'])) {
             foreach ($files['name'] as $key => $name) {
-                if ($key > 2) break;
-                $ext = pathinfo($name, PATHINFO_EXTENSION);
-                $newName = "meze_" . $mezeId . "_st_" . $studentId . "_" . time() . "_" . $key . "." . $ext;
-                if (move_uploaded_file($files['tmp_name'][$key], $uploadDir . $newName)) {
-                    $f[$key] = $newName;
+                if ($fileCounter >= 3) break;
+
+                // Έλεγχος αν στάλθηκε όντως αρχείο και δεν έχει σφάλμα
+                if (!empty($name) && $files['error'][$key] === 0) {
+                    $tmpName = $files['tmp_name'][$key];
+                    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+                    if (in_array($ext, $allowedExtensions)) {
+                        $cleanName = preg_replace("/[^a-zA-Z0-9.]/", "_", basename($name));
+                        $newFileName = time() . "_" . $studentId . "_" . $cleanName;
+
+                        if (move_uploaded_file($tmpName, $targetDir . $newFileName)) {
+                            $uploadedFiles[$fileCounter] = $newFileName;
+                            $fileCounter++;
+                        }
+                    }
                 }
             }
         }
 
-        $stmt = $conn->prepare("INSERT INTO aepp_meze_submissions (student_id, meze_id, student_text, file1, file2, file3) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("iissss", $studentId, $mezeId, $text, $f[0], $f[1], $f[2]);
+        // 3. Εισαγωγή στη βάση
+        $sql = "INSERT INTO aepp_meze_submissions (student_id, meze_id, student_text, file1, file2, file3) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iissss", $studentId, $mezeId, $text, $uploadedFiles[0], $uploadedFiles[1], $uploadedFiles[2]);
         $success = $stmt->execute();
+
         $stmt->close();
         $conn->close();
+
         return $success;
     }
-
     // Μέθοδος για έλεγχο password (στη βάση tutor)
     public function checkStudentPassword($studentId, $password)
     {
@@ -488,5 +530,33 @@ class DbHandler
         }
         $connTutor->close();
         return $year;
+    }
+
+    public function allowLateSubmission($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "INSERT IGNORE INTO aepp_meze_extensions (student_id, meze_id, user_year) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("iis", $studentId, $mezeId, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function isSubmissionAllowed($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT m.mezeId FROM aepp_mezedakia m 
+                LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND e.student_id = ?
+                WHERE m.mezeId = ? AND (m.solutionDate > NOW() OR e.id IS NOT NULL)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $allowed = ($result->num_rows > 0);
+        $stmt->close();
+        $conn->close();
+        return $allowed;
     }
 }

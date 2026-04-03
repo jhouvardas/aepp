@@ -416,46 +416,79 @@ class AdminDbHandler extends DbHandler
         $conn = $this->connectToFamilyDB();
         $mezeId = $data['mezeId'];
 
-        // Φέρνουμε τα τρέχοντα ονόματα εικόνων
+        // 1. Φέρνουμε τα τρέχοντα ονόματα αρχείων από τη βάση
         $stmtQuery = $conn->prepare("SELECT mezeImage, mezeSolutionImage FROM aepp_mezedakia WHERE mezeId = ?");
         $stmtQuery->bind_param("i", $mezeId);
         $stmtQuery->execute();
-        $currentRes = $stmtQuery->get_result();
-        $currentRow = $currentRes->fetch_assoc();
+        $currentRow = $stmtQuery->get_result()->fetch_assoc();
         $stmtQuery->close();
 
         $newImageName = $currentRow['mezeImage'];
         $newSolImageName = $currentRow['mezeSolutionImage'];
+        $path = "../images/mezedakia/";
 
-        // 1. Διαχείριση Εικόνας Εκφώνησης
+        // 2. Διαχείριση Εικόνας Εκφώνησης
+        // Α) Έλεγχος για ΔΙΑΓΡΑΦΗ
+        if (isset($data['deleteMezeImage']) && $data['deleteMezeImage'] == "1") {
+            if (!empty($currentRow['mezeImage']) && file_exists($path . $currentRow['mezeImage'])) {
+                @unlink($path . $currentRow['mezeImage']);
+            }
+            $newImageName = null; // Μηδενίζουμε το όνομα για τη βάση
+        }
+        // Β) Έλεγχος για ΝΕΟ ΑΝΕΒΑΣΜΑ (το νέο αρχείο κερδίζει τη διαγραφή)
         if (!empty($file['mezeImage']['name'])) {
-            // Σβήσιμο παλιάς
-            if (!empty($currentRow['mezeImage'])) {
-                @unlink("../images/mezedakia/" . $currentRow['mezeImage']);
+            if (!empty($currentRow['mezeImage']) && file_exists($path . $currentRow['mezeImage'])) {
+                @unlink($path . $currentRow['mezeImage']);
             }
-            // Ανέβασμα νέας
-            $newImageName = time() . '_q_' . $file['mezeImage']['name'];
-            move_uploaded_file($file['mezeImage']['tmp_name'], "../images/mezedakia/" . $newImageName);
+            $newImageName = time() . '_q_' . basename($file['mezeImage']['name']);
+            move_uploaded_file($file['mezeImage']['tmp_name'], $path . $newImageName);
         }
 
-        // 2. Διαχείριση Εικόνας Λύσης
+        // 3. Διαχείριση Εικόνας Λύσης
+        // Α) Έλεγχος για ΔΙΑΓΡΑΦΗ
+        if (isset($data['deleteMezeSolutionImage']) && $data['deleteMezeSolutionImage'] == "1") {
+            if (!empty($currentRow['mezeSolutionImage']) && file_exists($path . $currentRow['mezeSolutionImage'])) {
+                @unlink($path . $currentRow['mezeSolutionImage']);
+            }
+            $newSolImageName = null;
+        }
+        // Β) Έλεγχος για ΝΕΟ ΑΝΕΒΑΣΜΑ
         if (!empty($file['mezeSolutionImage']['name'])) {
-            // Σβήσιμο παλιάς
-            if (!empty($currentRow['mezeSolutionImage'])) {
-                @unlink("../images/mezedakia/" . $currentRow['mezeSolutionImage']);
+            if (!empty($currentRow['mezeSolutionImage']) && file_exists($path . $currentRow['mezeSolutionImage'])) {
+                @unlink($path . $currentRow['mezeSolutionImage']);
             }
-            // Ανέβασμα νέας
-            $newSolImageName = time() . '_a_' . $file['mezeSolutionImage']['name'];
-            move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $newSolImageName);
+            $newSolImageName = time() . '_a_' . basename($file['mezeSolutionImage']['name']);
+            move_uploaded_file($file['mezeSolutionImage']['tmp_name'], $path . $newSolImageName);
         }
 
-        // 3. Εκτέλεση του Update
-        $stmt = $conn->prepare("UPDATE aepp_mezedakia SET mezeNumber=?, mezeDate=?, solutionDate=?, mezeText=?, mezeSolution=?, mezeImage=?, mezeSolutionImage=? WHERE mezeId=?");
-        $stmt->bind_param("issssssi", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $data['mezeText'], $data['mezeSolution'], $newImageName, $newSolImageName, $mezeId);
+        // 4. Εκτέλεση του Update στη βάση δεδομένων
+        $sql = "UPDATE aepp_mezedakia SET 
+            mezeNumber = ?, 
+            mezeDate = ?, 
+            solutionDate = ?, 
+            mezeText = ?, 
+            mezeSolution = ?, 
+            mezeImage = ?, 
+            mezeSolutionImage = ? 
+            WHERE mezeId = ?";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            "issssssi",
+            $data['mezeNumber'],
+            $data['mezeDate'],
+            $data['solutionDate'],
+            $data['mezeText'],
+            $data['mezeSolution'],
+            $newImageName,
+            $newSolImageName,
+            $mezeId
+        );
 
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();
+
         return $success;
     }
 
@@ -532,19 +565,21 @@ class AdminDbHandler extends DbHandler
     public function getGradesForMeze($mezeId)
     {
         $conn = $this->connectToFamilyDB();
-        $stmt = $conn->prepare("SELECT student_id, grade_value FROM meze_grades WHERE meze_id = ?");
+        $sql = "SELECT student_id, grade_value, teacher_comments FROM meze_grades WHERE meze_id = ?";
+        $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $mezeId);
         $stmt->execute();
         $result = $stmt->get_result();
 
         $grades = [];
+        // Μετατρέπουμε το result set σε array
         while ($row = $result->fetch_assoc()) {
-            $grades[$row['student_id']] = $row['grade_value'];
+            $grades[] = $row;
         }
 
         $stmt->close();
         $conn->close();
-        return $grades; // Επιστρέφει array με format [studentId => grade]
+        return $grades; // Τώρα επιστρέφει Array, όχι mysqli_result
     }
 
     public function getFullGradesReport($userYear)
@@ -629,27 +664,37 @@ class AdminDbHandler extends DbHandler
     {
         $conn = $this->connectToFamilyDB();
 
-        $checkSql = "SELECT grade_id FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+        // 1. ΕΛΕΓΧΟΣ: Υπάρχει ήδη βαθμός; 
+        // Προσοχή: Πρέπει να έχουμε 3 ερωτηματικά για τα 3 ορίσματα (i, i, s)
+        $checkSql = "SELECT gradeId FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
         $stmtCheck = $conn->prepare($checkSql);
+
+        if (!$stmtCheck) {
+            die("Σφάλμα στην SQL (Check): " . $conn->error); // Αυτό θα μας πει τι ακριβώς φταίει
+        }
+
         $stmtCheck->bind_param("iis", $studentId, $mezeId, $userYear);
         $stmtCheck->execute();
         $res = $stmtCheck->get_result();
 
         if ($res->num_rows > 0) {
-            // UPDATE: Προσθέτουμε και το teacher_comments
+            // 2. UPDATE: Αν υπάρχει, ενημέρωσε βαθμό ΚΑΙ σχόλια
             $updateSql = "UPDATE meze_grades SET grade_value = ?, teacher_comments = ? WHERE student_id = ? AND meze_id = ? AND user_year = ?";
             $stmtUpdate = $conn->prepare($updateSql);
             $stmtUpdate->bind_param("dsiis", $grade, $comments, $studentId, $mezeId, $userYear);
-            $success = $stmtUpdate->execute();
+            $stmtUpdate->execute();
+            $stmtUpdate->close();
         } else {
-            // INSERT: Προσθέτουμε και το teacher_comments
+            // 3. INSERT: Αν δεν υπάρχει, φτιάξε νέα εγγραφή
             $insertSql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, teacher_comments, user_year) VALUES (?, ?, ?, ?, ?)";
             $stmtInsert = $conn->prepare($insertSql);
             $stmtInsert->bind_param("iidss", $studentId, $mezeId, $grade, $comments, $userYear);
-            $success = $stmtInsert->execute();
+            $stmtInsert->execute();
+            $stmtInsert->close();
         }
+
+        $stmtCheck->close();
         $conn->close();
-        return $success;
     }
 
     public function getStudentAverage($studentId, $userYear)

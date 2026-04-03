@@ -283,7 +283,6 @@ class FormMaker
                             <select name="student_id" class="form-control" required>
                                 <option value="">-- Ποιος είσαι; --</option>
                                 <?php
-                                // Χρησιμοποιούμε foreach γιατί το $studentsArray είναι πλέον πίνακας
                                 if (!empty($studentsArray)) {
                                     foreach ($studentsArray as $student) {
                                         echo "<option value='" . $student['studentId'] . "'>" . $student['name'] . " " . $student['lastName'] . "</option>";
@@ -303,13 +302,30 @@ class FormMaker
                         <textarea name="student_text" class="form-control" rows="3" placeholder="Γράψε εδώ αν θέλεις να μου πεις κάτι..."></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label>Ανέβασε τις φωτογραφίες σου (έως 3):</label>
-                        <input type="file" name="files[]" class="form-control-file mb-2" multiple>
-                        <small class="text-muted">Tip: Μπορείς να επιλέξετε 2 ή 3 αρχεία μαζί κρατώντας πατημένο το Ctrl.</small>
+                    <div class="form-group p-3 border rounded bg-light">
+                        <label class="font-weight-bold text-primary"><i class="fa fa-paperclip"></i> Ανέβασε τα αρχεία σου (έως 3):</label>
+
+                        <div class="mb-3">
+                            <small class="d-block text-muted">Πρώτο αρχείο (Κώδικας ή Φωτογραφία):</small>
+                            <input type="file" name="files[]" class="form-control-file border-bottom">
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="d-block text-muted">Δεύτερο αρχείο:</small>
+                            <input type="file" name="files[]" class="form-control-file border-bottom">
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="d-block text-muted">Τρίτο αρχείο:</small>
+                            <input type="file" name="files[]" class="form-control-file">
+                        </div>
+
+                        <small class="text-danger mt-2 d-block">
+                            <i class="fa fa-info-circle"></i> Μπορείς να επιλέξεις διαφορετικό αρχείο σε κάθε κουμπί.
+                        </small>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block shadow">
+                    <button type="submit" class="btn btn-primary btn-block shadow-lg btn-lg mt-3">
                         <i class="fa fa-paper-plane"></i> Αποστολή στον Δάσκαλο
                     </button>
                 </form>

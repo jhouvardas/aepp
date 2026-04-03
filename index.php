@@ -49,27 +49,6 @@ switch ($action) {
         $page->displayMezedakiaList($result);
         break;
 
-    /* case 'manageGrades':
-        // Παίρνουμε τους μαθητές για το τρέχον έτος (π.χ. από το session)
-        $userYear = $_SESSION['name'];
-        $students = $db->getTutorStudents($userYear);
-        $mezeId = $_GET['meze_id']; // Το ID από το μεζεδάκι που βαθμολογούμε
-        $fm->showGradesForm($students, $mezeId);
-        break;
-
-    case 'saveGrades':
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $mezeId = $_POST['meze_id'];
-            $userYear = $_SESSION['name'];
-            foreach ($_POST['grades'] as $studentId => $grade) {
-                if ($grade !== '') {
-                    $db->saveMezeGrade($studentId, $mezeId, $grade, $userYear);
-                }
-            }
-            echo "<div class='alert alert-success'>Οι βαθμοί αποθηκεύτηκαν!</div>";
-        }
-        break; */
-
     case 'submitMezeAnswer':
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $studentId = $_POST['student_id'];
@@ -77,20 +56,22 @@ switch ($action) {
             $pass = $_POST['pass'];
             $text = $_POST['student_text'];
 
-            // 1. ΠΡΩΤΟΣ ΕΛΕΓΧΟΣ: Είναι ο κωδικός ακριβώς 6 ψηφία;
+            // 1. Έλεγχος κωδικού (6 ψηφία)
             if (strlen($pass) != 6) {
                 echo "<script>alert('Ο κωδικός πρέπει να είναι ακριβώς 6 ψηφία!'); window.history.back();</script>";
                 exit();
             }
 
-            // 2. ΔΕΥΤΕΡΟΣ ΕΛΕΓΧΟΣ: Είναι ο σωστός κωδικός για αυτόν τον μαθητή;
+            // 2. Έλεγχος αν ο κωδικός είναι σωστός
             if ($db->checkStudentPassword($studentId, $pass)) {
                 // 3. Αποθήκευση
                 $success = $db->saveMezeSubmission($studentId, $mezeId, $text, $_FILES['files']);
                 if ($success) {
-                    echo "<script>alert('Η απάντησή σου καταχωρήθηκε! Μπράβο.'); window.location.href='index.php';</script>";
+                    // ΑΝΤΙ ΓΙΑ ALERT: Εμφάνιση της σελίδας επιτυχίας
+                    $page->displayMezeSuccess();
+                    exit();
                 } else {
-                    echo "<div class='alert alert-danger'>Κάτι πήγε στραβά στην αποθήκευση.</div>";
+                    echo "<div class='container mt-5'><div class='alert alert-danger'>Κάτι πήγε στραβά στην αποθήκευση. Παρακαλώ επικοινώνησε με τον δάσκαλο.</div></div>";
                 }
             } else {
                 echo "<script>alert('Λάθος κωδικός! Προσπάθησε ξανά.'); window.history.back();</script>";

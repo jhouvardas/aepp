@@ -28,14 +28,17 @@ class PageMaker
     public function displayMenu()
     {
         ?>
-            <nav class="navbar navbar-expand-md bg-dark navbar-dark">
-                <a class="navbar-brand" href="#" id="menu">ΑΕΠΠ</a>
+            <nav class="navbar navbar-dark bg-dark shadow">
+                <a class="navbar-brand font-weight-bold" href="index.php" id="menu">
+                    <i class="fa fa-code"></i> ΑΕΠΠ
+                </a>
+
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
                     <ul class="navbar-nav">
-
                         <li class="nav-item">
                             <a class="nav-link text-warning font-weight-bold" href="index.php?action=viewMezedakia">
                                 <i class="fa fa-star"></i> Μεζεδάκια
@@ -50,65 +53,64 @@ class PageMaker
                         <li class="nav-item">
                             <a class="nav-link" href="index.php#egirotita">Έλεγχος εγκυρότητας</a>
                         </li>
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
                                 Δομές Δεδομένων
                             </a>
-                            <div class="dropdown-menu">
+                            <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="index.php#1d">Πίνακες Μονοδιάστατοι</a>
                                 <a class="dropdown-item" href="index.php#2d">Πίνακες 2 διαστάσεων</a>
                                 <a class="dropdown-item" href="domesDedomenon.php">Στοίβα</a>
                             </div>
-
                         </li>
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
                                 Πανελλήνιες 2025
                             </a>
-                            <div class="dropdown-menu">
+                            <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="instructions.php">Οδηγίες</a>
                                 <a class="dropdown-item" href="epanalipsi.php">Ασκήσεις Επανάληψης</a>
                                 <a class="dropdown-item" href="askisi2025.php">Η τελευταία μας άσκηση</a>
                             </div>
-
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link" href="index.php#diagrammata">Διαγράμματα</a>
                         </li>
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="index.php?action=debit" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
                                 Πανελλήνιες
                             </a>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="kena.php">Αλγόριθμοι για συμπλήρωση κενών από Α και Β θέματα</a>
-                                <a class="dropdown-item" href="c.php">Γ θέματα από 2008 μέχρι 2022 </a>
-                                <a class="dropdown-item" href="a_a.php">Σωστό - Λάθός από όλα τα θέματα από 2008 μέχρι 2022</a>
-                                <a class="dropdown-item" href="a_anaptyxis.php">Όλες οι ερωτήσεις ανάπτυξης από 2008 μέχρι 2022</a>
-                                <a class="dropdown-item" href="index.php?action=listKenaDynamic">Αλγόριθμοι για Συμπλήρωση κενών 2</a>
+                            <div class="dropdown-menu shadow">
+                                <a class="dropdown-item" href="kena.php">Αλγόριθμοι (Κενά Α-Β)</a>
+                                <a class="dropdown-item" href="c.php">Γ θέματα (2008-2022)</a>
+                                <a class="dropdown-item" href="a_a.php">Σωστό - Λάθός</a>
+                                <a class="dropdown-item" href="a_anaptyxis.php">Ερωτήσεις ανάπτυξης</a>
+                                <a class="dropdown-item" href="index.php?action=listKenaDynamic">Συμπλήρωση κενών 2</a>
                                 <a class="dropdown-item" href="index.php?action=showThemaGDForm">Θέματα Γ & Δ</a>
                             </div>
-
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="index.php#theoria">Θεωρία</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="select.php">Επίλεξε</a>
                         </li>
-                        <!--                            <li class="nav-item">
-                                                            <a class="nav-link" href="https://docs.google.com/presentation/d/e/2PACX-1vTZ7yLiJJmucUygqXXydM9R2W5VqlM0gaUJdembo_04YAriQ3QYJW3Wo0Q1TanxZqDFN5xzA0ZYCIpO/pub?start=false&loop=false&delayms=5000">Εκσφαλμάτωση</a>
-                                                        </li>   -->
+
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
                                 Ασκήσεις
                             </a>
-                            <div class="dropdown-menu">
+                            <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="askisisKopsinis1.php">Κοψίνης Τεύχος 1</a>
                                 <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>
                             </div>
-
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
                         </li>
@@ -119,7 +121,62 @@ class PageMaker
                 </div>
             </nav>
             <br>
+        <?php
+    }
 
+    public function displayMezeSuccess()
+    {
+        ?>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-sm-12">
+                        <div class="card shadow border-0 text-center" style="border-radius: 20px;">
+                            <div class="card-body p-5">
+                                <div class="mb-4">
+                                    <i class="fa fa-check-circle text-success" style="font-size: 100px;"></i>
+                                </div>
+                                <h1 class="font-weight-bold">Έγινε!</h1>
+                                <p class="lead text-muted">Η λύση σου στάλθηκε επιτυχώς στον δάσκαλο.</p>
+
+                                <div class="alert alert-success bg-light border-success mt-4">
+                                    <strong><i class="fa fa-info-circle"></i> Μπράβο!</strong>
+                                    Τώρα μπορείς να κλείσεις αυτό το παράθυρο ή να επιστρέψεις στην αρχική.
+                                </div>
+
+                                <div class="mt-4">
+                                    <a href="index.php" class="btn btn-primary btn-lg btn-block shadow">
+                                        <i class="fa fa-home"></i> Επιστροφή στην Αρχική
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                body {
+                    background: #f4f7f6;
+                }
+
+                .fa-check-circle {
+                    animation: grow 0.6s ease-in-out;
+                }
+
+                @keyframes grow {
+                    0% {
+                        transform: scale(0);
+                    }
+
+                    80% {
+                        transform: scale(1.2);
+                    }
+
+                    100% {
+                        transform: scale(1);
+                    }
+                }
+            </style>
         <?php
     }
 
@@ -374,13 +431,9 @@ class PageMaker
             $db = new DbHandler();
             $fm = new FormMaker();
 
-            // 1. Δυναμική λήψη του τρέχοντος έτους από τη βάση (τελευταία εγγραφή στον user)
             $userYear = $db->getCurrentTutorYear();
-
-            // 2. Φέρνουμε τους μαθητές (Η getTutorStudents σου επιστρέφει πλέον έτοιμο Array)
             $studentsArray = $db->getTutorStudents($userYear);
 
-            // Ασφάλεια: Αν η μέθοδος επιστρέψει false ή null, ορίζουμε κενό array για να μην "σκάσει" η foreach
             if (!$studentsArray) {
                 $studentsArray = [];
             }
@@ -390,18 +443,30 @@ class PageMaker
                 $now = new DateTime();
                 $solDate = new DateTime($row['solutionDate']);
                 $isPastDeadline = ($now > $solDate);
+
+                // 1. Έλεγχος για το ποιοι μαθητές έχουν παράταση
+                $allowedStudents = [];
+                $allowedNames = [];
+
+                if ($isPastDeadline) {
+                    foreach ($studentsArray as $st) {
+                        if ($db->isSubmissionAllowed($st['studentId'], $mId, $userYear)) {
+                            $allowedStudents[] = $st;
+                            $allowedNames[] = $st['name'];
+                        }
+                    }
+                } else {
+                    $allowedStudents = $studentsArray;
+                }
+
+                $showButton = (!$isPastDeadline || !empty($allowedStudents));
             ?>
                 <div class="container-fluid p-0 mt-4 mb-4">
-                    <div class="card shadow-sm mobile-friendly-card border-warning">
+                    <div class="card shadow-sm border-warning">
                         <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                             <h6 class="mb-0"><strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong></h6>
-                            <div class="text-right">
-                                <small class="font-weight-bold d-block">
-                                    <i class="fa fa-calendar"></i> <?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?>
-                                </small>
-                                <small class="text-danger font-weight-bold">
-                                    <i class="fa fa-hourglass-end"></i> Deadline: <?php echo $solDate->format('d/m/Y H:i'); ?>
-                                </small>
+                            <div class="text-right small">
+                                <i class="fa fa-hourglass-end"></i> Deadline: <?php echo $solDate->format('d/m/Y H:i'); ?>
                             </div>
                         </div>
 
@@ -418,51 +483,51 @@ class PageMaker
 
                             <hr>
 
-                            <?php if (!$isPastDeadline): ?>
-                                <div class="mt-2">
-                                    <?php
-                                    if (!empty($studentsArray)) {
-                                        // Περνάμε το έτοιμο array των μαθητών στη φόρμα υποβολής
-                                        $fm->studentSubmissionForm($studentsArray, $mId);
-                                    } else {
-                                        // Μήνυμα αν για το έτος που βρέθηκε δεν υπάρχουν μαθητές στη βάση tutor
-                                        echo "<div class='alert alert-light border text-muted small shadow-sm'>
-                                                <i class='fa fa-exclamation-triangle text-warning'></i> 
-                                                Η φόρμα υποβολής δεν είναι διαθέσιμη (δεν βρέθηκαν ενεργοί μαθητές για το έτος: <b>$userYear</b>).
-                                              </div>";
-                                    }
-                                    ?>
+                            <?php if ($showButton): ?>
+                                <div class="mt-2 text-center">
+                                    <button class="btn btn-primary btn-block shadow-sm font-weight-bold"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#formMeze<?php echo $mId; ?>"
+                                        aria-expanded="false">
+                                        <i class="fa fa-paper-plane"></i> Υποβολή Λύσης
+                                    </button>
+
+                                    <div class="collapse mt-3 text-left" id="formMeze<?php echo $mId; ?>">
+                                        <?php if ($isPastDeadline && !empty($allowedNames)): ?>
+                                            <div class="alert alert-danger py-2 mb-3 small shadow-sm border-danger">
+                                                <i class="fa fa-unlock-alt fa-lg mr-2"></i>
+                                                <strong>Ειδική Παράταση:</strong> Επιτρεπτοί:
+                                                <b class="text-dark"><?php echo implode(', ', $allowedNames); ?></b>.
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php $fm->studentSubmissionForm($allowedStudents, $mId); ?>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-secondary py-2 small text-center">
+                                    <i class="fa fa-lock mr-1"></i> Η προθεσμία υποβολής έληξε.
                                 </div>
                             <?php endif; ?>
 
                             <?php
                             $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
-                            if ($hasSolution): ?>
+                            if ($hasSolution && $isPastDeadline): ?>
                                 <div id="accMeze<?php echo $mId; ?>" class="mt-3">
-                                    <?php if ($isPastDeadline): ?>
-                                        <button class="btn btn-success btn-block btn-sm font-weight-bold shadow-sm" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
-                                            <i class="fa fa-key"></i> Εμφάνιση Λύσης
-                                        </button>
-                                        <div id="sol<?php echo $mId; ?>" class="collapse mt-2" data-parent="#accMeze<?php echo $mId; ?>">
-                                            <div class="p-2 bg-light border rounded shadow-sm">
-                                                <?php if (!empty($row['mezeSolutionImage'])): ?>
-                                                    <div class="text-center mb-3">
-                                                        <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border shadow-sm border-success" style="max-width: 100%;">
-                                                    </div>
-                                                <?php endif; ?>
-                                                <?php if (!empty($row['mezeSolution'])): ?>
-                                                    <div class="solution-text">
-                                                        <?php echo $row['mezeSolution']; ?>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
+                                    <button class="btn btn-success btn-block btn-sm font-weight-bold shadow-sm" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
+                                        <i class="fa fa-key"></i> Εμφάνιση Λύσης
+                                    </button>
+                                    <div id="sol<?php echo $mId; ?>" class="collapse mt-2">
+                                        <div class="p-2 bg-light border rounded shadow-sm text-left">
+                                            <?php if (!empty($row['mezeSolutionImage'])): ?>
+                                                <div class="text-center mb-2">
+                                                    <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success">
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="solution-text"><?php echo $row['mezeSolution']; ?></div>
                                         </div>
-                                    <?php else: ?>
-                                        <div class="alert alert-secondary mb-0 p-2 text-center shadow-sm" style="font-size: 0.85rem; border-style: dashed;">
-                                            <i class="fa fa-clock-o text-danger"></i>
-                                            Η λύση ξεκλειδώνει αυτόματα μετά τη λήξη της προθεσμίας.
-                                        </div>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -470,8 +535,6 @@ class PageMaker
                 </div>
 <?php
             }
-        } else {
-            echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm'><i class='fa fa-info-circle'></i> Δεν υπάρχουν ακόμη διαθέσιμα μεζεδάκια!</div></div>";
         }
     }
 }

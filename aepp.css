@@ -1,6 +1,6 @@
 /* aepp.css */
 
-/* Κλάση για το πλαίσιο <pre> του αλγορίθμου */
+/* 1. Κλάση για το πλαίσιο <pre> του αλγορίθμου */
 .aepp-code {
     /* Βασικά Bootstrap στυλ που θέλουμε να κρατήσουμε */
     background-color: #f8f9fa;
@@ -27,8 +27,7 @@
     /* Οριζόντιο scroll αν χρειαστεί */
 }
 
-
-/* Η κλάση για το κενό που συμπληρώνει ο μαθητής */
+/* 2. Η κλάση για το κενό που συμπληρώνει ο μαθητής */
 .aepp-blank {
     display: inline-block;
     /* Απαραίτητο */
@@ -55,17 +54,15 @@
     vertical-align: top;
     /* Πρώτα στοίχιση στο πάνω μέρος */
     margin-top: -3px;
-    /* Αρνητικό περιθώριο πάνω: σπρώχνει το span 3px προς τα πάνω, κρύβοντας τη διαφορά ύψους */
+    /* Αρνητικό περιθώριο πάνω */
     margin-bottom: -3px;
-    /* Αρνητικό περιθώριο κάτω: τραβάει την επόμενη γραμμή 3px πιο κοντά */
+    /* Αρνητικό περιθώριο κάτω */
     position: relative;
     /* Απαραίτητο για να δουλέψουν τα negative margins */
     z-index: 1;
-    /* Προαιρετικό: φέρνει το span "πάνω" από άλλα στοιχεία αν χρειαστεί */
-    /* --------------------- */
 }
 
-/* Ρυθμίσεις για μέγιστη αξιοποίηση πλάτους σε κινητά */
+/* 3. Ρυθμίσεις για μέγιστη αξιοποίηση πλάτους σε κινητά */
 @media (max-width: 576px) {
     .mobile-friendly-card {
         margin-left: -10px !important;
@@ -88,4 +85,40 @@
         padding-left: 10px !important;
         padding-right: 10px !important;
     }
+}
+
+/* <--- ΕΔΩ ΕΚΛΕΙΣΕ Η ΑΓΚΥΛΗ ΓΙΑ ΤΑ ΚΙΝΗΤΑ */
+
+/* 4. Desktop Optimization: Κεντράρισμα και περιορισμός πλάτους */
+@media (min-width: 1200px) {
+    body {
+        max-width: 900px;
+        /* Standard πλάτος Bootstrap container */
+        margin: 0 auto !important;
+        /* Κεντράρισμα στο παράθυρο */
+        background-color: #f8f9fa;
+        /* Ελαφρύ γκρι για τα "περιθώρια" έξω από το body */
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+        /* Σκιά για να ξεχωρίζει το περιεχόμενο */
+        min-height: 100vh;
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        display: block;
+    }
+
+    /* Διασφαλίζουμε ότι το εσωτερικό του body παραμένει λευκό */
+    body>div,
+    body>nav,
+    body>header,
+    body>main,
+    body>footer {
+        background-color: #ffffff;
+    }
+}
+
+/* 5. Βελτίωση αναγνωσιμότητας για το κείμενο στα μεζεδάκια */
+.html-content-wrapper p {
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    text-align: justify;
 }
