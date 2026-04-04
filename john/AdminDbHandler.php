@@ -711,4 +711,16 @@ class AdminDbHandler extends DbHandler
         $conn->close();
         return round($avg, 2);
     }
+
+    public function getAllMezedakiaForAdmin()
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Φέρνουμε τα πάντα, ταξινομημένα από το πιο πρόσφατο
+        $sql = "SELECT * FROM aepp_mezedakia ORDER BY mezeDate DESC";
+        $result = $conn->query($sql);
+
+        $conn->close();
+        return $result;
+    }
 }

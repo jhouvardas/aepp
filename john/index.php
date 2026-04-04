@@ -198,7 +198,7 @@
             break;
 
         case 'listMezedakia':
-            $result = $db->getAllMezedakia();
+            $result = $db->getAllMezedakiaForAdmin();
             $fm->listMezedakia($result); // Η μέθοδος με τον πίνακα που φτιάξαμε
             break;
 
@@ -282,7 +282,7 @@
                 echo "<div class='container mt-2'><div class='alert alert-info'>Το έτος εργασίας ορίστηκε σε: " . $_SESSION['tutor_user'] . "</div></div>";
             }
             // Επιστροφή στο dashboard
-            $fm->listMezedakia($db->getAllMezedakia());
+            $fm->listMezedakia($db->getAllMezedakiaForAdmin());
             break;
         case 'fullReport':
             $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
@@ -376,7 +376,20 @@
             }
             break;
         default:
-            echo "<div class='container mt-5'><h3>Καλωσήρθες, Γιάννη.</h3><p>Επίλεξε μια ενέργεια από το μενού.</p></div>";
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+            // Παίρνουμε τα μεζεδάκια (η μέθοδος πλέον δεν θα "σκάσει" ποτέ)
+            $mezedakia = $db->getAllMezedakiaForAdmin();
+
+            if (empty($userYear)) {
+                // Φιλικό μήνυμα αντί για Fatal Error
+                echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm'>
+                        <i class='fa fa-user-circle'></i> Παρακαλώ πληκτρολογήστε το <b>Username</b> σας και πατήστε <b>Ορισμός</b> για να φορτώσουν τα μεζεδάκια.
+                      </div></div>";
+            } else {
+                // Κλήση της λίστας
+                $fm->listMezedakia($mezedakia);
+            }
             break;
     }
 

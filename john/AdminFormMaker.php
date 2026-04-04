@@ -625,7 +625,6 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-
     public function listMezedakia($result)
     {
     ?>
@@ -641,20 +640,36 @@ class AdminFormMaker extends FormMaker
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if ($result && $result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td class="text-center font-weight-bold"><?php echo $row['mezeNumber']; ?></td>
-                                <td class="text-center small"><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
+                    <?php
+                    // Επαναφορά του δείκτη στην αρχή του αποτελέσματος
+                    if ($result && $result->num_rows > 0) {
+                        $result->data_seek(0);
+                        while ($row = $result->fetch_assoc()):
+                            $mTimestamp = strtotime($row['mezeDate']);
+                            $currentTimestamp = time();
+                            // Αν η ημερομηνία είναι μετά την τρέχουσα στιγμή
+                            $isFuture = ($mTimestamp > $currentTimestamp);
+
+                            // Στυλ για μελλοντικά: Απαλό γκρι φόντο
+                            $rowStyle = $isFuture ? 'style="background-color: #f8f9fa; color: #9c9c9c; font-style: italic;"' : '';
+                    ?>
+                            <tr <?php echo $rowStyle; ?>>
+                                <td class="text-center font-weight-bold">
+                                    <?php if ($isFuture): ?>
+                                        <i class="fa fa-clock-o text-muted" title="Προγραμματισμένο"></i>
+                                    <?php endif; ?>
+                                    <?php echo $row['mezeNumber']; ?>
+                                </td>
+                                <td class="text-center small"><?php echo date('d/m/Y', $mTimestamp); ?></td>
                                 <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?></td>
                                 <td class="text-center">
                                     <a href="index.php?action=viewSubmissions&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn btn-info btn-sm">
-                                        <i class="fa fa-eye"></i> Λύσεις Μαθητών
+                                        class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm">
+                                        <i class="fa fa-eye"></i> Λύσεις
                                     </a>
 
                                     <a href="index.php?action=manageGrades&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn btn-primary btn-sm">
+                                        class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-primary'; ?> btn-sm">
                                         <i class="fa fa-graduation-cap"></i> Βαθμοί
                                     </a>
 
@@ -665,17 +680,17 @@ class AdminFormMaker extends FormMaker
 
                                     <a href="index.php?action=deleteMezedaki&id=<?php echo $row['mezeId']; ?>"
                                         class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Σίγουρα διαγραφή του μεζεδακίου #<?php echo $row['mezeNumber']; ?>;')">
+                                        onclick="return confirm('Σίγουρα διαγραφή;')">
                                         <i class="fa fa-trash"></i>
                                     </a>
                                 </td>
                             </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
+                        <?php endwhile;
+                    } else { ?>
                         <tr>
-                            <td colspan="4" class="text-center p-4 text-muted">Δεν βρέθηκαν μεζεδάκια στη βάση δεδομένων.</td>
+                            <td colspan="4" class="text-center p-4 text-muted">Δεν βρέθηκαν μεζεδάκια στη βάση.</td>
                         </tr>
-                    <?php endif; ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
