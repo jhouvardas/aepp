@@ -725,6 +725,10 @@ class AdminFormMaker extends FormMaker
                     <input type="file" name="mezeImage" class="form-control">
                 </div>
                 <div class="form-group">
+                    <label><strong>Οδηγίες / Hints (προς μαθητές):</strong></label>
+                    <textarea name="mezeHints" class="form-control" rows="3"><?php echo isset($row['mezeHints']) ? $row['mezeHints'] : ''; ?></textarea>
+                </div>
+                <div class="form-group">
                     <label>Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
                     <textarea name="mezeSolution" class="form-control" rows="4" placeholder="Γράψε τη λύση εδώ..."></textarea>
                 </div>
@@ -773,6 +777,12 @@ class AdminFormMaker extends FormMaker
                 <div class="form-group">
                     <label>Εκφώνηση (Κείμενο ή HTML)</label>
                     <textarea name="mezeText" class="form-control" rows="5"><?php echo $row['mezeText']; ?></textarea>
+                </div>
+
+                <div class="form-group card p-3 bg-white border-info shadow-sm">
+                    <label class="font-weight-bold text-info"><i class="fa fa-lightbulb-o"></i> Οδηγίες / Hints (Προς Μαθητές)</label>
+                    <textarea name="mezeHints" class="form-control" rows="3" placeholder="Γράψτε εδώ μικρές βοήθειες ή hints..."><?php echo isset($row['mezeHints']) ? $row['mezeHints'] : ''; ?></textarea>
+                    <small class="form-text text-muted">Αυτό το κείμενο θα εμφανίζεται στο Site των μαθητών με κουμπί "Χρειάζεσαι βοήθεια;".</small>
                 </div>
 
                 <div class="form-group card p-3 bg-white shadow-sm">

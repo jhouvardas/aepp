@@ -428,14 +428,12 @@ class AdminDbHandler extends DbHandler
         $path = "../images/mezedakia/";
 
         // 2. Διαχείριση Εικόνας Εκφώνησης
-        // Α) Έλεγχος για ΔΙΑΓΡΑΦΗ
         if (isset($data['deleteMezeImage']) && $data['deleteMezeImage'] == "1") {
             if (!empty($currentRow['mezeImage']) && file_exists($path . $currentRow['mezeImage'])) {
                 @unlink($path . $currentRow['mezeImage']);
             }
-            $newImageName = null; // Μηδενίζουμε το όνομα για τη βάση
+            $newImageName = null;
         }
-        // Β) Έλεγχος για ΝΕΟ ΑΝΕΒΑΣΜΑ (το νέο αρχείο κερδίζει τη διαγραφή)
         if (!empty($file['mezeImage']['name'])) {
             if (!empty($currentRow['mezeImage']) && file_exists($path . $currentRow['mezeImage'])) {
                 @unlink($path . $currentRow['mezeImage']);
@@ -445,14 +443,12 @@ class AdminDbHandler extends DbHandler
         }
 
         // 3. Διαχείριση Εικόνας Λύσης
-        // Α) Έλεγχος για ΔΙΑΓΡΑΦΗ
         if (isset($data['deleteMezeSolutionImage']) && $data['deleteMezeSolutionImage'] == "1") {
             if (!empty($currentRow['mezeSolutionImage']) && file_exists($path . $currentRow['mezeSolutionImage'])) {
                 @unlink($path . $currentRow['mezeSolutionImage']);
             }
             $newSolImageName = null;
         }
-        // Β) Έλεγχος για ΝΕΟ ΑΝΕΒΑΣΜΑ
         if (!empty($file['mezeSolutionImage']['name'])) {
             if (!empty($currentRow['mezeSolutionImage']) && file_exists($path . $currentRow['mezeSolutionImage'])) {
                 @unlink($path . $currentRow['mezeSolutionImage']);
@@ -461,24 +457,28 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], $path . $newSolImageName);
         }
 
-        // 4. Εκτέλεση του Update στη βάση δεδομένων
+        // 4. Εκτέλεση του Update (Εδώ μπαίνει το mezeHints)
         $sql = "UPDATE aepp_mezedakia SET 
             mezeNumber = ?, 
             mezeDate = ?, 
             solutionDate = ?, 
             mezeText = ?, 
+            mezeHints = ?, 
             mezeSolution = ?, 
             mezeImage = ?, 
             mezeSolutionImage = ? 
             WHERE mezeId = ?";
 
         $stmt = $conn->prepare($sql);
+
+        // Προστέθηκε ένα "s" για το mezeHints. Σύνολο: i s s s s s s s i
         $stmt->bind_param(
-            "issssssi",
+            "isssssssi",
             $data['mezeNumber'],
             $data['mezeDate'],
             $data['solutionDate'],
             $data['mezeText'],
+            $data['mezeHints'],
             $data['mezeSolution'],
             $newImageName,
             $newSolImageName,

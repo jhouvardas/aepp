@@ -481,6 +481,24 @@ class PageMaker
                                 <?php echo $row['mezeText']; ?>
                             </div>
 
+                            <?php if (!empty($row['mezeHints'])): ?>
+                                <div class="mt-3 px-1">
+                                    <button class="btn btn-outline-info btn-sm btn-block shadow-sm font-weight-bold"
+                                        type="button"
+                                        data-toggle="collapse"
+                                        data-target="#hints<?php echo $mId; ?>"
+                                        aria-expanded="false">
+                                        <i class="fa fa-lightbulb-o"></i> Χρειάζεσαι βοήθεια; (Hints)
+                                    </button>
+                                    <div class="collapse mt-2 text-left" id="hints<?php echo $mId; ?>">
+                                        <div class="alert alert-info border-info shadow-sm small mb-0">
+                                            <strong><i class="fa fa-info-circle"></i> Οδηγίες / Υποδείξεις:</strong><br>
+                                            <?php echo nl2br($row['mezeHints']); ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <hr>
 
                             <?php if ($showButton): ?>
