@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Πρόχειρο Μεζεδακίου</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            padding: 50px;
+            background-color: #f8f9fa;
+        }
+
+        .preview-box {
+            background: white;
+            padding: 20px;
+            border-left: 5px solid #17a2b8;
+            border-bottom: 1px solid #dee2e6;
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            border-radius: 0;
+        }
+
+        body {
+            padding: 0 !important;
+            margin: 0;
+        }
+
+        /* Επιπλέον στυλ για το κείμενο του θέματος */
+        .html-content-wrapper code {
+            color: #d63384;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid px-0">
+        <!-- Sticky Header με κουμπί Αντιγραφής -->
+        <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
+            <span class="text-white ms-3 fw-bold small"><i class="fa fa-eye text-info"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ</span>
+            <button onclick="copyMezeHTML()" class="btn btn-success btn-sm me-3 fw-bold">
+                <i class="fa fa-copy"></i> Αντιγραφή HTML
+            </button>
+        </div>
+
+        <div class="preview-box" id="mezePreview">
+            <html>
+            <div class="html-content-wrapper">
+                <h4 class="text-primary mb-3 border-bottom pb-2">ΘΕΜΑ Γ - Πανελλήνιες 2019</h4>
+
+                <p>Το Υπουργείο Παιδείας παρέχει μέσω του διαδικτύου μια συλλογή από εκπαιδευτικά βίντεο. Ο αριθμός των
+                    επισκέψεων που δέχεται κάθε ένα βίντεο καταγράφεται από ειδικό λογισμικό. Τα βίντεο διακρίνονται σε
+                    τρεις κατηγορίες ανάλογα με την επισκεψιμότητά τους, σύμφωνα με τον παρακάτω πίνακα:</p>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered text-center align-middle bg-light shadow-sm mx-auto"
+                        style="max-width: 500px;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th colspan="2">ΚΑΤΗΓΟΡΙΕΣ ΕΠΙΣΚΕΨΙΜΟΤΗΤΑΣ</th>
+                            </tr>
+                            <tr>
+                                <th>Όνομα</th>
+                                <th>Αριθμός Επισκέψεων</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Χαμηλή</td>
+                                <td>από 1 έως και 100</td>
+                            </tr>
+                            <tr>
+                                <td>Μεσαία</td>
+                                <td>από 101 έως και 1000</td>
+                            </tr>
+                            <tr>
+                                <td>Υψηλή</td>
+                                <td>πάνω από 1000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Τα βίντεο με μηδενικές επισκέψεις δεν κατατάσσονται σε καμία κατηγορία.</p>
+
+                <p class="fw-bold mt-4">Να αναπτύξετε πρόγραμμα σε ΓΛΩΣΣΑ το οποίο:</p>
+
+                <div class="mb-3 d-flex justify-content-between align-items-start border-top pt-2">
+                    <div><strong>Γ1.</strong> Να περιλαμβάνει κατάλληλο τμήμα δηλώσεων.</div>
+                    <span class="badge bg-secondary">Μονάδες 2</span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-start border-top pt-2">
+                    <div><strong>Γ2.</strong> Να διαβάζει επαναληπτικά τον τίτλο κάθε βίντεο και τον αριθμό των
+                        επισκέψεων που δέχτηκε. Η είσοδος δεδομένων να τερματίζεται, όταν ως τίτλος βίντεο δοθεί η λέξη
+                        «ΤΕΛΟΣ».</div>
+                    <span class="badge bg-secondary">Μονάδες 4</span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-start border-top pt-2">
+                    <div><strong>Γ3.</strong> Να βρίσκει και να εμφανίζει τον τίτλο του βίντεο με τον μεγαλύτερο αριθμό
+                        επισκέψεων. Να θεωρήσετε ότι είναι μοναδικό.</div>
+                    <span class="badge bg-secondary">Μονάδες 5</span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-start border-top pt-2">
+                    <div>
+                        <strong>Γ4.</strong> Να υπολογίζει για καθεμία από τις τρεις κατηγορίες επισκεψιμότητας το
+                        πλήθος των βίντεο που καταχωρίστηκαν σε αυτή. Να εμφανίζει για κάθε κατηγορία:
+                        <ul class="mb-0 mt-1">
+                            <li>το όνομά της και</li>
+                            <li>το πλήθος των βίντεο που περιλαμβάνει.</li>
+                        </ul>
+                    </div>
+                    <span class="badge bg-secondary">Μονάδες 6</span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-start border-top pt-2 pb-2">
+                    <div><strong>Γ5.</strong> Να βρίσκει και να εμφανίζει το όνομα της κατηγορίας επισκεψιμότητας στην
+                        οποία καταχωρίστηκαν τα περισσότερα βίντεο. Να θεωρήσετε ότι είναι μοναδική.</div>
+                    <span class="badge bg-secondary">Μονάδες 3</span>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <strong>Σημειώσεις:</strong><br>
+                    α) Δεν απαιτούνται έλεγχοι εγκυρότητας τιμών.<br>
+                    β) Το πλήθος των βίντεο δεν είναι γνωστό.
+                </div>
+            </div>
+
+            </html>
+        </div>
+    </div>
+
+    <script>
+        function copyMezeHTML() {
+            const wrapper = document.querySelector('.html-content-wrapper');
+            if (!wrapper) return;
+            const finalHtml = "<html>\n" + wrapper.outerHTML + "\n</html>";
+
+            // Προσπάθεια με το σύγχρονο API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(finalHtml).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    fallbackCopy(finalHtml);
+                });
+            } else {
+                fallbackCopy(finalHtml);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showSuccess() {
+            const btn = document.querySelector('.sticky-top button');
+            const originalContent = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+            btn.classList.replace('btn-success', 'btn-light');
+
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.replace('btn-light', 'btn-success');
+            }, 2000);
+        }
+    </script>
+
+</body>
+
+</html>

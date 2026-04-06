@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Λύση Θέματος Δ - 2015</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 0 !important;
+      margin: 0;
+    }
+
+    .solution-container {
+      background: white;
+      padding: 30px;
+      border-left: 5px solid #007bff;
+      /* Μπλε γραμμή για λύση */
+      border-bottom: 1px solid #dee2e6;
+      border-radius: 0.25rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    /* Styles for aepp-code and list-group-item strong */
+    .aepp-code {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.25rem;
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .list-group-item strong {
+      color: #d63384;
+      margin-right: 5px;
+    }
+
+    .solution-title {
+      color: #28a745;
+      /* Changed to green for solution */
+    }
+
+    pre {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    /* Interactive Flowchart Styles */
+    .interactive-flowchart {
+      position: relative;
+      display: inline-block;
+      cursor: crosshair;
+    }
+
+    .interactive-flowchart img {
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .interactive-flowchart:hover img {
+      transform: scale(1.03);
+      filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+    }
+
+    .flowchart-hotspot {
+      position: absolute;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .flowchart-hotspot:hover {
+      border-color: #28a745;
+      background-color: rgba(40, 167, 69, 0.1);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid px-0">
+    <!-- Sticky Header με κουμπιά Αντιγραφής & Καθαρισμού -->
+    <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
+      <span class="text-white ms-3 fw-bold small"><i class="fa fa-code text-primary"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ
+        ΛΥΣΗΣ</span>
+      <div>
+        <button onclick="clearSolutionContent()" class="btn btn-outline-danger btn-sm me-2 fw-bold">
+          <i class="fa fa-trash"></i> Καθαρισμός
+        </button>
+        <button onclick="copySolutionHTML()" class="btn btn-success btn-sm me-3 fw-bold">
+          <i class="fa fa-copy"></i> Αντιγραφή HTML
+        </button>
+      </div>
+    </div>
+
+    <div class="container mt-4">
+      <!-- Προσθήκη contenteditable για επεξεργασία της λύσης στον browser -->
+      <div class="solution-container" contenteditable="true">
+        <h4 class="solution-title"><i class="fa fa-check-square-o"></i> Απαντήσεις Συμπλήρωσης (Β1)</h4>
+        <ul class="list-group mb-4 shadow-sm">
+          <li class="list-group-item"><strong>(1):</strong> 2</li>
+          <li class="list-group-item"><strong>(2):</strong> ΨΕΥΔΗΣ</li>
+          <li class="list-group-item"><strong>(3):</strong> i ← i + 1</li>
+          <li class="list-group-item"><strong>(4):</strong> &gt;</li>
+          <li class="list-group-item"><strong>(5):</strong> ΑΛΗΘΗΣ</li>
+        </ul>
+
+        <h4 class="solution-title mt-4"><i class="fa fa-code"></i> Κωδικοποίηση σε ΓΛΩΣΣΑ (Β2)</h4>
+        <p class="fw-bold">Λύση με ΜΕΧΡΙΣ_ΟΤΟΥ:</p>
+        <pre class="aepp-code">
+ΔΙΑΒΑΣΕ Χ
+Σ ← 0
+Π ← 1
+ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
+  Δ ← Χ MOD 10
+  Σ ← Σ + Δ
+  Π ← Π * Δ
+  Χ ← Χ DIV 10
+ΜΕΧΡΙΣ_ΟΤΟΥ Χ = 0
+ΓΡΑΨΕ Σ, Π</pre>
+
+        <p class="fw-bold mt-4">Εναλλακτική λύση με ΟΣΟ...ΕΠΑΝΑΛΑΒΕ (χωρίς ΑΝ):</p>
+        <pre class="aepp-code">
+ΔΙΑΒΑΣΕ Χ
+Σ ← 0
+Π ← 1
+ΟΣΟ Χ > 0 ΕΠΑΝΑΛΑΒΕ
+  Δ ← Χ MOD 10
+  Σ ← Σ + Δ
+  Π ← Π * Δ
+  Χ ← Χ DIV 10
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+ΓΡΑΨΕ Σ, Π</pre>
+
+        <h4 class="solution-title mt-4"><i class="fa fa-info-circle"></i> Επεξήγηση Διαγράμματος (Διαδραστικό)</h4>
+        <div class="text-center mb-4">
+          <div class="interactive-flowchart border rounded p-2 bg-white shadow-sm">
+            <img src="images/mezedakia/diagrammaMez016.png" class="img-fluid" alt="Διάγραμμα Ροής #16">
+
+            <!-- Παράδειγμα Hotspot για τον ρόμβο X>0 -->
+            <div class="flowchart-hotspot" style="top: 48%; left: 24%; width: 17%; height: 16%;"
+              title="Συνθήκη επανάληψης: Ελέγχεται αν ο αριθμός είναι μεγαλύτερος του μηδέν."></div>
+            <!-- Προσθέστε περισσότερα hotspots εδώ -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function clearSolutionContent() {
+      if (confirm('Προσοχή! Είσαι σίγουρος ότι θέλεις να καθαρίσεις τη λύση;')) {
+        const wrapper = document.querySelector('.solution-container');
+        if (wrapper) {
+          wrapper.innerHTML = '<br>';
+          wrapper.focus();
+        }
+      }
+    }
+
+    function copySolutionHTML() {
+      const wrapper = document.querySelector('.solution-container');
+      if (!wrapper) return;
+      const finalHtml = "<html>\n" + wrapper.outerHTML + "\n</html>";
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(finalHtml).then(() => {
+          showSuccess();
+        }).catch(() => {
+          fallbackCopy(finalHtml);
+        });
+      } else {
+        fallbackCopy(finalHtml);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showSuccess();
+      } catch (err) {
+        alert('Η αντιγραφή απέτυχε.');
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showSuccess() {
+      const btn = document.querySelector('.btn-success');
+      const originalContent = btn.innerHTML;
+      btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+      btn.classList.replace('btn-success', 'btn-light');
+      setTimeout(() => {
+        btn.innerHTML = originalContent;
+        btn.classList.replace('btn-light', 'btn-success');
+      }, 2000);
+    }
+  </script>
+</body>
+
+</html>

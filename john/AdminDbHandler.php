@@ -723,4 +723,79 @@ class AdminDbHandler extends DbHandler
         $conn->close();
         return $result;
     }
+
+    /**
+     * Επιστρέφει το πλήθος των υποβολών για ένα μεζεδάκι που δεν έχουν ακόμα βαθμολογηθεί.
+     */
+    public function getUngradedSubmissionsCountForMeze($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT COUNT(s.student_id) 
+                FROM aepp_meze_submissions s
+                LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
+                WHERE s.meze_id = ? AND g.grade_value IS NULL";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $userYear, $mezeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $row['COUNT(s.student_id)'];
+    }
+
+    /**
+     * Επιστρέφει το πλήθος των μαθητών που δεν έχουν υποβάλει ακόμα λύση για ένα μεζεδάκι.
+     */
+    public function getNotSubmittedCount($mezeId, $userYear)
+    {
+        $students = $this->getTutorStudents($userYear);
+        if (empty($students)) return 0;
+
+        $studentIds = array_column($students, 'studentId');
+        $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT COUNT(DISTINCT student_id) as subCount 
+                FROM aepp_meze_submissions 
+                WHERE meze_id = ? AND student_id IN ($placeholders)";
+
+        $stmt = $conn->prepare($sql);
+        $types = 'i' . str_repeat('i', count($studentIds));
+        $params = array_merge([$mezeId], $studentIds);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+
+        return count($studentIds) - ($row['subCount'] ?? 0);
+    }
+
+    public function hasAnyExtension($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM aepp_meze_extensions WHERE meze_id = ? AND user_year = ?");
+        $stmt->bind_param("is", $mezeId, $userYear);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return ($res['total'] > 0);
+    }
+
+    public function toggleMezeLock($mezeId, $status)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("UPDATE aepp_mezedakia SET isLocked = ? WHERE mezeId = ?");
+        if (!$stmt) {
+            die("SQL Error: " . $conn->error . ". Βεβαιωθείτε ότι έχετε εκτελέσει το SQL: ALTER TABLE aepp_mezedakia ADD COLUMN isLocked TINYINT(1) DEFAULT 0;");
+        }
+
+        $stmt->bind_param("ii", $status, $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
 }

@@ -488,7 +488,7 @@ class PageMaker
                                         data-toggle="collapse"
                                         data-target="#hints<?php echo $mId; ?>"
                                         aria-expanded="false">
-                                        <i class="fa fa-lightbulb-o"></i> Χρειάζεσαι βοήθεια; (Hints)
+                                        <i class="fa fa-lightbulb-o"></i> Οδηγίες - Συμβουλές (Hints)
                                     </button>
                                     <div class="collapse mt-2 text-left" id="hints<?php echo $mId; ?>">
                                         <div class="alert alert-info border-info shadow-sm small mb-0">
@@ -531,7 +531,8 @@ class PageMaker
 
                             <?php
                             $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
-                            if ($hasSolution && $isPastDeadline): ?>
+                            $canShowSolution = $db->canShowMezeSolution($mId, $userYear);
+                            if ($hasSolution && $canShowSolution): ?>
                                 <div id="accMeze<?php echo $mId; ?>" class="mt-3">
                                     <button class="btn btn-success btn-block btn-sm font-weight-bold shadow-sm" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
                                         <i class="fa fa-key"></i> Εμφάνιση Λύσης

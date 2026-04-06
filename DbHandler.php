@@ -453,7 +453,7 @@ class DbHandler
 
         // 2. Ανέβασμα των νέων αρχείων
         $uploadedFiles = [null, null, null];
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'glo', 'txt'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'glo', 'txt', 'heic', 'heif'];
         $targetDir = "uploads/submissions/"; // ΔΙΟΡΘΩΣΗ: Χωρίς κενά μπροστά
 
         $fileCounter = 0;
@@ -469,7 +469,7 @@ class DbHandler
 
                     if (in_array($ext, $allowedExtensions)) {
                         $cleanName = preg_replace("/[^a-zA-Z0-9.]/", "_", basename($name));
-                        $newFileName = time() . "_" . $studentId . "_" . $cleanName;
+                        $newFileName = time() . "_" . $key . "_" . $studentId . "_" . $cleanName;
 
                         if (move_uploaded_file($tmpName, $targetDir . $newFileName)) {
                             $uploadedFiles[$fileCounter] = $newFileName;
@@ -549,8 +549,12 @@ class DbHandler
         $conn = $this->connectToFamilyDB();
         $sql = "SELECT m.mezeId FROM aepp_mezedakia m 
                 LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND e.student_id = ?
-                WHERE m.mezeId = ? AND (m.solutionDate > NOW() OR e.id IS NOT NULL)";
+                WHERE m.mezeId = ? AND m.isLocked = 0 AND (m.solutionDate > NOW() OR e.id IS NOT NULL)";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            $conn->close();
+            return false;
+        }
         $stmt->bind_param("ii", $studentId, $mezeId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -558,5 +562,83 @@ class DbHandler
         $stmt->close();
         $conn->close();
         return $allowed;
+    }
+
+    public function canShowMezeSolution($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Get the solution deadline
+        $sql = "SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $mezeData = $result->fetch_assoc();
+        $stmt->close();
+
+        if (!$mezeData) {
+            $conn->close();
+            return false;
+        }
+
+        $now = new DateTime();
+        $solDate = new DateTime($mezeData['solutionDate']);
+        $isPastDeadline = ($now > $solDate);
+
+        if (!$isPastDeadline) {
+            $conn->close();
+            return false;
+        }
+
+        // Get all students with extensions for this meze
+        $extensionSql = "SELECT DISTINCT student_id FROM aepp_meze_extensions WHERE meze_id = ? AND user_year = ?";
+        $extStmt = $conn->prepare($extensionSql);
+        $extStmt->bind_param("is", $mezeId, $userYear);
+        $extStmt->execute();
+        $extResult = $extStmt->get_result();
+
+        $extensionStudents = [];
+        while ($row = $extResult->fetch_assoc()) {
+            $extensionStudents[] = $row['student_id'];
+        }
+        $extStmt->close();
+
+        // If no students with extensions, show solution
+        if (empty($extensionStudents)) {
+            $conn->close();
+            return true;
+        }
+
+        // Check if all extension students have either submitted or been graded
+        foreach ($extensionStudents as $studentId) {
+            // Check if submitted
+            $submitSql = "SELECT COUNT(*) as count FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
+            $submitStmt = $conn->prepare($submitSql);
+            $submitStmt->bind_param("ii", $studentId, $mezeId);
+            $submitStmt->execute();
+            $submitResult = $submitStmt->get_result();
+            $submitRow = $submitResult->fetch_assoc();
+            $hasSubmission = ($submitRow['count'] > 0);
+            $submitStmt->close();
+
+            // Check if graded with a value (including 0)
+            $gradeSql = "SELECT grade_value FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+            $gradeStmt = $conn->prepare($gradeSql);
+            $gradeStmt->bind_param("iis", $studentId, $mezeId, $userYear);
+            $gradeStmt->execute();
+            $gradeResult = $gradeStmt->get_result();
+            $hasGrade = ($gradeResult->num_rows > 0);
+            $gradeStmt->close();
+
+            // If neither submitted nor graded, don't show solution yet
+            if (!$hasSubmission && !$hasGrade) {
+                $conn->close();
+                return false;
+            }
+        }
+
+        $conn->close();
+        return true;
     }
 }

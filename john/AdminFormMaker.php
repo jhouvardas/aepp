@@ -625,74 +625,152 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-    public function listMezedakia($result)
+    public function listMezedakia($result, $dbHandler) // Προσθήκη $dbHandler
     {
     ?>
         <div class="container mt-4">
             <h3 class="mb-4"><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
-            <table class="table table-bordered table-striped shadow-sm">
-                <thead class="thead-dark text-center">
-                    <tr>
-                        <th style="width: 5%">#</th>
-                        <th style="width: 12%">Ημερομηνία</th>
-                        <th style="width: 35%">Εκφώνηση (Preview)</th>
-                        <th style="width: 48%">Ενέργειες</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Επαναφορά του δείκτη στην αρχή του αποτελέσματος
-                    if ($result && $result->num_rows > 0) {
-                        $result->data_seek(0);
-                        while ($row = $result->fetch_assoc()):
-                            $mTimestamp = strtotime($row['mezeDate']);
-                            $currentTimestamp = time();
-                            // Αν η ημερομηνία είναι μετά την τρέχουσα στιγμή
-                            $isFuture = ($mTimestamp > $currentTimestamp);
-
-                            // Στυλ για μελλοντικά: Απαλό γκρι φόντο
-                            $rowStyle = $isFuture ? 'style="background-color: #f8f9fa; color: #9c9c9c; font-style: italic;"' : '';
-                    ?>
-                            <tr <?php echo $rowStyle; ?>>
-                                <td class="text-center font-weight-bold">
-                                    <?php if ($isFuture): ?>
-                                        <i class="fa fa-clock-o text-muted" title="Προγραμματισμένο"></i>
-                                    <?php endif; ?>
-                                    <?php echo $row['mezeNumber']; ?>
-                                </td>
-                                <td class="text-center small"><?php echo date('d/m/Y', $mTimestamp); ?></td>
-                                <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?></td>
-                                <td class="text-center">
-                                    <a href="index.php?action=viewSubmissions&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm">
-                                        <i class="fa fa-eye"></i> Λύσεις
-                                    </a>
-
-                                    <a href="index.php?action=manageGrades&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-primary'; ?> btn-sm">
-                                        <i class="fa fa-graduation-cap"></i> Βαθμοί
-                                    </a>
-
-                                    <a href="index.php?action=editMezedaki&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn btn-warning btn-sm">
-                                        <i class="fa fa-edit"></i> Διόρθωση
-                                    </a>
-
-                                    <a href="index.php?action=deleteMezedaki&id=<?php echo $row['mezeId']; ?>"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Σίγουρα διαγραφή;')">
-                                        <i class="fa fa-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endwhile;
-                    } else { ?>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped shadow-sm">
+                    <thead class="thead-dark text-center">
                         <tr>
-                            <td colspan="4" class="text-center p-4 text-muted">Δεν βρέθηκαν μεζεδάκια στη βάση.</td>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 12%">Ημερομηνία</th>
+                            <th style="width: 35%">Εκφώνηση (Preview)</th>
+                            <th style="width: 48%">Ενέργειες</th>
                         </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php
+                        // Επαναφορά του δείκτη στην αρχή του αποτελέσματος
+                        if ($result && $result->num_rows > 0) {
+                            $result->data_seek(0);
+                            while ($row = $result->fetch_assoc()):
+                                $mezeId = $row['mezeId'];
+                                $mTimestamp = strtotime($row['mezeDate']);
+                                $solTimestamp = strtotime($row['solutionDate'] ?? '');
+                                $currentTimestamp = time();
+                                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : '';
+
+                                // Αν η ημερομηνία είναι μετά την τρέχουσα στιγμή
+                                $isFuture = ($mTimestamp > $currentTimestamp);
+                                $isLocked = (isset($row['isLocked']) && $row['isLocked'] == 1);
+
+                                // Έλεγχος για λήξη προθεσμίας και απουσία παρατάσεων
+                                $isExpired = ($solTimestamp > 0 && $solTimestamp < $currentTimestamp);
+                                $hasExtensions = (!empty($userYear)) ? $dbHandler->hasAnyExtension($mezeId, $userYear) : false;
+                                $isClosed = $isLocked || ($isExpired && !$hasExtensions);
+
+                                // Στυλ για μελλοντικά: Απαλό γκρι φόντο
+                                $rowStyle = '';
+                                $badgeHtml = '';
+
+                                if ($isLocked) {
+                                    $badgeHtml .= '<br><span class="badge badge-dark mt-1" style="font-size: 0.75rem;"><i class="fa fa-lock"></i> Κλειδωμένο (Manual)</span>';
+                                    $rowStyle = 'style="background-color: #f2f2f2; color: #777;"';
+                                } elseif ($isClosed) {
+                                    $badgeHtml .= '<br><span class="badge badge-secondary mt-1" style="font-size: 0.75rem; opacity: 0.8;"><i class="fa fa-lock"></i> Λήξη (Χωρίς Ext)</span>';
+                                    $rowStyle = 'style="background-color: #f2f2f2; color: #777;"';
+                                }
+
+                                // Έλεγχος για μεζεδάκια χωρίς λύση
+                                $noSolution = (empty(trim($row['mezeSolution'] ?? '')) && empty($row['mezeSolutionImage']));
+                                if ($noSolution) {
+                                    $badgeHtml .= '<br><span class="badge badge-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-warning"></i> Χωρίς Λύση</span>';
+                                }
+
+                                // Έλεγχος για μη βαθμολογημένες υποβολές
+                                $ungradedCount = 0;
+                                $notSubmittedCount = 0;
+                                if (!empty($userYear)) {
+                                    $ungradedCount = $dbHandler->getUngradedSubmissionsCountForMeze($mezeId, $userYear);
+                                    $notSubmittedCount = $dbHandler->getNotSubmittedCount($mezeId, $userYear);
+                                }
+                                $hasUngradedSubmissions = ($ungradedCount > 0);
+
+                                if ($hasUngradedSubmissions) {
+                                    $badgeHtml .= '<br><span class="badge bg-warning text-dark mt-1" style="font-size: 0.75rem;"><i class="fa fa-exclamation-triangle"></i> ' . $ungradedCount . ' προς Βαθμολόγηση</span>';
+                                    // Αν υπάρχουν μη βαθμολογημένες υποβολές και δεν είναι μελλοντικό, χρωμάτισε τη γραμμή
+                                    if (!$isFuture) {
+                                        $rowStyle = 'style="background-color: #fff3cd;"'; // Bootstrap warning background color
+                                    }
+                                }
+
+                                if ($notSubmittedCount > 0 && !$isFuture) {
+                                    $badgeHtml .= '<br><span class="badge bg-light text-muted border mt-1" style="font-size: 0.75rem;"><i class="fa fa-hourglass-o"></i> ' . $notSubmittedCount . ' δεν απάντησαν</span>';
+                                }
+
+                                // Εφάρμοσε το στυλ για μελλοντικά τελευταίο, για να υπερισχύει
+                                if ($isFuture) {
+                                    $rowStyle = 'style="background-color: #f8f9fa; color: #9c9c9c; font-style: italic;"';
+                                }
+                        ?>
+                                <tr <?php echo $rowStyle; ?>>
+                                    <td class="text-center font-weight-bold" style="white-space: nowrap;">
+                                        <?php if ($isFuture): ?>
+                                            <i class="fa fa-clock-o text-muted" title="Προγραμματισμένο"></i>
+                                        <?php endif; ?>
+                                        <?php echo $row['mezeNumber']; ?>
+                                    </td>
+                                    <td class="text-center small" style="white-space: nowrap;"><?php echo date('d/m/Y', $mTimestamp); ?></td>
+                                    <td class="small">
+                                        <?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?>
+                                        <?php echo $badgeHtml; ?>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap justify-content-center">
+                                            <?php if ($isLocked): ?>
+                                                <a href="index.php?action=toggleMezeLock&id=<?php echo $mezeId; ?>&status=0"
+                                                    class="btn btn-outline-success btn-sm m-1" title="Άνοιγμα Υποβολών">
+                                                    <i class="fa fa-unlock"></i>
+                                                </a>
+                                            <?php else: ?>
+                                                <a href="index.php?action=toggleMezeLock&id=<?php echo $mezeId; ?>&status=1"
+                                                    class="btn btn-outline-secondary btn-sm m-1" title="Χειροκίνητο Κλείδωμα"
+                                                    onclick="return confirm('Θέλετε να κλειδώσετε χειροκίνητα τις υποβολές για αυτό το μεζεδάκι;')">
+                                                    <i class="fa fa-lock"></i>
+                                                </a>
+                                            <?php endif; ?>
+
+                                            <a href="index.php?action=previewMeze&id=<?php echo $row['mezeId']; ?>"
+                                                target="_blank"
+                                                class="btn btn-dark btn-sm m-1"
+                                                title="Προεπισκόπηση">
+                                                <i class="fa fa-search"></i>
+                                            </a>
+
+                                            <a href="index.php?action=viewSubmissions&id=<?php echo $row['mezeId']; ?>"
+                                                class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm m-1" title="Λύσεις">
+                                                <i class="fa fa-eye"></i> <span class="d-none d-lg-inline">Λύσεις</span>
+                                            </a>
+
+                                            <a href="index.php?action=manageGrades&id=<?php echo $row['mezeId']; ?>"
+                                                class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-primary'; ?> btn-sm m-1" title="Βαθμοί">
+                                                <i class="fa fa-graduation-cap"></i> <span class="d-none d-lg-inline">Βαθμοί</span>
+                                            </a>
+
+                                            <a href="index.php?action=editMezedaki&id=<?php echo $row['mezeId']; ?>"
+                                                class="btn btn-warning btn-sm m-1" title="Διόρθωση">
+                                                <i class="fa fa-edit"></i> <span class="d-none d-lg-inline">Διόρθωση</span>
+                                            </a>
+
+                                            <a href="index.php?action=deleteMezedaki&id=<?php echo $row['mezeId']; ?>"
+                                                class="btn btn-danger btn-sm m-1"
+                                                onclick="return confirm('Σίγουρα διαγραφή;')" title="Διαγραφή">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endwhile;
+                        } else { ?>
+                            <tr>
+                                <td colspan="4" class="text-center p-4 text-muted">Δεν βρέθηκαν μεζεδάκια στη βάση.</td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     <?php
     }

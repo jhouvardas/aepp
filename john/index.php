@@ -199,7 +199,7 @@
 
         case 'listMezedakia':
             $result = $db->getAllMezedakiaForAdmin();
-            $fm->listMezedakia($result); // Η μέθοδος με τον πίνακα που φτιάξαμε
+            $fm->listMezedakia($result, $db); // Περνάμε το $db object
             break;
 
         case 'deleteMezedaki':
@@ -234,6 +234,89 @@
                 // Αν αποτύχει, θα βγει από το switch και θα συνεχίσει η ροή της σελίδας
             }
             break;
+
+        case 'previewMeze':
+            if (isset($_GET['id'])) {
+                $res = $db->getMezedakiById($_GET['id']);
+                $meze = $res->fetch_assoc();
+            ?>
+                <!DOCTYPE html>
+                <html lang="el">
+
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Προεπισκόπηση Μεζεδακίου #<?php echo $meze['mezeNumber']; ?></title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+                    <link rel="stylesheet" href="../aepp.css">
+                    <style>
+                        body {
+                            background-color: #f8f9fa;
+                            padding: 20px;
+                        }
+
+                        .preview-box {
+                            background: white;
+                            padding: 30px;
+                            border-left: 5px solid #17a2b8;
+                            border-bottom: 1px solid #dee2e6;
+                            min-height: 100vh;
+                        }
+                    </style>
+                </head>
+
+                <body>
+                    <div class="container">
+                        <div class="preview-box">
+                            <h2 class="border-bottom pb-2 mb-4 text-dark font-weight-bold">Προεπισκόπηση: Μεζεδάκι #<?php echo $meze['mezeNumber']; ?></h2>
+
+                            <!-- Ενότητα Εκφώνησης -->
+                            <div class="mb-5">
+                                <h4 class="text-primary mb-3"><i class="fa fa-file-text-o"></i> Εκφώνηση</h4>
+                                <?php if (!empty($meze['mezeImage'])): ?>
+                                    <div class="text-center mb-3">
+                                        <img src="../images/mezedakia/<?php echo $meze['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-height: 400px;">
+                                    </div>
+                                <?php endif; ?>
+                                <div class="html-content-wrapper p-3 border rounded bg-white">
+                                    <?php echo $meze['mezeText']; ?>
+                                </div>
+                            </div>
+
+                            <!-- Ενότητα Hints -->
+                            <?php if (!empty($meze['mezeHints'])): ?>
+                                <div class="mb-5">
+                                    <h4 class="text-info mb-3"><i class="fa fa-lightbulb-o"></i> Υποδείξεις / Hints</h4>
+                                    <div class="alert alert-info border-info shadow-sm">
+                                        <?php echo nl2br($meze['mezeHints']); ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- Ενότητα Λύσης -->
+                            <div class="mb-4">
+                                <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύση</h4>
+                                <div class="p-3 border border-success rounded bg-light shadow-sm">
+                                    <?php if (!empty($meze['mezeSolutionImage'])): ?>
+                                        <div class="text-center mb-3">
+                                            <img src="../images/mezedakia/<?php echo $meze['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success" style="max-height: 400px;">
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="solution-text">
+                                        <?php echo !empty($meze['mezeSolution']) ? $meze['mezeSolution'] : (empty($meze['mezeSolutionImage']) ? '<i class="text-muted">Δεν έχει καταχωρηθεί λύση.</i>' : ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </body>
+
+                </html>
+            <?php
+                exit();
+            }
+            break;
+
         case 'manageGrades':
             if (isset($_GET['id'])) {
                 $mezeId = $_GET['id'];
@@ -271,9 +354,9 @@
                     }
                 }
                 echo "<div class='container mt-3'><div class='alert alert-success shadow'>Επιτυχής αποθήκευση $count βαθμολογιών!</div></div>";
-                // Επιστροφή στη λίστα
-                $result = $db->getAllMezedakia();
-                $fm->listMezedakia($result);
+                // Επιστροφή στη λίστα (χρησιμοποιούμε getAllMezedakiaForAdmin για την admin view)
+                $result = $db->getAllMezedakiaForAdmin();
+                $fm->listMezedakia($result, $db);
             }
             break;
         case 'setYear':
@@ -282,7 +365,7 @@
                 echo "<div class='container mt-2'><div class='alert alert-info'>Το έτος εργασίας ορίστηκε σε: " . $_SESSION['tutor_user'] . "</div></div>";
             }
             // Επιστροφή στο dashboard
-            $fm->listMezedakia($db->getAllMezedakiaForAdmin());
+            $fm->listMezedakia($db->getAllMezedakiaForAdmin(), $db);
             break;
         case 'fullReport':
             $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
@@ -375,6 +458,15 @@
                 exit();
             }
             break;
+
+        case 'toggleMezeLock':
+            if (isset($_GET['id']) && isset($_GET['status'])) {
+                $db->toggleMezeLock($_GET['id'], $_GET['status']);
+                echo "<script>window.location.href='index.php?action=listMezedakia';</script>";
+                exit();
+            }
+            break;
+
         default:
             $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
 
@@ -383,12 +475,12 @@
 
             if (empty($userYear)) {
                 // Φιλικό μήνυμα αντί για Fatal Error
-                echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm'>
+                echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm text-center'>
                         <i class='fa fa-user-circle'></i> Παρακαλώ πληκτρολογήστε το <b>Username</b> σας και πατήστε <b>Ορισμός</b> για να φορτώσουν τα μεζεδάκια.
                       </div></div>";
             } else {
                 // Κλήση της λίστας
-                $fm->listMezedakia($mezedakia);
+                $fm->listMezedakia($mezedakia, $db);
             }
             break;
     }

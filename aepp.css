@@ -122,3 +122,32 @@
     margin-bottom: 1.2rem;
     text-align: justify;
 }
+
+/* Διαδραστικό Διάγραμμα Ροής */
+.interactive-flowchart {
+    position: relative;
+    display: inline-block;
+    cursor: crosshair;
+}
+
+.interactive-flowchart img {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.interactive-flowchart:hover img {
+    transform: scale(1.03);
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
+}
+
+.flowchart-hotspot {
+    position: absolute;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.flowchart-hotspot:hover {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);
+}
