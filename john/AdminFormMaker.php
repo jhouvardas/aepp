@@ -349,9 +349,9 @@ class AdminFormMaker extends FormMaker
                 $i = 1;
                 while ($row = $questions->fetch_assoc()): ?>
                     <div class="question-block mb-2" style="page-break-inside: avoid;">
-                        <div class="d-flex align-items-baseline">
-                            <strong class="mr-2" style="white-space: nowrap;">Θέμα <?php echo $i++; ?>:</strong>
-                            <div style="font-size: 1.05rem;">
+                        <div style="font-size: 1.05rem; line-height: 1.5;">
+                            <div class="mb-1">
+                                <strong class="mr-1">Θέμα <?php echo $i++; ?>:</strong>
                                 <?php echo $row['question_text']; ?>
                             </div>
                         </div>
@@ -790,7 +790,7 @@ class AdminFormMaker extends FormMaker
                         <input type="date" name="mezeDate" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
                     </div>
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group">
                     <label>Ημερομηνία & Ώρα Λύσης (Deadline)</label>
                     <input type="datetime-local" name="solutionDate" class="form-control" required>
                 </div>
@@ -804,7 +804,7 @@ class AdminFormMaker extends FormMaker
                 </div>
                 <div class="form-group">
                     <label><strong>Οδηγίες / Hints (προς μαθητές):</strong></label>
-                    <textarea name="mezeHints" class="form-control" rows="3"><?php echo isset($row['mezeHints']) ? $row['mezeHints'] : ''; ?></textarea>
+                    <textarea name="mezeHints" class="form-control" rows="3" placeholder="Μικρές βοήθειες..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
@@ -1188,7 +1188,7 @@ class AdminFormMaker extends FormMaker
                                 <input type="hidden" name="meze_id" value="<?php echo ($sub) ? $sub['meze_id'] : $mezeId; ?>">
                                 <div class="d-flex align-items-start">
                                     <input type="number" name="grade" step="0.5" class="form-control form-control-sm mr-2" style="width:80px" placeholder="Βαθμός" required>
-                                    <textarea name="teacher_comments" class="form-control form-control-sm mr-2" rows="1" style="flex:1; min-height: 31px;" placeholder="Σχόλια παρότρυνσης..."></textarea>
+                                    <textarea name="teacher_comments" class="form-control form-control-sm mr-2" rows="2" style="flex:1; min-height: 60px;" placeholder="Σχόλια παρότρυνσης..."></textarea>
                                     <button type="submit" class="btn btn-sm btn-success px-4 text-white font-weight-bold shadow-sm">OK</button>
                                 </div>
                             </form>
@@ -1214,6 +1214,27 @@ class AdminFormMaker extends FormMaker
                             <i class="fa fa-chevron-down text-muted"></i>
                         </div>
                         <div class="edit-row p-3 border border-top-0 mb-2 bg-light shadow-sm" style="display:none;">
+                            <?php if ($sub): ?>
+                                <div class="submission-preview mb-3">
+                                    <h6 class="font-weight-bold text-muted small text-uppercase">Απάντηση Μαθητή:</h6>
+                                    <p class="small bg-white p-2 border rounded"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
+                                    <div class="row">
+                                        <?php
+                                        $fileFields = ['file1', 'file2', 'file3'];
+                                        foreach ($fileFields as $f):
+                                            if (!empty($sub[$f])): ?>
+                                                <div class="col-md-4 mb-2">
+                                                    <a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-block btn-white border text-truncate">
+                                                        <i class="fa fa-file-image-o"></i> <?php echo $sub[$f]; ?>
+                                                    </a>
+                                                </div>
+                                        <?php endif;
+                                        endforeach; ?>
+                                    </div>
+                                </div>
+                                <hr>
+                            <?php endif; ?>
+
                             <form action="index.php?action=quickGrade" method="post">
                                 <input type="hidden" name="student_id" value="<?php echo $st['studentId']; ?>">
                                 <input type="hidden" name="meze_id" value="<?php echo ($sub) ? $sub['meze_id'] : $mezeId; ?>">
@@ -1304,6 +1325,220 @@ class AdminFormMaker extends FormMaker
                 }
             }
         </style>
+    <?php
+    }
+
+    public function manageGroupsForm($groups, $students, $db, $assignments = [])
+    {
+    ?>
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-dark text-white">Δημιουργία Ομάδας</div>
+                        <div class="card-body">
+                            <form action="index.php?action=save_group" method="POST">
+                                <input type="text" name="group_name" class="form-control mb-2" placeholder="Όνομα Ομάδας" required>
+                                <button type="submit" class="btn btn-primary btn-block">Δημιουργία</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-info text-white">Ανάθεση Μαθητή σε Ομάδα</div>
+                        <div class="card-body">
+                            <form action="index.php?action=add_student_to_group" method="POST">
+                                <select name="student_id" class="form-control mb-2" required>
+                                    <option value="">Επίλεξε Μαθητή</option>
+                                    <?php foreach ($students as $s):
+                                        // Αν ο μαθητής είναι ήδη σε ομάδα, τον προσπερνάμε
+                                        if (array_key_exists($s['studentId'], $assignments)) continue;
+                                    ?>
+                                        <option value="<?php echo $s['studentId']; ?>"><?php echo "{$s['lastName']} {$s['name']}"; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <select name="group_id" class="form-control mb-2" required>
+                                    <option value="">Επίλεξε Ομάδα</option>
+                                    <?php foreach ($groups as $g) echo "<option value='{$g['id']}'>{$g['group_name']}</option>"; ?>
+                                </select>
+                                <button type="submit" class="btn btn-info btn-block">Ανάθεση</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>Υπάρχουσες Ομάδες & Μέλη</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 30%;">Ομάδα</th>
+                            <th>Μέλη</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($groups as $g):
+                            // Βρίσκουμε ποιοι μαθητές ανήκουν σε αυτή την ομάδα
+                            $members = [];
+                            foreach ($students as $s) {
+                                if (isset($assignments[$s['studentId']]) && $assignments[$s['studentId']] == $g['id']) {
+                                    $members[] = $s;
+                                }
+                            }
+                        ?>
+                            <tr>
+                                <td><strong><?php echo $g['group_name']; ?></strong></td>
+                                <td>
+                                    <?php if (empty($members)): ?>
+                                        <span class="text-muted small">Κενή ομάδα</span>
+                                    <?php else: ?>
+                                        <ul class="list-unstyled mb-0 small">
+                                            <?php foreach ($members as $m): ?>
+                                                <li>
+                                                    <?php echo "{$m['lastName']} {$m['name']}"; ?>
+                                                    <a href="index.php?action=remove_student_from_group&student_id=<?php echo $m['studentId']; ?>" class="text-danger ml-1" onclick="return confirm('Αφαίρεση μαθητή από την ομάδα;')"><i class="fa fa-times-circle"></i></a>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    public function showTaskGradesForm($task, $students, $existingGrades)
+    {
+    ?>
+        <div class="container mt-4 border p-4 bg-white shadow-sm">
+            <h3><i class="fa fa-pencil"></i> Βαθμολόγηση Εργασίας</h3>
+            <div class="alert alert-info shadow-sm">
+                <strong>Περιγραφή:</strong> <?php echo nl2br($task['task_text']); ?>
+            </div>
+            <form action="index.php?action=save_task_grades" method="post">
+                <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
+                <table class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Ονοματεπώνυμο Μαθητή</th>
+                            <th style="width: 150px;">Βαθμός</th>
+                            <th>Σχόλια / Παρατηρήσεις</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($students as $s):
+                            $stId = $s['studentId'];
+                            $grade = isset($existingGrades[$stId]) ? $existingGrades[$stId]['grade_value'] : "";
+                            $comments = isset($existingGrades[$stId]) ? $existingGrades[$stId]['teacher_comments'] : "";
+                        ?>
+                            <tr>
+                                <td class="align-middle"><?php echo $s['name'] . " " . $s['lastName']; ?></td>
+                                <td><input type="number" name="grades[<?php echo $stId; ?>]" step="0.5" min="0" max="20" class="form-control" value="<?php echo $grade; ?>" placeholder="-"></td>
+                                <td>
+                                    <textarea name="comments[<?php echo $stId; ?>]" class="form-control" rows="3" placeholder="Σχόλια..."><?php echo !empty($comments) ? htmlspecialchars($comments) : "<html>\n<body>\n\n</body>\n</html>"; ?></textarea>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary btn-lg shadow-sm"><i class="fa fa-save"></i> Αποθήκευση</button>
+                <a href="index.php?action=assign_tasks" class="btn btn-secondary btn-lg ml-2">Επιστροφή</a>
+            </form>
+        </div>
+    <?php
+    }
+
+    public function assignTasksForm($groups, $db, $booksResult = null)
+    {
+    ?>
+        <div class="container mt-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">Ανάθεση Ασκήσεων σε Ομάδα</div>
+                <div class="card-body">
+                    <form action="index.php?action=save_group_task" method="POST" enctype="multipart/form-data">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Επιλογή Ομάδας:</label>
+                                <select name="group_id" class="form-control" required>
+                                    <?php foreach ($groups as $g) echo "<option value='{$g['id']}'>{$g['group_name']}</option>"; ?>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Σύνδεση με Βιβλίο (Προαιρετικά):</label>
+                                <select name="book_id" class="form-control">
+                                    <option value="">-- Χωρίς συγκεκριμένο βιβλίο --</option>
+                                    <?php
+                                    if ($booksResult) {
+                                        $booksResult->data_seek(0);
+                                        while ($b = $booksResult->fetch_assoc()) echo "<option value='{$b['id']}'>{$b['title']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ασκήσεις / Περιγραφή:</label>
+                            <textarea name="task_text" class="form-control" rows="3" placeholder="π.χ. Κοψίνης 2: 3.13, 3.15"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Επισύναψη Αρχείου (PDF/Εικόνα):</label>
+                            <input type="file" name="task_file" class="form-control-file border p-1 bg-white w-100">
+                        </div>
+                        <button type="submit" class="btn btn-success">Αποστολή Ασκήσεων</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>Τρέχουσες Ασκήσεις ανά Ομάδα</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 30%;">Ομάδα</th>
+                            <th>Τελευταία Ανάθεση</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($groups as $g):
+                            $tasks = $db->getGroupTasks($g['id']);
+                        ?>
+                            <tr>
+                                <td><strong><?php echo $g['group_name']; ?></strong></td>
+                                <td>
+                                    <?php if (empty($tasks)): ?>
+                                        <span class="text-muted">Καμία ανάθεση</span>
+                                    <?php else:
+                                        $task = $tasks[0]; // Δείχνουμε την τελευταία για βαθμολόγηση
+                                        $bookTitle = $task['book_title'];
+                                        $taskDate = date('d/m/Y', strtotime($task['date_added']));
+                                    ?>
+                                        <?php if ($bookTitle): ?>
+                                            <span class="badge badge-dark"><?php echo $bookTitle; ?></span><br>
+                                        <?php endif; ?>
+                                        <?php echo nl2br($task['task_text']); ?>
+                                        <?php if (!empty($task['task_file'])): ?>
+                                            <div class="mt-1"><small><i class="fa fa-paperclip"></i> <?php echo $task['task_file']; ?></small></div>
+                                        <?php endif; ?>
+                                        <?php if ($taskDate): ?>
+                                            <div class="text-muted small mt-1">Ημ/νία: <?php echo $taskDate; ?></div>
+                                        <?php endif; ?>
+                                        <div class="mt-2">
+                                            <a href="index.php?action=grade_task&task_id=<?php echo $task['id']; ?>" class="btn btn-xs btn-outline-primary"><i class="fa fa-pencil"></i> Βαθμολόγηση</a>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 <?php
     }
 }

@@ -79,9 +79,266 @@ switch ($action) {
             exit();
         }
         break;
+
+    case 'myGrades':
+        $currentYear = $db->getCurrentTutorYear();
+        $students = $db->getTutorStudents($currentYear);
+?>
+        <div class="container mt-5">
+            <div class="card shadow mx-auto" style="max-width: 500px; border-radius: 15px; border: none;">
+                <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0"><i class="fa fa-graduation-cap"></i> Οι Βαθμολογίες μου</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted text-center mb-4">Επιλέξτε το όνομά σας και πληκτρολογήστε τον προσωπικό σας κωδικό.</p>
+                    <form action="index.php?action=showMyGrades" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ονοματεπώνυμο</label>
+                            <select name="student_id" class="form-select form-select-lg shadow-sm" required>
+                                <option value="">--- Επιλέξτε από τη λίστα ---</option>
+                                <?php foreach ($students as $s): ?>
+                                    <option value="<?php echo $s['studentId']; ?>"><?php echo $s['lastName'] . " " . $s['name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Προσωπικός Κωδικός</label>
+                            <input type="password" name="student_pass" class="form-control form-control-lg text-center" placeholder="••••••" maxlength="6" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm"><i class="fa fa-search"></i> Εμφάνιση Αποτελεσμάτων</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php
+        break;
+
+    case 'showMyGrades':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $studentId = $_POST['student_id'];
+            $pass = $_POST['student_pass'];
+            $currentYear = $db->getCurrentTutorYear();
+
+            if ($db->checkStudentPassword($studentId, $pass)) {
+                $grades = $db->getStudentGradesForStudent($studentId, $currentYear);
+                $students = $db->getTutorStudents($currentYear);
+                $overallAverage = $db->getStudentOverallAverage($studentId, $currentYear); // Νέα κλήση για τον μέσο όρο
+                $groupTasks = $db->getStudentGroupTasks($studentId); // Ανάκτηση εργασιών ομάδας
+                $financials = $db->getStudentFinancials($studentId); // Ανάκτηση οικονομικών
+                $fullName = "";
+                foreach ($students as $s) {
+                    if ($s['studentId'] == $studentId) $fullName = $s['name'] . " " . $s['lastName'];
+                }
+        ?>
+                <div class="container mt-4 mb-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                        <h3 class="text-primary mb-0"><i class="fa fa-user-circle"></i> <?php echo $fullName; ?></h3>
+                        <a href="index.php?action=myGrades" class="btn btn-outline-secondary btn-sm"><i class="fa fa-sign-out"></i> Έξοδος</a>
+                    </div>
+
+                    <!-- Navigation tabs για τον μαθητή -->
+                    <ul class="nav nav-pills mb-4 justify-content-center" id="studentTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="grades-tab" data-toggle="pill" href="#grades" role="tab"><i class="fa fa-star"></i> Βαθμοί (Μεζεδάκια)</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="task-grades-tab" data-toggle="pill" href="#task-grades" role="tab"><i class="fa fa-check-square-o"></i> Βαθμοί (Εργασίες)</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="tasks-tab" data-toggle="pill" href="#tasks" role="tab"><i class="fa fa-tasks"></i> Οι Εργασίες μου</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="financials-tab" data-toggle="pill" href="#financials" role="tab"><i class="fa fa-calendar-check-o"></i> Τα Μαθήματά μου</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="studentTabsContent">
+                        <!-- Tab Βαθμολογιών -->
+                        <div class="tab-pane fade show active" id="grades" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover shadow-sm align-middle">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 150px;">Μεζεδάκι</th>
+                                            <th>Βαθμός</th>
+                                            <th>Σχόλια Καθηγητή</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($grades)): ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center py-5 text-muted italic">Δεν έχουν βρεθεί ακόμα βαθμολογίες.</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <?php foreach ($grades as $g): ?>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold">#<?php echo $g['mezeNumber']; ?></div>
+                                                        <small class="text-muted"><?php echo date('d/m/Y', strtotime($g['mezeDate'])); ?></small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="badge rounded-pill bg-<?php echo $g['grade_value'] >= 10 ? 'success' : 'danger'; ?> px-3 py-2 fs-6">
+                                                            <?php echo $g['grade_value']; ?>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-wrap" style="max-width: 400px;"><?php echo !empty($g['teacher_comments']) ? $g['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="2" class="text-end py-3">Μ.Ο. ΜΕΖΕΔΑΚΙΩΝ:</th>
+                                            <th class="text-center py-3 fs-5 text-danger"><?php echo number_format($overallAverage, 2); ?></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Βαθμολογιών Εργασιών -->
+                        <div class="tab-pane fade" id="task-grades" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover shadow-sm align-middle">
+                                    <thead class="table-info">
+                                        <tr>
+                                            <th>Εργασία / Περιγραφή</th>
+                                            <th style="width: 120px;">Βαθμός</th>
+                                            <th>Σχόλια Καθηγητή</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                        $hasTaskGrades = false;
+                                        foreach ($groupTasks as $task):
+                                            if (isset($task['grade_value']) && $task['grade_value'] !== null):
+                                                $hasTaskGrades = true;
+                                        ?>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold"><?php echo htmlspecialchars($task['task_text']); ?></div>
+                                                        <small class="text-muted"><?php echo date('d/m/Y', strtotime($task['date_added'])); ?></small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="badge rounded-pill bg-<?php echo $task['grade_value'] >= 10 ? 'success' : 'danger'; ?> px-3 py-2 fs-6">
+                                                            <?php echo $task['grade_value']; ?> / 20
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-wrap" style="max-width: 400px;"><?php echo !empty($task['teacher_comments']) ? $task['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
+                                                </tr>
+                                            <?php
+                                            endif;
+                                        endforeach;
+
+                                        if (!$hasTaskGrades): ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center py-5 text-muted italic">Δεν έχουν βρεθεί ακόμα βαθμολογίες για εργασίες.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab Εργασιών -->
+                        <div class="tab-pane fade" id="tasks" role="tabpanel">
+                            <?php if (!empty($groupTasks)): ?>
+                                <div class="list-group shadow-sm">
+                                    <div class="list-group-item bg-info text-white">
+                                        <h5 class="mb-0"><i class="fa fa-book"></i> Αναθέσεις για την ομάδα: <?php echo $groupTasks[0]['group_name']; ?></h5>
+                                    </div>
+                                    <?php foreach ($groupTasks as $task): ?>
+                                        <div class="list-group-item">
+                                            <?php if (!empty($task['book_title'])): ?>
+                                                <span class="badge badge-dark mb-2"><?php echo $task['book_title']; ?></span>
+                                            <?php endif; ?>
+
+                                            <p class="mb-1 h5 text-dark"><?php echo nl2br($task['task_text']); ?></p>
+
+                                            <?php if (isset($task['grade_value']) && $task['grade_value'] !== null): ?>
+                                                <div class="mt-2 mb-2">
+                                                    <span class="badge badge-success px-3 py-2" style="font-size: 0.9rem;">Βαθμός: <?php echo $task['grade_value']; ?> / 20</span>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($task['task_file'])): ?>
+                                                <div class="mt-2">
+                                                    <a href="uploads/tasks/<?php echo $task['task_file']; ?>" target="_blank" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fa fa-file-pdf-o"></i> Προβολή Αρχείου / PDF
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <small class="text-muted d-block mt-2"><i class="fa fa-calendar"></i> Ημερομηνία ανάθεσης: <?php echo date('d/m/Y', strtotime($task['date_added'])); ?></small>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="alert alert-light border text-center py-4">
+                                    <i class="fa fa-info-circle fa-2x text-muted mb-2"></i>
+                                    <p class="mb-0">Δεν υπάρχουν καταχωρημένες εργασίες για την ομάδα σου αυτή τη στιγμή.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Tab Οικονομικών -->
+                        <div class="tab-pane fade" id="financials" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-6 mx-auto text-center">
+                                    <div class="alert <?php echo $financials['balance'] > 0 ? 'alert-danger' : 'alert-success'; ?> shadow-sm">
+                                        <h6 class="mb-1">
+                                            Μαθήματα μέχρι σήμερα
+                                            <?php if (!empty($financials['items'])) echo " (" . count($financials['items']) . " μαθήματα)"; ?>
+                                        </h6>
+                                        <!-- <h4 class="mb-0 font-weight-bold"><?php echo number_format($financials['balance'], 2); ?> €</h4> -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover shadow-sm align-middle">
+                                    <thead class="table-warning">
+                                        <tr>
+                                            <th style="width: 50px;">#</th>
+                                            <th>Ημερομηνία</th>
+                                            <th>Περιγραφή</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($financials['items'])): ?>
+                                            <tr>
+                                                <td colspan="3" class="text-center py-5 text-success italic">Δεν υπάρχουν εκκρεμή μαθήματα.</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <?php
+                                            $idx = 1;
+                                            foreach ($financials['items'] as $item): ?>
+                                                <tr>
+                                                    <td class="text-muted small"><?php echo $idx++; ?></td>
+                                                    <td class="font-weight-bold"><?php echo date('d/m/Y', strtotime($item['date'])); ?></td>
+                                                    <td>
+                                                        <span class="badge badge-primary px-3 py-2">Μάθημα</span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="small text-muted mt-3 italic text-center"><i class="fa fa-info-circle"></i> Εμφανίζονται μόνο οι ημερομηνίες των μαθημάτων που δεν έχουν εξοφληθεί ακόμα.</p>
+                        </div>
+                    </div>
+                </div>
+        <?php
+            } else {
+                echo "<div class='container mt-5 text-center'><div class='alert alert-danger d-inline-block px-5 shadow'><h4><i class='fa fa-exclamation-triangle'></i> Λάθος Κωδικός</h4><p>Παρακαλώ προσπαθήστε ξανά.</p><hr><a href='index.php?action=myGrades' class='btn btn-danger'>Επιστροφή</a></div></div>";
+            }
+        }
+        break;
+
     case 'home':
     default:
-?>
+        ?>
 
 
 
@@ -1289,9 +1546,8 @@ J <- 1
 ?>
 <!--</div>-->
 <footer>
-    <div class="container">Αντώνης Χουβαρδάς 2021-22.
-        <p>Όποιος θέλει μπορεί ελεύθερα να το μοιράσει,
-            να το αλλάξει, να το παρουσιάσει σαν δικό του</p>
+    <div class="container">Αντώνης Χουβαρδάς 2021-26.
+
     </div>
 </footer>
 </body>

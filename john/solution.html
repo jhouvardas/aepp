@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Λύση Μεζεδακίου #16</title>
+    <base href="../">
+    <title>Λύση Μεζεδακίου #17</title>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -85,48 +86,82 @@
 
         <div class="preview-box">
             <div class="html-content-wrapper" contenteditable="true">
-                <h5 class="text-success mb-3"><i class="fa fa-check-square-o"></i> Απαντήσεις Συμπλήρωσης (Β1)</h5>
-                <ul class="list-group mb-4 shadow-sm">
-                    <li class="list-group-item"><strong>(1):</strong> 2</li>
-                    <li class="list-group-item"><strong>(2):</strong> ΨΕΥΔΗΣ</li>
-                    <li class="list-group-item"><strong>(3):</strong> i ← i + 1</li>
-                    <li class="list-group-item"><strong>(4):</strong> &gt;</li>
-                    <li class="list-group-item"><strong>(5):</strong> ΑΛΗΘΗΣ</li>
-                </ul>
+                <h4 class="text-success mb-3 border-bottom pb-2"><i class="fa fa-code"></i> Λύση σε ΓΛΩΣΣΑ</h4>
 
-                <h5 class="text-success mb-3"><i class="fa fa-code"></i> Κωδικοποίηση σε ΓΛΩΣΣΑ (Β2)</h5>
-                <p class="fw-bold">Λύση με ΜΕΧΡΙΣ_ΟΤΟΥ:</p>
                 <pre class="aepp-code">
-ΔΙΑΒΑΣΕ Σ
-ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
-  ΔΙΑΒΑΣΕ Α
-  ΑΝ Α <> 0 ΤΟΤΕ
-    Σ ← Σ + Α
+ΠΡΟΓΡΑΜΜΑ Καφετέρια
+ΜΕΤΑΒΛΗΤΕΣ
+  ΑΚΕΡΑΙΕΣ: π[16], i, j, αρΤραπ
+  ΠΡΑΓΜΑΤΙΚΕΣ: λογ[16, 5], συνΛογ
+  ΛΟΓΙΚΕΣ: βρΑ, βρΓ, έχειΜηδέν
+ΑΡΧΗ
+
+  ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 16
+    ΓΡΑΨΕ 'Δώσε πλήθος ατόμων για το τραπέζι ', i, ':'
+    ΔΙΑΒΑΣΕ π[i]
+    ΟΣΟ π[i] < 0 Η π[i] > 5 ΕΠΑΝΑΛΑΒΕ
+      ΓΡΑΨΕ 'Λάθος τιμή. Δώσε αριθμό ατόμων από 0 έως 5:'
+      ΔΙΑΒΑΣΕ π[i]
+    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+    ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ π[i]
+      ΓΡΑΨΕ 'Λογαριασμός ατόμου ', j, ' στο τραπέζι ', i, ':'
+      ΔΙΑΒΑΣΕ λογ[i, j]
+      ΟΣΟ λογ[i, j] < 0 ΕΠΑΝΑΛΑΒΕ
+        ΓΡΑΨΕ 'Λάθος. Δώσε μη αρνητικό ποσό:'
+        ΔΙΑΒΑΣΕ λογ[i, j]
+      ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+
+  ΓΡΑΨΕ 'α. Τραπέζια χωρίς άτομα:'
+  βρΑ <- ΨΕΥΔΗΣ
+  ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 16
+    ΑΝ π[i] = 0 ΤΟΤΕ
+      ΓΡΑΨΕ 'Τραπέζι ', i
+      βρΑ <- ΑΛΗΘΗΣ
+    ΤΕΛΟΣ_ΑΝ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΑΝ βρΑ = ΨΕΥΔΗΣ ΤΟΤΕ
+    ΓΡΑΨΕ 'Δεν υπάρχουν τραπέζια χωρίς άτομα.'
   ΤΕΛΟΣ_ΑΝ
-ΜΕΧΡΙΣ_ΟΤΟΥ Α = 0
-ΕΜΦΑΝΙΣΕ Σ</pre>
 
-                <p class="fw-bold mt-4">Εναλλακτική λύση με ΟΣΟ...ΕΠΑΝΑΛΑΒΕ (χωρίς ΑΝ):</p>
-                <pre class="aepp-code">
-ΔΙΑΒΑΣΕ Σ
-ΔΙΑΒΑΣΕ Α
-ΟΣΟ Α <> 0 ΕΠΑΝΑΛΑΒΕ
-  Σ ← Σ + Α
-  ΔΙΑΒΑΣΕ Α
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΕΜΦΑΝΙΣΕ Σ</pre>
+  ΓΡΑΨΕ 'β. Συνολικός λογαριασμός τραπεζιού:'
+  ΓΡΑΨΕ 'Δώσε αριθμό τραπεζιού (1-16):'
+  ΔΙΑΒΑΣΕ αρΤραπ
+  ΟΣΟ αρΤραπ < 1 Η αρΤραπ > 16 ΕΠΑΝΑΛΑΒΕ
+    ΓΡΑΨΕ 'Λάθος αριθμός. Δώσε από 1 έως 16:'
+    ΔΙΑΒΑΣΕ αρΤραπ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
 
-                <h5 class="text-success mt-4 mb-3"><i class="fa fa-info-circle"></i> Επεξήγηση Διαγράμματος
-                    (Διαδραστικό)</h5>
-                <div class="text-center mb-4">
-                    <div class="interactive-flowchart border rounded p-2 bg-white shadow-sm">
-                        <img src="../images/mezedakia/diagrammaMez016.png" class="img-fluid" alt="Διάγραμμα Ροής #16">
+  συνΛογ <- 0.0
+  ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ π[αρΤραπ]
+    συνΛογ <- συνΛογ + λογ[αρΤραπ, j]
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+  ΓΡΑΨΕ 'Ο συνολικός λογαριασμός του τραπεζιού ', αρΤραπ, ' είναι: ', συνΛογ
 
-                        <!-- Παράδειγμα Hotspot για τον ρόμβο A=0 -->
-                        <div class="flowchart-hotspot" style="top: 48%; left: 24%; width: 17%; height: 16%;"
-                            title="Συνθήκη τερματισμού: Ελέγχεται αν ο αριθμός είναι μηδέν."></div>
-                    </div>
-                </div>
+  ΓΡΑΨΕ 'γ. Τραπέζια με 5 άτομα και τουλάχιστον έναν μηδενικό λογαριασμό:'
+  βρΓ <- ΨΕΥΔΗΣ
+  ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 16
+    ΑΝ π[i] = 5 ΤΟΤΕ
+      έχειΜηδέν <- ΨΕΥΔΗΣ
+      ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 5
+        ΑΝ λογ[i, j] = 0 ΤΟΤΕ
+          έχειΜηδέν <- ΑΛΗΘΗΣ
+        ΤΕΛΟΣ_ΑΝ
+      ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+      ΑΝ έχειΜηδέν = ΑΛΗΘΗΣ ΤΟΤΕ
+        ΓΡΑΨΕ 'Τραπέζι ', i
+        βρΓ <- ΑΛΗΘΗΣ
+      ΤΕΛΟΣ_ΑΝ
+    ΤΕΛΟΣ_ΑΝ
+  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
+
+  ΑΝ βρΓ = ΨΕΥΔΗΣ ΤΟΤΕ
+    ΓΡΑΨΕ 'Δεν βρέθηκε τέτοιο τραπέζι.'
+  ΤΕΛΟΣ_ΑΝ
+
+ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
+                </pre>
             </div>
         </div>
     </div>
@@ -142,24 +177,40 @@
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(finalHtml).then(() => {
                     showSuccess();
+                }).catch(() => {
+                    fallbackCopy(finalHtml);
                 });
             } else {
-                const textArea = document.createElement("textarea");
-                textArea.value = finalHtml;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showSuccess();
+                fallbackCopy(finalHtml);
             }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
+            }
+            document.body.removeChild(textArea);
         }
 
         function showSuccess() {
             const btn = document.querySelector('.btn-success');
+            if (!btn) return;
+
             const originalContent = btn.innerHTML;
+
             btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+            btn.classList.replace('btn-success', 'btn-light');
+
             setTimeout(() => {
                 btn.innerHTML = originalContent;
+                btn.classList.replace('btn-light', 'btn-success');
             }, 2000);
         }
     </script>

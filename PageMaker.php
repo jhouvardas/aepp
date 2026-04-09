@@ -45,6 +45,11 @@ class PageMaker
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link text-info font-weight-bold" href="index.php?action=myGrades">
+                                <i class="fa fa-graduation-cap"></i> Βαθμοί & Εργασίες
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="index.php#max">Μεγαλύτερος</a>
                         </li>
                         <li class="nav-item">
@@ -478,7 +483,7 @@ class PageMaker
                             <?php endif; ?>
 
                             <div class="meze-text px-1">
-                                <?php echo $row['mezeText']; ?>
+                                <?php echo str_replace('src="../images/', 'src="images/', $row['mezeText']); ?>
                             </div>
 
                             <?php if (!empty($row['mezeHints'])): ?>
@@ -544,7 +549,7 @@ class PageMaker
                                                     <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success">
                                                 </div>
                                             <?php endif; ?>
-                                            <div class="solution-text"><?php echo $row['mezeSolution']; ?></div>
+                                            <div class="solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
                                         </div>
                                     </div>
                                 </div>

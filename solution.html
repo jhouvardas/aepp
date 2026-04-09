@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Λύση Θέματος Δ - 2015</title>
+  <title>Λύση Θεμάτων Α5, Β1, Β2</title>
   <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
@@ -110,53 +110,43 @@
     <div class="container mt-4">
       <!-- Προσθήκη contenteditable για επεξεργασία της λύσης στον browser -->
       <div class="solution-container" contenteditable="true">
-        <h4 class="solution-title"><i class="fa fa-check-square-o"></i> Απαντήσεις Συμπλήρωσης (Β1)</h4>
-        <ul class="list-group mb-4 shadow-sm">
-          <li class="list-group-item"><strong>(1):</strong> 2</li>
-          <li class="list-group-item"><strong>(2):</strong> ΨΕΥΔΗΣ</li>
-          <li class="list-group-item"><strong>(3):</strong> i ← i + 1</li>
-          <li class="list-group-item"><strong>(4):</strong> &gt;</li>
-          <li class="list-group-item"><strong>(5):</strong> ΑΛΗΘΗΣ</li>
+        <h4 class="solution-title"><i class="fa fa-check-square-o"></i> Απαντήσεις Θέμα Α5</h4>
+        <p><strong>Α5. α.</strong></p>
+        <ol>
+          <li><code>Χ ← Χ + 2</code></li>
+          <li><code>Υ ← (Κ + Λ + Μ) / 3</code></li>
+          <li><code>Α MOD 10 = 5</code></li>
+          <li><code>Β >= 10 ΚΑΙ Β <= 99</code></li>
+        </ol>
+
+        <p><strong>Α5. β.</strong></p>
+        <ol>
+          <li>Η εντολή που δεν θα εκτελεστεί: <code>Γράψε 2</code></li>
+          <li>Διαστήματα:
+            <ul>
+              <li><code>Γράψε 1</code>: Χ > 15</li>
+              <li><code>Γράψε 3</code>: Χ <= 15</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4 class="solution-title mt-4"><i class="fa fa-code"></i> Λύση Θέμα Β1 (Για)</h4>
+        <pre class="aepp-code">
+Αν x > 1 τότε
+  Για y από x - 2 μέχρι -1 με_βήμα -2
+    Εμφάνισε y
+  Τέλος_επανάληψης
+Τέλος_αν</pre>
+
+        <h4 class="solution-title mt-4"><i class="fa fa-list-ol"></i> Απαντήσεις Θέμα Β2</h4>
+        <ul class="list-group shadow-sm">
+          <li class="list-group-item"><strong>(1):</strong> 1</li>
+          <li class="list-group-item"><strong>(2):</strong> 2</li>
+          <li class="list-group-item"><strong>(3):</strong> 100</li>
+          <li class="list-group-item"><strong>(4):</strong> i</li>
+          <li class="list-group-item"><strong>(5):</strong> ></li>
+          <li class="list-group-item"><strong>(6):</strong> i - 1</li>
         </ul>
-
-        <h4 class="solution-title mt-4"><i class="fa fa-code"></i> Κωδικοποίηση σε ΓΛΩΣΣΑ (Β2)</h4>
-        <p class="fw-bold">Λύση με ΜΕΧΡΙΣ_ΟΤΟΥ:</p>
-        <pre class="aepp-code">
-ΔΙΑΒΑΣΕ Χ
-Σ ← 0
-Π ← 1
-ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
-  Δ ← Χ MOD 10
-  Σ ← Σ + Δ
-  Π ← Π * Δ
-  Χ ← Χ DIV 10
-ΜΕΧΡΙΣ_ΟΤΟΥ Χ = 0
-ΓΡΑΨΕ Σ, Π</pre>
-
-        <p class="fw-bold mt-4">Εναλλακτική λύση με ΟΣΟ...ΕΠΑΝΑΛΑΒΕ (χωρίς ΑΝ):</p>
-        <pre class="aepp-code">
-ΔΙΑΒΑΣΕ Χ
-Σ ← 0
-Π ← 1
-ΟΣΟ Χ > 0 ΕΠΑΝΑΛΑΒΕ
-  Δ ← Χ MOD 10
-  Σ ← Σ + Δ
-  Π ← Π * Δ
-  Χ ← Χ DIV 10
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΓΡΑΨΕ Σ, Π</pre>
-
-        <h4 class="solution-title mt-4"><i class="fa fa-info-circle"></i> Επεξήγηση Διαγράμματος (Διαδραστικό)</h4>
-        <div class="text-center mb-4">
-          <div class="interactive-flowchart border rounded p-2 bg-white shadow-sm">
-            <img src="images/mezedakia/diagrammaMez016.png" class="img-fluid" alt="Διάγραμμα Ροής #16">
-
-            <!-- Παράδειγμα Hotspot για τον ρόμβο X>0 -->
-            <div class="flowchart-hotspot" style="top: 48%; left: 24%; width: 17%; height: 16%;"
-              title="Συνθήκη επανάληψης: Ελέγχεται αν ο αριθμός είναι μεγαλύτερος του μηδέν."></div>
-            <!-- Προσθέστε περισσότερα hotspots εδώ -->
-          </div>
-        </div>
       </div>
     </div>
   </div>

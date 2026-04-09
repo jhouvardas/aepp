@@ -1168,13 +1168,15 @@ class TheoryMaker
                             $hasImage = !empty($row['question_image']);
                         ?>
                             <li class="mb-4">
-                                <div class="d-flex align-items-start">
+                                <div>
                                     <a data-toggle="collapse" data-target="#<?php echo $collapseId; ?>"
                                         class="text-dark w-100"
                                         style="cursor:pointer; text-decoration:none;">
 
                                         <?php if ($hasText): ?>
-                                            <div class="mb-1"><?php echo $qText; ?></div>
+                                            <div class="mb-1">
+                                                <?php echo $qText; ?>
+                                            </div>
                                         <?php endif; ?>
 
                                         <?php if ($hasImage): ?>

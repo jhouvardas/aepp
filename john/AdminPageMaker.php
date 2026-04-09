@@ -101,6 +101,16 @@ class AdminPageMaker extends PageMaker
                         <li class="nav-item">
                             <a class="nav-link" href="index.php?action=list_for_test">Δημιουργία Τεστ</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-info" href="index.php?action=assign_tasks">
+                                <i class="fa fa-tasks"></i> Ανάθεση Εργασιών
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?action=manage_groups">
+                                <i class="fa fa-users"></i> Διαχείριση Ομάδων
+                            </a>
+                        </li>
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-warning" href="#" id="mezedakiaDrop" data-toggle="dropdown">

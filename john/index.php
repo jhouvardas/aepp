@@ -54,14 +54,16 @@
         case 'save_book':
             if (isset($_POST['book_title'])) {
                 $db->insertBook($_POST['book_title']);
-                header("Location: index.php?action=manage_books"); // Refresh για να φανεί το νέο
+                echo "<script>window.location.href='index.php?action=manage_books';</script>";
+                exit();
             }
             break;
 
         case 'delete_book':
             if (isset($_GET['id'])) {
                 $db->deleteBook($_GET['id']);
-                header("Location: index.php?action=manage_books");
+                echo "<script>window.location.href='index.php?action=manage_books';</script>";
+                exit();
             }
             break;
 
@@ -88,14 +90,16 @@
                     $_FILES['q_image'], // Προσθήκη αρχείου ερώτησης
                     $_FILES['a_image']  // Προσθήκη αρχείου απάντησης
                 );
-                header("Location: index.php?action=list_theory");
+                echo "<script>window.location.href='index.php?action=list_theory';</script>";
+                exit();
             }
             break;
 
         case 'delete_theory':
             if (isset($_GET['id'])) {
                 $db->deleteTheoryQuestion($_GET['id']);
-                header("Location: index.php?action=list_theory");
+                echo "<script>window.location.href='index.php?action=list_theory';</script>";
+                exit();
             }
             break;
 
@@ -155,7 +159,8 @@
         case 'deleteKena':
             if (isset($_GET['id'])) {
                 $db->deleteKena($_GET['id']);
-                header("Location: index.php?action=listKena");
+                echo "<script>window.location.href='index.php?action=listKena';</script>";
+                exit();
             }
             break;
 
@@ -180,7 +185,8 @@
             if (isset($_GET['id'])) {
                 $db->deleteThemaG($_GET['id']);
             }
-            header("Location: index.php?action=listThemaG");
+            echo "<script>window.location.href='index.php?action=listThemaG';</script>";
+            exit();
             break;
 
         case 'saveMezedaki':
@@ -245,10 +251,11 @@
 
                 <head>
                     <meta charset="UTF-8">
+                    <base href="../">
                     <title>Προεπισκόπηση Μεζεδακίου #<?php echo $meze['mezeNumber']; ?></title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-                    <link rel="stylesheet" href="../aepp.css">
+                    <link rel="stylesheet" href="aepp.css">
                     <style>
                         body {
                             background-color: #f8f9fa;
@@ -275,7 +282,7 @@
                                 <h4 class="text-primary mb-3"><i class="fa fa-file-text-o"></i> Εκφώνηση</h4>
                                 <?php if (!empty($meze['mezeImage'])): ?>
                                     <div class="text-center mb-3">
-                                        <img src="../images/mezedakia/<?php echo $meze['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-height: 400px;">
+                                        <img src="images/mezedakia/<?php echo $meze['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-height: 400px;">
                                     </div>
                                 <?php endif; ?>
                                 <div class="html-content-wrapper p-3 border rounded bg-white">
@@ -299,7 +306,7 @@
                                 <div class="p-3 border border-success rounded bg-light shadow-sm">
                                     <?php if (!empty($meze['mezeSolutionImage'])): ?>
                                         <div class="text-center mb-3">
-                                            <img src="../images/mezedakia/<?php echo $meze['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success" style="max-height: 400px;">
+                                            <img src="images/mezedakia/<?php echo $meze['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success" style="max-height: 400px;">
                                         </div>
                                     <?php endif; ?>
                                     <div class="solution-text">
@@ -464,6 +471,62 @@
                 $db->toggleMezeLock($_GET['id'], $_GET['status']);
                 echo "<script>window.location.href='index.php?action=listMezedakia';</script>";
                 exit();
+            }
+            break;
+
+        case 'manage_groups':
+            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $groups = $db->getGroups($uYear);
+            $students = $db->getTutorStudents($uYear);
+            $assignments = $db->getAssignedStudents();
+            $fm->manageGroupsForm($groups, $students, $db, $assignments);
+            break;
+
+        case 'assign_tasks':
+            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $groups = $db->getGroups($uYear);
+            $books = $db->getTheoryBooks();
+            $fm->assignTasksForm($groups, $db, $books);
+            break;
+
+        case 'save_group':
+            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $db->createGroup($_POST['group_name'], $uYear);
+            echo "<script>window.location.href='index.php?action=manage_groups';</script>";
+            break;
+
+        case 'add_student_to_group':
+            $db->addStudentToGroup($_POST['student_id'], $_POST['group_id']);
+            echo "<script>window.location.href='index.php?action=manage_groups';</script>";
+            break;
+
+        case 'save_group_task':
+            $db->saveGroupTask($_POST['group_id'], $_POST['task_text'], $_POST['book_id'], $_FILES['task_file']);
+            echo "<script>window.location.href='index.php?action=assign_tasks';</script>";
+            break;
+
+        case 'remove_student_from_group':
+            if (isset($_GET['student_id'])) {
+                $db->removeStudentFromGroup($_GET['student_id']);
+            }
+            echo "<script>window.location.href='index.php?action=manage_groups';</script>";
+            break;
+
+        case 'grade_task':
+            if (isset($_GET['task_id'])) {
+                $task = $db->getTaskById($_GET['task_id']);
+                $students = $db->getStudentsByGroupId($task['group_id']);
+                $grades = $db->getTaskGrades($_GET['task_id']);
+                $fm->showTaskGradesForm($task, $students, $grades);
+            }
+            break;
+
+        case 'save_task_grades':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                foreach ($_POST['grades'] as $stId => $grade) {
+                    if ($grade !== "") $db->saveTaskGrade($_POST['task_id'], $stId, $grade, $_POST['comments'][$stId]);
+                }
+                echo "<script>window.location.href='index.php?action=assign_tasks';</script>";
             }
             break;
 

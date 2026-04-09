@@ -39,8 +39,6 @@
     /* Εσωτερικό περιθώριο */
     margin: 0 2px;
     /* Εξωτερικό περιθώριο */
-    border-bottom: 2px solid #000;
-    /* Η μαύρη γραμμή από κάτω */
     background-color: #f8f9fa;
     /* Ελαφρύ γκρι φόντο */
     color: #1a73e8;
@@ -150,4 +148,23 @@
     border-color: #28a745;
     background-color: rgba(40, 167, 69, 0.1);
     box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);
+}
+
+/* Διόρθωση για τις μονάδες στα κινητά (για τα υπάρχοντα μεζεδάκια στη βάση) */
+@media (max-width: 576px) {
+
+    .meze-text .d-flex,
+    .meze-text .justify-content-between,
+    .question-block .d-flex {
+        display: block !important;
+    }
+}
+
+/* Διόρθωση για τις μονάδες στα κινητά (για τα υπάρχοντα μεζεδάκια στη βάση) */
+@media (max-width: 576px) {
+
+    .meze-text .d-flex,
+    .meze-text .justify-content-between {
+        display: block !important;
+    }
 }

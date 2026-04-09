@@ -18,6 +18,57 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function getTaskById($taskId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_group_tasks WHERE id = ?");
+        $stmt->bind_param("i", $taskId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    public function getStudentsByGroupId($groupId)
+    {
+        $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+        $allTutorStudents = $this->getTutorStudents($userYear);
+
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT student_id FROM aepp_student_groups WHERE group_id = ?");
+        $stmt->bind_param("i", $groupId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $groupIds = [];
+        while ($row = $res->fetch_assoc()) $groupIds[] = $row['student_id'];
+
+        $groupStudents = [];
+        foreach ($allTutorStudents as $ts) {
+            if (in_array($ts['studentId'], $groupIds)) $groupStudents[] = $ts;
+        }
+        return $groupStudents;
+    }
+
+    public function getTaskGrades($taskId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_task_grades WHERE task_id = ?");
+        $stmt->bind_param("i", $taskId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $grades = [];
+        while ($row = $res->fetch_assoc()) $grades[$row['student_id']] = $row;
+        return $grades;
+    }
+
+    public function saveTaskGrade($taskId, $studentId, $grade, $comments)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_task_grades (task_id, student_id, grade_value, teacher_comments) 
+                                VALUES (?, ?, ?, ?) 
+                                ON DUPLICATE KEY UPDATE grade_value = VALUES(grade_value), teacher_comments = VALUES(teacher_comments)");
+        $stmt->bind_param("iids", $taskId, $studentId, $grade, $comments);
+        return $stmt->execute();
+    }
+
     // Σημείωση: Η saveTheory() κάνει το ίδιο με την insertTheoryItem, 
     // οπότε μπορείς να κρατήσεις μόνο μία από τις δύο για να είναι καθαρός ο κώδικας.
 
@@ -322,40 +373,6 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
-    public function addMezedakiForm()
-    {
-?>
-        <div class="container mt-4 border p-4 bg-light shadow">
-            <h3><i class="fa fa-coffee"></i> Νέο Μεζεδάκι</h3>
-            <form action="index.php?action=saveMezedaki" method="post" enctype="multipart/form-data">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label>Αριθμός Μεζεδακίου</label>
-                        <input type="number" name="mezeNumber" class="form-control" placeholder="π.χ. 1" required>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Ημερομηνία Εμφάνισης</label>
-                        <input type="date" name="mezeDate" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Κείμενο / Κώδικας (HTML/Bootstrap)</label>
-                    <textarea name="mezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Φωτογραφία (Προαιρετικά)</label>
-                    <input type="file" name="mezeImage" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
-                    <textarea name="mezeSolution" class="form-control" rows="4" placeholder="Γράψε τη λύση εδώ..."></textarea>
-                </div>
-                <button type="submit" class="btn btn-warning btn-block font-weight-bold">Αποθήκευση Μεζεδακίου</button>
-            </form>
-        </div>
-<?php
-    }
-
     public function deleteMezedaki($id)
     {
         $conn = $this->connectToFamilyDB();
@@ -402,9 +419,9 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $solImageName);
         }
 
-        // Προσθήκη του mezeSolutionImage στα πεδία
-        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeSolution, mezeSolutionImage) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("issssss", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $imageName, $data['mezeText'], $data['mezeSolution'], $solImageName);
+        // Προσθήκη mezeHints (χωρίς points)
+        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssssss", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $imageName, $data['mezeText'], $data['mezeHints'], $data['mezeSolution'], $solImageName);
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();
@@ -471,7 +488,6 @@ class AdminDbHandler extends DbHandler
 
         $stmt = $conn->prepare($sql);
 
-        // Προστέθηκε ένα "s" για το mezeHints. Σύνολο: i s s s s s s s i
         $stmt->bind_param(
             "isssssssi",
             $data['mezeNumber'],
@@ -793,6 +809,123 @@ class AdminDbHandler extends DbHandler
         }
 
         $stmt->bind_param("ii", $status, $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    // --- GROUP MANAGEMENT ---
+
+    public function createGroup($name, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_groups (group_name, user_year) VALUES (?, ?)");
+        $stmt->bind_param("ss", $name, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getGroups($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_groups WHERE user_year = ? ORDER BY group_name ASC");
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $groups = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return $groups;
+    }
+
+    public function addStudentToGroup($studentId, $groupId)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Πρώτα καθαρίζουμε παλιές ομάδες αν θέλεις ο μαθητής να ανήκει μόνο σε μία
+        $stmtDel = $conn->prepare("DELETE FROM aepp_student_groups WHERE student_id = ?");
+        $stmtDel->bind_param("i", $studentId);
+        $stmtDel->execute();
+
+        $stmt = $conn->prepare("INSERT INTO aepp_student_groups (student_id, group_id) VALUES (?, ?)");
+        $stmt->bind_param("ii", $studentId, $groupId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function saveGroupTask($groupId, $taskText, $bookId = null, $taskFile = null)
+    {
+        $taskFileName = $this->uploadTaskFile($taskFile);
+        $bookId = !empty($bookId) ? $bookId : null;
+
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_group_tasks (group_id, task_text, book_id, task_file) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("isis", $groupId, $taskText, $bookId, $taskFileName);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    private function uploadTaskFile($file)
+    {
+        if (isset($file) && $file['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = '../uploads/tasks/';
+            if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
+            $fileName = time() . '_task_' . basename($file['name']);
+            if (move_uploaded_file($file['tmp_name'], $uploadDir . $fileName)) {
+                return $fileName;
+            }
+        }
+        return null;
+    }
+
+    public function getGroupTasks($groupId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT gt.*, b.title as book_title FROM aepp_group_tasks gt 
+                LEFT JOIN theory_books b ON gt.book_id = b.id 
+                WHERE gt.group_id = ? ORDER BY gt.date_added DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $groupId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getStudentGroupId($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT group_id FROM aepp_student_groups WHERE student_id = ?");
+        $stmt->bind_param("i", $studentId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        $conn->close();
+        return $row ? $row['group_id'] : null;
+    }
+
+    public function getAssignedStudents()
+    {
+        $conn = $this->connectToFamilyDB();
+        $result = $conn->query("SELECT student_id, group_id FROM aepp_student_groups");
+        $assignments = [];
+        while ($row = $result->fetch_assoc()) {
+            $assignments[$row['student_id']] = $row['group_id'];
+        }
+        $conn->close();
+        return $assignments;
+    }
+
+    public function removeStudentFromGroup($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM aepp_student_groups WHERE student_id = ?");
+        $stmt->bind_param("i", $studentId);
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();

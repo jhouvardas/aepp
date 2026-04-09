@@ -19,6 +19,17 @@ class DbHandler
         return $conn;
     }
 
+    private function connectToTutorDB()
+    {
+        $servername = "jhouv.eu";
+        $username = "jhouvardas";
+        $password = "Jhouv@1957";
+        $dbname = "tutor";
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        mysqli_set_charset($conn, "utf8");
+        return ($conn->connect_error) ? null : $conn;
+    }
+
     public function login($username, $password)
     {
         $conn = $this->connectToFamilyDB();
@@ -391,16 +402,8 @@ class DbHandler
 
     public function getTutorStudents($userYear)
     {
-        // Στοιχεία σύνδεσης για τη βάση tutor
-        $servername = "jhouv.eu";
-        $username = "jhouvardas";
-        $password = "Jhouv@1957";
-        $dbname = "tutor";
-
-        $connTutor = new mysqli($servername, $username, $password, $dbname);
-        mysqli_set_charset($connTutor, "utf8");
-
-        if ($connTutor->connect_error) {
+        $connTutor = $this->connectToTutorDB();
+        if (!$connTutor) {
             return false;
         }
 
@@ -494,8 +497,8 @@ class DbHandler
     // Μέθοδος για έλεγχο password (στη βάση tutor)
     public function checkStudentPassword($studentId, $password)
     {
-        $conn = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
-
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
         // Προσθέτουμε το trim για ασφάλεια
         $password = trim($password);
 
@@ -514,12 +517,8 @@ class DbHandler
 
     public function getCurrentTutorYear()
     {
-        $connTutor = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
-        mysqli_set_charset($connTutor, "utf8");
-
-        if ($connTutor->connect_error) {
-            return "jhouv2026";
-        }
+        $connTutor = $this->connectToTutorDB();
+        if (!$connTutor) return "jhouv2026";
 
         $sql = "SELECT username FROM user ORDER BY id DESC LIMIT 1";
         $result = $connTutor->query($sql);
@@ -640,5 +639,144 @@ class DbHandler
 
         $conn->close();
         return true;
+    }
+
+    public function getStudentGradesForStudent($studentId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT g.grade_value, g.teacher_comments, m.mezeNumber, m.mezeDate 
+            FROM meze_grades g 
+            JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
+            WHERE g.student_id = ? AND g.user_year = ? 
+            ORDER BY m.mezeNumber DESC";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $studentId, $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $grades = [];
+        while ($row = $result->fetch_assoc()) {
+            $grades[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $grades;
+    }
+
+    public function getStudentOverallAverage($studentId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT AVG(g.grade_value) as overall_average
+                FROM meze_grades g
+                WHERE g.student_id = ? AND g.user_year = ?";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $studentId, $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+
+        $overallAverage = $row['overall_average'] ? round($row['overall_average'], 2) : 0;
+        $stmt->close();
+        $conn->close();
+        return $overallAverage;
+    }
+
+    public function getStudentGroupTasks($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT gt.id as task_id, gt.task_text, gt.task_file, gt.date_added, g.group_name, b.title as book_title,
+                       tg.grade_value, tg.teacher_comments
+                FROM aepp_group_tasks gt
+                JOIN aepp_student_groups sg ON gt.group_id = sg.group_id
+                JOIN aepp_groups g ON gt.group_id = g.id
+                LEFT JOIN theory_books b ON gt.book_id = b.id
+                LEFT JOIN aepp_task_grades tg ON gt.id = tg.task_id AND tg.student_id = ?
+                WHERE sg.student_id = ? ORDER BY gt.date_added DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $studentId, $studentId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Ανακτά μαθήματα και απουσίες από τη βάση tutor για τον υπολογισμό διδάκτρων.
+     */
+    public function getStudentFinancials($studentId)
+    {
+        $connTutor = $this->connectToTutorDB();
+        if (!$connTutor) return ['items' => [], 'balance' => 0, 'totalPaid' => 0];
+
+        // 1. Λήψη της ωριαίας τιμής (rate) του μαθητή από τον πίνακα student
+        $sqlRate = "SELECT paying FROM student WHERE studentId = ?";
+        $stmtR = $connTutor->prepare($sqlRate);
+        $stmtR->bind_param("i", $studentId);
+        $stmtR->execute();
+        $resRate = $stmtR->get_result()->fetch_assoc();
+        // Αν η τιμή είναι 1€ ή λιγότερο, χρησιμοποιούμε τα 10€ ως σωστή χρέωση
+        $rate = ($resRate && (float)$resRate['paying'] > 1) ? (float)$resRate['paying'] : 10.0;
+        $stmtR->close();
+
+        // 2. Λήψη μαθημάτων ΚΑΙ πληρωμών από τον πίνακα lesson
+        $sqlEntries = "SELECT date, duration, payment as amount, type FROM lesson WHERE studentId = ? ORDER BY date ASC";
+        $stmtL = $connTutor->prepare($sqlEntries);
+        $stmtL->bind_param("i", $studentId);
+        $stmtL->execute();
+        $allEntries = $stmtL->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmtL->close();
+
+        $connTutor->close();
+
+        // Διαχωρισμός πληρωμών και υπολογισμός εξοφλημένων μαθημάτων (FIFO logic)
+        $totalPaid = 0;
+        $totalCost = 0;
+        $lessonsOnly = [];
+        foreach ($allEntries as $entry) {
+            // Προσθήκη πληρωμής στο σύνολο (αν υπάρχει στο record)
+            $totalPaid += (float)$entry['amount'];
+
+            // Αν υπάρχει διάρκεια, το record θεωρείται και μάθημα
+            if ((float)$entry['duration'] > 0) {
+                $entry['cost'] = (float)$entry['duration'] * $rate;
+                $totalCost += $entry['cost'];
+                $entry['entryType'] = 'lesson';
+                $lessonsOnly[] = $entry;
+            }
+        }
+
+        $unpaidLessons = [];
+        $runningTotalPaid = $totalPaid;
+
+        foreach ($lessonsOnly as $lesson) {
+            $cost = $lesson['cost'];
+            if ($cost > 0) {
+                if ($runningTotalPaid >= $cost) {
+                    // Πλήρως εξοφλημένο
+                    $runningTotalPaid -= $cost;
+                } else {
+                    // Μερικώς πληρωμένο ή εντελώς απλήρωτο
+                    if ($runningTotalPaid > 0) {
+                        $lesson['cost'] = $cost - $runningTotalPaid;
+                        $runningTotalPaid = 0;
+                    }
+                    $unpaidLessons[] = $lesson;
+                }
+            } elseif ($lesson['entryType'] !== 'absence') {
+                // Μαθήματα με 0 κόστος (που δεν είναι απουσίες)
+                $unpaidLessons[] = $lesson;
+            }
+        }
+
+        // Ταξινόμηση μόνο των απλήρωτων μαθημάτων ανά ημερομηνία
+        usort($unpaidLessons, function ($a, $b) {
+            return strtotime($a['date']) - strtotime($b['date']);
+        });
+
+        return [
+            'items' => $unpaidLessons,
+            'balance' => $totalCost - $totalPaid,
+            'totalPaid' => $totalPaid
+        ];
     }
 }
