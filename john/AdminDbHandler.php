@@ -677,11 +677,8 @@ class AdminDbHandler extends DbHandler
     // 1. Φέρνει τους μαθητές από την tutor (μόνο για το admin)
     public function getTutorStudents($userYear)
     {
-        // Στοιχεία σύνδεσης για τη βάση tutor
-        $connTutor = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
-        mysqli_set_charset($connTutor, "utf8");
-
-        if ($connTutor->connect_error) {
+        $connTutor = $this->connectToTutorDB();
+        if (!$connTutor || $connTutor->connect_error) {
             return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
         }
 
@@ -746,6 +743,8 @@ class AdminDbHandler extends DbHandler
             $sql = "SELECT student_id, grade_value, teacher_comments FROM meze_grades WHERE meze_id = ?";
             $stmt = $conn->prepare($sql);
         }
+
+        if (!$stmt) return [];
 
         $stmt->bind_param("i", $mezeId);
         $stmt->execute();

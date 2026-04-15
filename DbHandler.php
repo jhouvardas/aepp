@@ -1,14 +1,19 @@
 <?php
+require_once __DIR__ . '/john/config.php'; // Χρήση __DIR__ για σωστό εντοπισμό του αρχείου
 
 class DbHandler
 {
 
     public function connectToFamilyDB()
     {
-        $servername = "jhouv.eu";
-        $username = "familyUser";
-        $password = "Geo@1994!";
-        $dbname = "familyDB";
+        if (!defined('FAMILY_DB_SERVER')) {
+            die("Σφάλμα: Λείπουν οι ρυθμίσεις της βάσης Family στο config.php");
+        }
+
+        $servername = FAMILY_DB_SERVER;
+        $username = FAMILY_DB_USER;
+        $password = FAMILY_DB_PASS;
+        $dbname = FAMILY_DB_NAME;
         $conn = new mysqli($servername, $username, $password, $dbname);
         mysqli_set_charset($conn, "utf8");
         if ($conn->connect_error) {
@@ -19,12 +24,16 @@ class DbHandler
         return $conn;
     }
 
-    private function connectToTutorDB()
+    protected function connectToTutorDB()
     {
-        $servername = "jhouv.eu";
-        $username = "jhouvardas";
-        $password = "Jhouv@1957";
-        $dbname = "tutor";
+        if (!defined('TUTOR_DB_SERVER')) {
+            return null;
+        }
+
+        $servername = TUTOR_DB_SERVER;
+        $username = TUTOR_DB_USER;
+        $password = TUTOR_DB_PASS;
+        $dbname = TUTOR_DB_NAME;
         $conn = new mysqli($servername, $username, $password, $dbname);
         mysqli_set_charset($conn, "utf8");
         return ($conn->connect_error) ? null : $conn;

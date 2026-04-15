@@ -23,16 +23,6 @@ class AdminPageMaker extends PageMaker
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
             <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 
-            <style>
-                .fa-external-link {
-                    vertical-align: middle;
-                    cursor: pointer;
-                }
-
-                .dropdown-item:hover {
-                    background-color: #f8d7da;
-                }
-            </style>
         </head>
 
         <body class="admin-body">
@@ -71,6 +61,11 @@ class AdminPageMaker extends PageMaker
                         <li class="nav-item">
                             <a class="nav-link" href="index.php?action=list_all_tasks">
                                 <i class="fa fa-history"></i> Ιστορικό Εργασιών
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-success font-weight-bold" href="index.php?action=viewStudentProfile">
+                                <i class="fa fa-address-card"></i> Καρτέλες Μαθητών
                             </a>
                         </li>
                         <li class="nav-item">

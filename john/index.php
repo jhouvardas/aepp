@@ -392,6 +392,31 @@
             $fm->showFullGradesTable($students, $gradesReport);
             break;
         case 'studentReport':
+        case 'viewStudentProfile':
+            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $students = $db->getTutorStudents($userYear);
+
+            if (isset($_GET['studentId'])) {
+                $studentId = $_GET['studentId'];
+                $studentInfo = null;
+                foreach ($students as $s) {
+                    if ($s['studentId'] == $studentId) {
+                        $studentInfo = $s;
+                        break;
+                    }
+                }
+                if ($studentInfo) {
+                    $grades = $db->getStudentGradesForStudent($studentId, $userYear);
+                    $average = $db->getStudentOverallAverage($studentId, $userYear);
+                    $tasks = $db->getStudentGroupTasks($studentId);
+                    $financials = $db->getStudentFinancials($studentId);
+                    $fm->showFullStudentProfile($studentInfo, $grades, $tasks, $financials, $average);
+                }
+            } else {
+                $fm->showStudentSelectionList($students);
+            }
+            break;
+        case 'oldStudentReport':
             if (isset($_GET['studentId']) && isset($_GET['name'])) {
                 $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $grades = $db->getStudentGrades($_GET['studentId'], $userYear);
@@ -476,6 +501,8 @@
                 require_once '../phpmailer/class.phpmailer.php';
                 require_once '../phpmailer/class.smtp.php';
 
+                require_once 'config.php';
+
                 $mail = new PHPMailer(true);
 
                 try {
@@ -483,16 +510,16 @@
                     $mail->isSMTP();
                     $mail->Host       = 'smtp.gmail.com';
                     $mail->SMTPAuth   = true;
-                    $mail->Username   = 'jhouvardas@gmail.com';
-                    $mail->Password   = 'tkca jeln feps frwj';
+                    $mail->Username   = SMTP_USER;
+                    $mail->Password   = SMTP_PASS;
                     $mail->SMTPSecure = 'tls';
                     $mail->Port       = 587;
                     $mail->CharSet    = 'UTF-8';
 
                     // Στοιχεία Αποστολέα
-                    $mail->setFrom('jhouvardas@gmail.com', 'Αντώνης Χουβαρδάς');
+                    $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
                     $mail->addAddress($to);
-                    $mail->addReplyTo('info@jhouv.eu', 'Πληροφορίες');
+                    $mail->addReplyTo(SMTP_REPLY_TO, 'Πληροφορίες');
 
                     // Περιεχόμενο
                     $mail->isHTML(true);

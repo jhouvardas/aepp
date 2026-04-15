@@ -256,6 +256,11 @@
     min-height: 250px;
 }
 
+/* CKEditor Override for Grading Tables */
+.ck-editor__editable_inline {
+    min-height: 120px !important;
+}
+
 /* Task/Comment Editor (Smaller) */
 .task-comment-editor+.ck-editor .ck-editor__editable {
     min-height: 120px !important;
@@ -311,6 +316,12 @@
     }
 }
 
+/* Exam Images Styling */
+.question-block img {
+    max-width: 70%;
+    height: auto;
+}
+
 .exam-sheet {
     font-family: "Times New Roman", Times, serif;
     background-color: white;
@@ -336,6 +347,14 @@
     color: black;
     font-family: 'DejaVu Sans', sans-serif;
     border-radius: 15px;
+}
+
+.hr-light-grey {
+    border-top: 2px solid #eee;
+}
+
+.report-info-text {
+    font-size: 1.1rem;
 }
 
 .report-comments-box {
@@ -364,4 +383,14 @@
     100% {
         transform: scale(1);
     }
+}
+
+/* Global Utilities & Admin UI */
+.fa-external-link {
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f8d7da;
 }
