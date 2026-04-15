@@ -2,6 +2,7 @@
     session_start();
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
+
     error_reporting(E_ALL);
     // Προσαρμοσμένο autoload για να βρίσκει κλάσεις και στον πάνω φάκελο
     function __autoload($name)
@@ -203,6 +204,25 @@
             $fm->addMezedakiForm();
             break;
 
+        case 'manage_exercise_types':
+            $types = $db->getExerciseTypes();
+            $fm->manageExerciseTypesForm($types);
+            break;
+
+        case 'save_exercise_type':
+            if (isset($_POST['type_name'])) {
+                $db->insertExerciseType($_POST['type_name']);
+                echo "<script>window.location.href='index.php?action=manage_exercise_types';</script>";
+            }
+            break;
+
+        case 'delete_exercise_type':
+            if (isset($_GET['id'])) {
+                $db->deleteExerciseType($_GET['id']);
+                echo "<script>window.location.href='index.php?action=manage_exercise_types';</script>";
+            }
+            break;
+
         case 'listMezedakia':
             $result = $db->getAllMezedakiaForAdmin();
             $fm->listMezedakia($result, $db); // Περνάμε το $db object
@@ -256,26 +276,17 @@
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
                     <link rel="stylesheet" href="aepp.css">
-                    <style>
-                        body {
-                            background-color: #f8f9fa;
-                            padding: 20px;
-                        }
-
-                        .preview-box {
-                            background: white;
-                            padding: 30px;
-                            border-left: 5px solid #17a2b8;
-                            border-bottom: 1px solid #dee2e6;
-                            min-height: 100vh;
-                        }
-                    </style>
                 </head>
 
-                <body>
+                <body class="p-4 bg-light">
                     <div class="container">
                         <div class="preview-box">
-                            <h2 class="border-bottom pb-2 mb-4 text-dark font-weight-bold">Προεπισκόπηση: Μεζεδάκι #<?php echo $meze['mezeNumber']; ?></h2>
+                            <h2 class="border-bottom pb-2 mb-4 text-dark font-weight-bold">
+                                Προεπισκόπηση: Μεζεδάκι #<?php echo $meze['mezeNumber']; ?>
+                                <?php if (isset($meze['isSos']) && $meze['isSos'] == 1): ?>
+                                    <span class="badge bg-danger ms-2" style="font-size: 1rem;"><i class="fa fa-fire"></i> SOS</span>
+                                <?php endif; ?>
+                            </h2>
 
                             <!-- Ενότητα Εκφώνησης -->
                             <div class="mb-5">
@@ -419,7 +430,7 @@
                 }
 
                 // Στέλνουμε και τις 5 παραμέτρους
-                $fm->showSubmissionsForGrading($submissions, $studentsList, $meze['mezeNumber'], $allMezedakia, $existingGrades);
+                $fm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
             }
             break;
 
@@ -440,26 +451,101 @@
 
                 // 3. Εύρεση ονόματος μαθητή για την αναφορά
                 $students = $db->getTutorStudents($userYear);
-                $studentName = "Μαθητής";
+                $student = null;
                 foreach ($students as $s) {
                     if ($s['studentId'] == $studentId) {
-                        $studentName = $s['name'] . " " . $s['lastName'];
+                        $student = $s;
                         break;
                     }
                 }
+                $studentName = $student ? $student['name'] . " " . $student['lastName'] : "Μαθητής";
 
                 // 4. Εμφάνιση της εκτυπώσιμης αναφοράς (PDF Report)
-                $fm->showPrintableReport($studentName, $mezeNum, $grade, $comments, $avg, $mezeId);
+                $fm->showPrintableReport($studentName, $mezeNum, $grade, $comments, $avg, $mezeId, $student);
+            }
+            break;
+
+        case 'sendReportEmail':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $to = $_POST['email'];
+                $subject = $_POST['subject'];
+                $htmlContent = htmlspecialchars_decode($_POST['html_message']);
+                $mezeId = $_POST['meze_id'];
+
+                // Χρήση PHPMailer από τον τοπικό φάκελο (έκδοση 5.2.x)
+                require_once '../phpmailer/class.phpmailer.php';
+                require_once '../phpmailer/class.smtp.php';
+
+                $mail = new PHPMailer(true);
+
+                try {
+                    // Ρυθμίσεις Gmail SMTP
+                    $mail->isSMTP();
+                    $mail->Host       = 'smtp.gmail.com';
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = 'jhouvardas@gmail.com';
+                    $mail->Password   = 'tkca jeln feps frwj';
+                    $mail->SMTPSecure = 'tls';
+                    $mail->Port       = 587;
+                    $mail->CharSet    = 'UTF-8';
+
+                    // Στοιχεία Αποστολέα
+                    $mail->setFrom('jhouvardas@gmail.com', 'Αντώνης Χουβαρδάς');
+                    $mail->addAddress($to);
+                    $mail->addReplyTo('info@jhouv.eu', 'Πληροφορίες');
+
+                    // Περιεχόμενο
+                    $mail->isHTML(true);
+                    $mail->Subject = $subject;
+                    $mail->Body    = $htmlContent;
+                    $mail->AltBody = strip_tags($htmlContent);
+
+                    $mail->send();
+                    echo "<div class='container mt-3'><div class='alert alert-success shadow'>✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!</div></div>";
+                } catch (Exception $e) {
+                    echo "<div class='container mt-3'><div class='alert alert-danger shadow'>❌ Η αποστολή απέτυχε. Σφάλμα: {$mail->ErrorInfo}</div></div>";
+                }
+
+                // Επιστροφή στις λύσεις
+                $mezeRes = $db->getMezedakiById($mezeId);
+                $meze = $mezeRes->fetch_assoc();
+                $fm->showSubmissionsForGrading($db->getSubmissionsByMeze($mezeId), $db->getTutorStudents($_SESSION['tutor_user']), $meze, [], $db->getGradesForMeze($mezeId));
             }
             break;
 
         case 'giveExtension':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-                $db->allowLateSubmission($_POST['student_id'], $_POST['meze_id'], $uYear);
+                $stId = $_POST['student_id'];
+                $mId = $_POST['meze_id'];
+                $hours = isset($_POST['hours']) ? (int)$_POST['hours'] : 24;
+                if ($db->hasExtension($stId, $mId, $uYear)) {
+                    $db->removeLateSubmission($stId, $mId, $uYear);
+                } else {
+                    $db->allowLateSubmission($stId, $mId, $uYear, $hours);
+                }
             ?>
                 <script>
                     window.location.href = 'index.php?action=viewSubmissions&id=<?php echo $_POST['meze_id']; ?>';
+                </script>
+            <?php
+                exit();
+            }
+            break;
+
+        case 'extendMezeForAll':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $mId = $_POST['meze_id'];
+                $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+                if ($db->hasGlobalExtension($mId, $uYear)) {
+                    $db->removeGlobalExtension($mId, $uYear);
+                } else {
+                    $hours = isset($_POST['hours']) ? (int)$_POST['hours'] : 24;
+                    $db->extendMezeForAll($mId, $hours, $uYear);
+                }
+            ?>
+                <script>
+                    window.location.href = 'index.php?action=listMezedakia';
                 </script>
     <?php
                 exit();
@@ -487,6 +573,12 @@
             $groups = $db->getGroups($uYear);
             $books = $db->getTheoryBooks();
             $fm->assignTasksForm($groups, $db, $books);
+            break;
+
+        case 'list_all_tasks':
+            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+            $tasks = $db->getAllGroupTasks($uYear);
+            $fm->listAllTasks($tasks);
             break;
 
         case 'save_group':
@@ -526,7 +618,7 @@
                 foreach ($_POST['grades'] as $stId => $grade) {
                     if ($grade !== "") $db->saveTaskGrade($_POST['task_id'], $stId, $grade, $_POST['comments'][$stId]);
                 }
-                echo "<script>window.location.href='index.php?action=assign_tasks';</script>";
+                echo "<script>window.location.href='index.php?action=list_all_tasks';</script>";
             }
             break;
 

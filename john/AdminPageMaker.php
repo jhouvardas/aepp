@@ -17,51 +17,13 @@ class AdminPageMaker extends PageMaker
             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+            <link rel="stylesheet" href="../aepp.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
             <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
             <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 
             <style>
-                /* Ρύθμιση για Desktop: Κεντράρισμα και πλάτος */
-                @media (min-width: 1200px) {
-                    body {
-                        max-width: 1000px;
-                        /* Λίγο πιο πλατύ από το μαθητικό για τα εργαλεία admin */
-                        margin: 0 auto !important;
-                        background-color: #f0f2f5;
-                        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-                        min-height: 100vh;
-                        display: block;
-                    }
-
-                    /* Λευκό φόντο στο περιεχόμενο */
-                    body>div,
-                    body>nav,
-                    body>form {
-                        background-color: #ffffff;
-                    }
-                }
-
-                /* Ρύθμιση ύψους για τον editor */
-                .ck-editor__editable {
-                    min-height: 250px;
-                }
-
-                /* Στυλ για την εκτύπωση */
-                @media print {
-                    .d-print-none {
-                        display: none !important;
-                    }
-
-                    .container,
-                    .container-fluid {
-                        width: 100%;
-                        margin: 0;
-                        padding: 0;
-                    }
-                }
-
                 .fa-external-link {
                     vertical-align: middle;
                     cursor: pointer;
@@ -73,7 +35,7 @@ class AdminPageMaker extends PageMaker
             </style>
         </head>
 
-        <body>
+        <body class="admin-body">
         <?php
     }
 
@@ -107,6 +69,11 @@ class AdminPageMaker extends PageMaker
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="index.php?action=list_all_tasks">
+                                <i class="fa fa-history"></i> Ιστορικό Εργασιών
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="index.php?action=manage_groups">
                                 <i class="fa fa-users"></i> Διαχείριση Ομάδων
                             </a>
@@ -122,6 +89,9 @@ class AdminPageMaker extends PageMaker
                                 </a>
                                 <a class="dropdown-item" href="index.php?action=listMezedakia">
                                     <i class="fa fa-list text-secondary"></i> 2. Λίστα / Διαχείριση
+                                </a>
+                                <a class="dropdown-item" href="index.php?action=manage_exercise_types">
+                                    <i class="fa fa-tags text-info"></i> 3. Διαχείριση Τύπων/Τεχνικών
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="index.php?action=fullReport">
@@ -159,7 +129,8 @@ class AdminPageMaker extends PageMaker
                             <input type="text" name="tutor_user" class="form-control border-0"
                                 placeholder="Username"
                                 value="<?php echo isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : ''; ?>"
-                                style="width: 120px;">
+                                style="width: 120px;"
+                                autocomplete="off">
                             <div class="input-group-append">
                                 <button class="btn btn-dark border-0 text-success font-weight-bold" type="submit">Ορισμός</button>
                             </div>

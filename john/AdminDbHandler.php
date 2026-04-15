@@ -21,7 +21,10 @@ class AdminDbHandler extends DbHandler
     public function getTaskById($taskId)
     {
         $conn = $this->connectToFamilyDB();
-        $stmt = $conn->prepare("SELECT * FROM aepp_group_tasks WHERE id = ?");
+        $stmt = $conn->prepare("SELECT gt.*, g.group_name 
+                                FROM aepp_group_tasks gt 
+                                JOIN aepp_groups g ON gt.group_id = g.id 
+                                WHERE gt.id = ?");
         $stmt->bind_param("i", $taskId);
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
@@ -401,11 +404,105 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function extendMezeForAll($mezeId, $hours, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Πλέον χρησιμοποιούμε το student_id = 0 για καθολική παράταση αντί να αλλάζουμε το deadline
+        $sql = "INSERT INTO aepp_meze_extensions (student_id, meze_id, user_year, expires_at) 
+                VALUES (0, ?, ?, DATE_ADD(NOW(), INTERVAL ? HOUR)) 
+                ON DUPLICATE KEY UPDATE expires_at = DATE_ADD(NOW(), INTERVAL ? HOUR), user_year = VALUES(user_year)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("isii", $mezeId, $userYear, $hours, $hours);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function removeGlobalExtension($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "DELETE FROM aepp_meze_extensions WHERE student_id = 0 AND meze_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function hasGlobalExtension($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Ελέγχουμε αν υπάρχει ενεργή (μη ληγμένη) καθολική παράταση.
+        // Αν έχει λήξει, το toggle switch στο back-end θα εμφανίζεται πλέον ανενεργό (+).
+        $sql = "SELECT id FROM aepp_meze_extensions WHERE student_id = 0 AND meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $exists = ($stmt->get_result()->num_rows > 0);
+        $stmt->close();
+        $conn->close();
+        return $exists;
+    }
+
+    public function getExerciseTypes()
+    {
+        $conn = $this->connectToFamilyDB();
+        $result = $conn->query("SELECT * FROM aepp_exercise_types ORDER BY name ASC");
+        $types = $result->fetch_all(MYSQLI_ASSOC);
+        $conn->close();
+        return $types;
+    }
+
+    public function getMezeTypeIds($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT type_id FROM aepp_meze_type_mapping WHERE meze_id = ?");
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $ids = [];
+        while ($row = $res->fetch_assoc()) $ids[] = $row['type_id'];
+        $conn->close();
+        return $ids;
+    }
+
+    public function insertExerciseType($name)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_exercise_types (name) VALUES (?)");
+        $stmt->bind_param("s", $name);
+        $success = $stmt->execute();
+        $conn->close();
+        return $success;
+    }
+
+    public function deleteExerciseType($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM aepp_exercise_types WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $conn->close();
+        return $success;
+    }
+
     public function insertMezedaki($data, $file)
     {
         $conn = $this->connectToFamilyDB();
         $imageName = "";
         $solImageName = "";
+
+        // Νέα πεδία
+        $isSos = isset($data['isSos']) ? 1 : 0;
+        $isPan = isset($data['isPanhellenic']) ? 1 : 0;
+        $panYear = !empty($data['panYear']) ? $data['panYear'] : null;
+        $panThema = !empty($data['panThema']) ? $data['panThema'] : null;
+        $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
+        $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
+
+        $selectedTypes = isset($data['exercise_types']) ? $data['exercise_types'] : [];
 
         // Εικόνα Εκφώνησης
         if (!empty($file['mezeImage']['name'])) {
@@ -419,10 +516,38 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $solImageName);
         }
 
-        // Προσθήκη mezeHints (χωρίς points)
-        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssssss", $data['mezeNumber'], $data['mezeDate'], $data['solutionDate'], $imageName, $data['mezeText'], $data['mezeHints'], $data['mezeSolution'], $solImageName);
+        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage, isSos, isPanhellenic, panYear, panThema, panExamType, panSchoolType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param(
+            "isssssssiiisss",
+            $data['mezeNumber'],
+            $data['mezeDate'],
+            $data['solutionDate'],
+            $imageName,
+            $data['mezeText'],
+            $data['mezeHints'],
+            $data['mezeSolution'],
+            $solImageName,
+            $isSos,
+            $isPan,
+            $panYear,
+            $panThema,
+            $panExamType,
+            $panSchoolType
+        );
         $success = $stmt->execute();
+
+        if ($success) {
+            $mezeId = $conn->insert_id;
+            // Αποθήκευση των Types
+            if (!empty($selectedTypes)) {
+                $stmtType = $conn->prepare("INSERT INTO aepp_meze_type_mapping (meze_id, type_id) VALUES (?, ?)");
+                foreach ($selectedTypes as $typeId) {
+                    $stmtType->bind_param("ii", $mezeId, $typeId);
+                    $stmtType->execute();
+                }
+            }
+        }
+
         $stmt->close();
         $conn->close();
         return $success;
@@ -474,6 +599,15 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], $path . $newSolImageName);
         }
 
+        $isSos = isset($data['isSos']) ? 1 : 0;
+        $isPan = isset($data['isPanhellenic']) ? 1 : 0;
+        $panYear = !empty($data['panYear']) ? $data['panYear'] : null;
+        $panThema = !empty($data['panThema']) ? $data['panThema'] : null;
+        $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
+        $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
+
+        $selectedTypes = isset($data['exercise_types']) ? $data['exercise_types'] : [];
+
         // 4. Εκτέλεση του Update (Εδώ μπαίνει το mezeHints)
         $sql = "UPDATE aepp_mezedakia SET 
             mezeNumber = ?, 
@@ -483,13 +617,19 @@ class AdminDbHandler extends DbHandler
             mezeHints = ?, 
             mezeSolution = ?, 
             mezeImage = ?, 
-            mezeSolutionImage = ? 
+            mezeSolutionImage = ?,
+            isSos = ?,
+            isPanhellenic = ?,
+            panYear = ?,
+            panThema = ?,
+            panExamType = ?,
+            panSchoolType = ?
             WHERE mezeId = ?";
 
         $stmt = $conn->prepare($sql);
 
         $stmt->bind_param(
-            "isssssssi",
+            "isssssssiiisssi",
             $data['mezeNumber'],
             $data['mezeDate'],
             $data['solutionDate'],
@@ -498,10 +638,27 @@ class AdminDbHandler extends DbHandler
             $data['mezeSolution'],
             $newImageName,
             $newSolImageName,
+            $isSos,
+            $isPan,
+            $panYear,
+            $panThema,
+            $panExamType,
+            $panSchoolType,
             $mezeId
         );
 
         $success = $stmt->execute();
+
+        if ($success) {
+            // Ενημέρωση των Types (delete and re-insert)
+            $conn->query("DELETE FROM aepp_meze_type_mapping WHERE meze_id = $mezeId");
+            $stmtType = $conn->prepare("INSERT INTO aepp_meze_type_mapping (meze_id, type_id) VALUES (?, ?)");
+            foreach ($selectedTypes as $typeId) {
+                $stmtType->bind_param("ii", $mezeId, $typeId);
+                $stmtType->execute();
+            }
+        }
+
         $stmt->close();
         $conn->close();
 
@@ -528,7 +685,7 @@ class AdminDbHandler extends DbHandler
             return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
         }
 
-        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
         $stmt = $connTutor->prepare($sql);
         $stmt->bind_param("s", $userYear);
         $stmt->execute();
@@ -581,8 +738,15 @@ class AdminDbHandler extends DbHandler
     public function getGradesForMeze($mezeId)
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT student_id, grade_value, teacher_comments FROM meze_grades WHERE meze_id = ?";
+        $sql = "SELECT student_id, grade_value, teacher_comments, updated_at FROM meze_grades WHERE meze_id = ?";
         $stmt = $conn->prepare($sql);
+
+        if (!$stmt) {
+            // Fallback αν η στήλη updated_at δεν υπάρχει ακόμα στη βάση για να αποφύγουμε το Fatal Error
+            $sql = "SELECT student_id, grade_value, teacher_comments FROM meze_grades WHERE meze_id = ?";
+            $stmt = $conn->prepare($sql);
+        }
+
         $stmt->bind_param("i", $mezeId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -749,7 +913,7 @@ class AdminDbHandler extends DbHandler
         $sql = "SELECT COUNT(s.student_id) 
                 FROM aepp_meze_submissions s
                 LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
-                WHERE s.meze_id = ? AND g.grade_value IS NULL";
+                WHERE s.meze_id = ? AND (g.grade_value IS NULL OR s.submission_date > g.updated_at)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $userYear, $mezeId);
         $stmt->execute();
@@ -791,8 +955,9 @@ class AdminDbHandler extends DbHandler
     public function hasAnyExtension($mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
-        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM aepp_meze_extensions WHERE meze_id = ? AND user_year = ?");
-        $stmt->bind_param("is", $mezeId, $userYear);
+        // Προσθέτουμε έλεγχο ημερομηνίας ώστε το badge να δείχνει μόνο τις πραγματικά "ενεργές" παρατάσεις
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())");
+        $stmt->bind_param("i", $mezeId);
         $stmt->execute();
         $res = $stmt->get_result()->fetch_assoc();
         $stmt->close();
@@ -887,7 +1052,10 @@ class AdminDbHandler extends DbHandler
     public function getGroupTasks($groupId)
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT gt.*, b.title as book_title FROM aepp_group_tasks gt 
+        $sql = "SELECT gt.*, b.title as book_title,
+                (SELECT COUNT(*) FROM aepp_student_groups sg WHERE sg.group_id = gt.group_id) as total_students,
+                (SELECT COUNT(*) FROM aepp_task_grades tg WHERE tg.task_id = gt.id) as graded_count
+                FROM aepp_group_tasks gt 
                 LEFT JOIN theory_books b ON gt.book_id = b.id 
                 WHERE gt.group_id = ? ORDER BY gt.date_added DESC";
         $stmt = $conn->prepare($sql);
@@ -930,5 +1098,26 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return $success;
+    }
+
+    public function getAllGroupTasks($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT gt.*, g.group_name, b.title as book_title,
+                (SELECT COUNT(*) FROM aepp_student_groups sg WHERE sg.group_id = gt.group_id) as total_students,
+                (SELECT COUNT(*) FROM aepp_task_grades tg WHERE tg.task_id = gt.id) as graded_count
+                FROM aepp_group_tasks gt 
+                JOIN aepp_groups g ON gt.group_id = g.id 
+                LEFT JOIN theory_books b ON gt.book_id = b.id 
+                WHERE g.user_year = ? 
+                ORDER BY gt.date_added DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $tasks = $res->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return $tasks;
     }
 }

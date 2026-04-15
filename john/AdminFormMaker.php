@@ -333,23 +333,23 @@ class AdminFormMaker extends FormMaker
     public function previewExam($questions)
     {
     ?>
-        <div class="container mt-4 bg-white p-5 shadow border" id="printableArea">
+        <div class="container mt-4 bg-white p-5 shadow border exam-sheet" id="printableArea">
             <div class="text-center mb-4">
-                <h2 style="text-decoration: underline;">ΦΥΛΛΟ ΕΡΓΑΣΙΑΣ / ΔΙΑΓΩΝΙΣΜΑ</h2>
+                <h2 class="exam-title-underline">ΦΥΛΛΟ ΕΡΓΑΣΙΑΣ / ΔΙΑΓΩΝΙΣΜΑ</h2>
                 <h4>Μάθημα: ΑΕΠΠ</h4>
                 <div class="d-flex justify-content-between mt-3">
                     <span>Ονοματεπώνυμο: .......................................................................</span>
                     <span>Ημερομηνία: ...... / ...... / 202...</span>
                 </div>
-                <hr class="mt-3" style="border-top: 2px solid #000;">
+                <hr class="mt-3 exam-hr-bold">
             </div>
 
             <div class="exam-content">
                 <?php
                 $i = 1;
                 while ($row = $questions->fetch_assoc()): ?>
-                    <div class="question-block mb-2" style="page-break-inside: avoid;">
-                        <div style="font-size: 1.05rem; line-height: 1.5;">
+                    <div class="question-block mb-2">
+                        <div class="question-block-text">
                             <div class="mb-1">
                                 <strong class="mr-1">Θέμα <?php echo $i++; ?>:</strong>
                                 <?php echo $row['question_text']; ?>
@@ -358,7 +358,7 @@ class AdminFormMaker extends FormMaker
 
                         <?php if (!empty($row['question_image'])): ?>
                             <div class="text-center mt-2 mb-2">
-                                <img src="../uploads/<?php echo $row['question_image']; ?>" class="img-fluid border" style="max-height:280px;">
+                                <img src="../uploads/<?php echo $row['question_image']; ?>" class="img-fluid border exam-img">
                             </div>
                         <?php endif; ?>
 
@@ -375,47 +375,7 @@ class AdminFormMaker extends FormMaker
                 </a>
             </div>
         </div>
-
         <style>
-            @media print {
-
-                .navbar,
-                .no-print,
-                .btn,
-                footer {
-                    display: none !important;
-                }
-
-                body {
-                    background: white !important;
-                    margin: 0.5cm;
-                }
-
-                .container {
-                    border: none !important;
-                    box-shadow: none !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-
-                #printableArea {
-                    border: none !important;
-                    box-shadow: none !important;
-                    padding: 0 !important;
-                }
-
-                .question-block {
-                    page-break-inside: avoid;
-                }
-            }
-
-            #printableArea {
-                font-family: "Times New Roman", Times, serif;
-                background-color: white;
-            }
-
             .question-block img {
                 max-width: 70%;
                 height: auto;
@@ -673,6 +633,14 @@ class AdminFormMaker extends FormMaker
                                     $rowStyle = 'style="background-color: #f2f2f2; color: #777;"';
                                 }
 
+                                // Ειδική σήμανση αν υπάρχει ενεργή παράταση σε κάποιον μαθητή
+                                if ($hasExtensions && !$isLocked) {
+                                    $badgeHtml .= '<br><span class="badge badge-warning mt-1" style="font-size: 0.75rem;"><i class="fa fa-clock-o"></i> Ενεργή Παράταση</span>';
+                                    if (empty($rowStyle) && !$isFuture) {
+                                        $rowStyle = 'style="background-color: #fffde7;"'; // Πολύ απαλό κίτρινο για να ξεχωρίζει από τα λευκά "ανοιχτά"
+                                    }
+                                }
+
                                 // Έλεγχος για μεζεδάκια χωρίς λύση
                                 $noSolution = (empty(trim($row['mezeSolution'] ?? '')) && empty($row['mezeSolutionImage']));
                                 if ($noSolution) {
@@ -698,6 +666,11 @@ class AdminFormMaker extends FormMaker
 
                                 if ($notSubmittedCount > 0 && !$isFuture) {
                                     $badgeHtml .= '<br><span class="badge bg-light text-muted border mt-1" style="font-size: 0.75rem;"><i class="fa fa-hourglass-o"></i> ' . $notSubmittedCount . ' δεν απάντησαν</span>';
+                                }
+
+                                // Έλεγχος για SOS
+                                if (isset($row['isSos']) && $row['isSos'] == 1) {
+                                    $badgeHtml .= '<br><span class="badge badge-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-fire"></i> SOS</span>';
                                 }
 
                                 // Εφάρμοσε το στυλ για μελλοντικά τελευταίο, για να υπερισχύει
@@ -749,6 +722,26 @@ class AdminFormMaker extends FormMaker
                                                 <i class="fa fa-graduation-cap"></i> <span class="d-none d-lg-inline">Βαθμοί</span>
                                             </a>
 
+                                            <!-- Γρήγορη Παράταση σε όλους -->
+                                            <?php
+                                            $isGlobal = $dbHandler->hasGlobalExtension($mezeId, $userYear);
+                                            ?>
+                                            <form action="index.php?action=extendMezeForAll" method="post" class="form-inline m-1">
+                                                <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                                <div class="input-group input-group-sm">
+                                                    <?php if (!$isGlobal): ?>
+                                                        <input type="number" name="hours" class="form-control" style="width: 45px;" value="24" title="Ώρες παράτασης για όλους">
+                                                    <?php endif; ?>
+                                                    <div class="input-group-append">
+                                                        <button type="submit" class="btn <?php echo $isGlobal ? 'btn-warning' : 'btn-outline-warning'; ?> btn-sm"
+                                                            title="<?php echo $isGlobal ? 'Αφαίρεση Καθολικής Παράτασης' : 'Παράταση σε ΟΛΟΥΣ'; ?>"
+                                                            onclick="return confirm('<?php echo $isGlobal ? 'Θέλετε να αναιρέσετε την καθολική παράταση;' : 'Θέλετε να δώσετε παράταση σε ΟΛΟΥΣ τους μαθητές;'; ?>')">
+                                                            <i class="fa fa-users"></i> <?php echo $isGlobal ? '-' : '+'; ?>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+
                                             <a href="index.php?action=editMezedaki&id=<?php echo $row['mezeId']; ?>"
                                                 class="btn btn-warning btn-sm m-1" title="Διόρθωση">
                                                 <i class="fa fa-edit"></i> <span class="d-none d-lg-inline">Διόρθωση</span>
@@ -774,8 +767,12 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-    public function addMezedakiForm()
+    public function addMezedakiForm($exerciseTypes = [])
     {
+        if (empty($exerciseTypes)) {
+            $db = new AdminDbHandler();
+            $exerciseTypes = $db->getExerciseTypes();
+        }
     ?>
         <div class="container mt-4 border p-4 bg-light shadow">
             <h3><i class="fa fa-coffee"></i> Νέο Μεζεδάκι</h3>
@@ -790,6 +787,82 @@ class AdminFormMaker extends FormMaker
                         <input type="date" name="mezeDate" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
                     </div>
                 </div>
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm">
+                        <label class="switch-container text-danger font-weight-bold mb-0" style="cursor: pointer;">
+                            <input type="checkbox" name="isSos" value="1" id="isSosCheck">
+                            <span><i class="fa fa-fire"></i> Χαρακτηρισμός ως SOS (Τεχνική Πανελληνίων)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm border-primary">
+                        <label class="switch-container text-primary font-weight-bold mb-2" style="cursor: pointer;">
+                            <input type="checkbox" name="isPanhellenic" value="1" id="isPanCheck" onchange="togglePanFields(this)">
+                            <span><i class="fa fa-university"></i> Θέμα Πανελληνίων Εξετάσεων</span>
+                        </label>
+
+                        <div id="panelliniesFields" style="display: none;" class="mt-3 p-3 bg-light border rounded">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Έτος</label>
+                                    <input type="number" name="panYear" class="form-control" placeholder="π.χ. 2024">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Θέμα</label>
+                                    <select name="panThema" class="form-control">
+                                        <option value="">--</option>
+                                        <option value="A">Θέμα Α</option>
+                                        <option value="B">Θέμα Β</option>
+                                        <option value="G">Θέμα Γ</option>
+                                        <option value="D">Θέμα Δ</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Είδος Εξέτασης</label>
+                                    <select name="panExamType" class="form-control">
+                                        <option value="Kanonikes">Κανονικές</option>
+                                        <option value="Epanaliptikes">Επαναληπτικές</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Σχολείο</label>
+                                    <select name="panSchoolType" class="form-group form-control">
+                                        <option value="Hmerisio">Ημερήσιο</option>
+                                        <option value="Esperino">Εσπερινό</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold"><i class="fa fa-tags text-info"></i> Είδος Άσκησης / Τεχνικές</label>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-left bg-white" type="button" id="typeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Επιλογή Τεχνικών...
+                        </button>
+                        <div class="dropdown-menu p-3 w-100 shadow" aria-labelledby="typeDropdown" style="max-height: 350px; overflow-y: auto;">
+                            <input type="text" class="form-control form-control-sm mb-2" id="typeSearch" placeholder="Αναζήτηση τεχνικής..." autocomplete="off">
+                            <hr class="my-2">
+                            <div class="row px-2">
+                                <?php foreach ($exerciseTypes as $type): ?>
+                                    <div class="col-md-4 col-6 mb-2 type-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="type_<?php echo $type['id']; ?>" name="exercise_types[]" value="<?php echo $type['id']; ?>" style="cursor:pointer;">
+                                            <label class="form-check-label small" for="type_<?php echo $type['id']; ?>" style="cursor:pointer; margin-left: 5px;">
+                                                <?php echo $type['name']; ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Ημερομηνία & Ώρα Λύσης (Deadline)</label>
                     <input type="datetime-local" name="solutionDate" class="form-control" required>
@@ -812,16 +885,37 @@ class AdminFormMaker extends FormMaker
                 </div>
                 <div class="form-group">
                     <label>Φωτογραφία Λύσης (Προαιρετικά)</label>
-                    <input type="file" name="mezeSolutionImage" class="form-control">
+                    <input type="file" name="mezeSolutionImage" class="form-control-file">
                 </div>
                 <button type="submit" class="btn btn-warning btn-block font-weight-bold">Αποθήκευση Μεζεδακίου</button>
             </form>
         </div>
+        <script>
+            function togglePanFields(checkbox) {
+                document.getElementById('panelliniesFields').style.display = checkbox.checked ? 'block' : 'none';
+            }
+            // JS για να μην κλείνει το dropdown όταν επιλέγεις checkboxes
+            $(document).on('click', '.dropdown-menu', function(e) {
+                e.stopPropagation();
+            });
+
+            // Φιλτράρισμα Τύπων στην αναζήτηση
+            $('#typeSearch').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $('.type-item').filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        </script>
     <?php
     }
 
     public function editMezedakiForm($row)
     {
+        $db = new AdminDbHandler();
+        $exerciseTypes = $db->getExerciseTypes();
+        $selectedTypeIds = $db->getMezeTypeIds($row['mezeId']);
+
     ?>
         <div class="container mt-4 border p-4 bg-light shadow">
             <h3><i class="fa fa-edit"></i> Επεξεργασία Μεζεδακίου #<?php echo $row['mezeNumber']; ?></h3>
@@ -849,6 +943,81 @@ class AdminFormMaker extends FormMaker
                         }
                         ?>
                         <input type="datetime-local" name="solutionDate" class="form-control" value="<?php echo $currentVal; ?>" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm border-danger">
+                        <label class="switch-container text-danger font-weight-bold mb-0" style="cursor: pointer;">
+                            <input type="checkbox" name="isSos" value="1" id="isSosCheckEdit" <?php echo (isset($row['isSos']) && $row['isSos'] == 1) ? 'checked' : ''; ?>>
+                            <span><i class="fa fa-fire"></i> Χαρακτηρισμός ως SOS (Τεχνική Πανελληνίων)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm border-primary">
+                        <label class="switch-container text-primary font-weight-bold mb-2" style="cursor: pointer;">
+                            <input type="checkbox" name="isPanhellenic" value="1" id="isPanCheckEdit" onchange="togglePanFieldsEdit(this)" <?php echo (isset($row['isPanhellenic']) && $row['isPanhellenic'] == 1) ? 'checked' : ''; ?>>
+                            <span><i class="fa fa-university"></i> Θέμα Πανελληνίων Εξετάσεων</span>
+                        </label>
+
+                        <div id="panelliniesFieldsEdit" style="display: <?php echo (isset($row['isPanhellenic']) && $row['isPanhellenic'] == 1) ? 'block' : 'none'; ?>;" class="mt-3 p-3 bg-light border rounded">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Έτος</label>
+                                    <input type="number" name="panYear" class="form-control" placeholder="π.χ. 2024" value="<?php echo $row['panYear']; ?>">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Θέμα</label>
+                                    <select name="panThema" class="form-control">
+                                        <option value="">--</option>
+                                        <?php foreach (['A', 'B', 'G', 'D'] as $thema): ?>
+                                            <option value="<?php echo $thema; ?>" <?php echo ($row['panThema'] == $thema) ? 'selected' : ''; ?>>Θέμα <?php echo $thema; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Είδος Εξέτασης</label>
+                                    <select name="panExamType" class="form-control">
+                                        <option value="Kanonikes" <?php echo ($row['panExamType'] == 'Kanonikes') ? 'selected' : ''; ?>>Κανονικές</option>
+                                        <option value="Epanaliptikes" <?php echo ($row['panExamType'] == 'Epanaliptikes') ? 'selected' : ''; ?>>Επαναληπτικές</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Σχολείο</label>
+                                    <select name="panSchoolType" class="form-control">
+                                        <option value="Hmerisio" <?php echo ($row['panSchoolType'] == 'Hmerisio') ? 'selected' : ''; ?>>Ημερήσιο</option>
+                                        <option value="Esperino" <?php echo ($row['panSchoolType'] == 'Esperino') ? 'selected' : ''; ?>>Εσπερινό</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold"><i class="fa fa-tags text-info"></i> Είδος Άσκησης / Τεχνικές</label>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-left bg-white" type="button" id="editTypeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Επιλογή Τεχνικών...
+                        </button>
+                        <div class="dropdown-menu p-3 w-100 shadow" aria-labelledby="editTypeDropdown" style="max-height: 350px; overflow-y: auto;">
+                            <input type="text" class="form-control form-control-sm mb-2" id="editTypeSearch" placeholder="Αναζήτηση τεχνικής..." autocomplete="off">
+                            <hr class="my-2">
+                            <div class="row px-2">
+                                <?php foreach ($exerciseTypes as $type): ?>
+                                    <div class="col-md-4 col-6 mb-2 edit-type-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="edit_type_<?php echo $type['id']; ?>" name="exercise_types[]" value="<?php echo $type['id']; ?>" <?php echo in_array($type['id'], $selectedTypeIds) ? 'checked' : ''; ?> style="cursor:pointer;">
+                                            <label class="form-check-label small" for="edit_type_<?php echo $type['id']; ?>" style="cursor:pointer; margin-left: 5px;">
+                                                <?php echo $type['name']; ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -916,6 +1085,11 @@ class AdminFormMaker extends FormMaker
                 </div>
             </form>
         </div>
+        <script>
+            function togglePanFieldsEdit(checkbox) {
+                document.getElementById('panelliniesFieldsEdit').style.display = checkbox.checked ? 'block' : 'none';
+            }
+        </script>
     <?php
     }
     public function showGradesForm($students, $mezeId, $displayNumber, $existingGrades = [])
@@ -1090,11 +1264,15 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-    public function showSubmissionsForGrading($submissions, $students, $mezeNumber, $allMezedakia, $existingGrades = [])
+    public function showSubmissionsForGrading($submissions, $students, $mezeData, $allMezedakia, $existingGrades = [])
     {
         $db = new DbHandler(); // Για να ελέγχουμε αν επιτρέπεται η υποβολή
-        $mezeNumber = (int)$mezeNumber;
-        $mezeId = $_GET['id']; // Το τρέχον μεζεδάκι
+        $mezeNumber = (int)$mezeData['mezeNumber'];
+        $isSos = (isset($mezeData['isSos']) && $mezeData['isSos'] == 1);
+
+        // Παίρνουμε το ID από τα δεδομένα που μας ήρθαν (mezeData)
+        $mezeId = $mezeData['mezeId'];
+
         $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
 
         $pendingSubmissions = [];
@@ -1120,16 +1298,32 @@ class AdminFormMaker extends FormMaker
         foreach ($students as $student) {
             $stId = (int)$student['studentId'];
             $subData = isset($submissionsByStudent[$stId]) ? $submissionsByStudent[$stId] : null;
+            $gradeData = isset($gradesByStudent[$stId]) ? $gradesByStudent[$stId] : null;
 
-            if (isset($gradesByStudent[$stId])) {
-                $gradedSubmissions[] = ['sub' => $subData, 'grade' => $gradesByStudent[$stId], 'student' => $student];
+            $isGraded = false;
+            if ($gradeData) {
+                $isGraded = true;
+                // Αν υπάρχει υποβολή και είναι πιο πρόσφατη από την τελευταία βαθμολόγηση, 
+                // τότε ο μαθητής επιστρέφει στη λίστα προς βαθμολόγηση.
+                if ($subData && strtotime($subData['submission_date']) > strtotime($gradeData['updated_at'] ?? '2000-01-01')) {
+                    $isGraded = false;
+                }
+            }
+
+            if ($isGraded) {
+                $gradedSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student];
             } else {
                 $pendingSubmissions[] = ['sub' => $subData, 'student' => $student];
             }
         }
     ?>
         <div class="container mt-4">
-            <h3 class="text-primary mb-4"><i class="fa fa-mortar-board"></i> Απαντήσεις για το Μεζεδάκι #<?php echo $mezeNumber; ?></h3>
+            <h3 class="text-primary mb-4">
+                <i class="fa fa-mortar-board"></i> Απαντήσεις για το Μεζεδάκι #<?php echo $mezeNumber; ?>
+                <?php if ($isSos): ?>
+                    <span class="badge badge-danger ml-2 shadow-sm"><i class="fa fa-fire"></i> SOS</span>
+                <?php endif; ?>
+            </h3>
 
             <div class="mb-5">
                 <h5 class="text-danger font-weight-bold"><i class="fa fa-clock-o"></i> Προς Βαθμολόγηση (<?php echo count($pendingSubmissions); ?>)</h5>
@@ -1143,7 +1337,7 @@ class AdminFormMaker extends FormMaker
                     // ΕΛΕΓΧΟΣ ΛΟΥΚΕΤΟΥ: Είναι ήδη ανοιχτή η φόρμα γι' αυτόν;
                     $isAllowed = $db->isSubmissionAllowed($stId, $mezeId, $userYear);
                     $lockIcon = $isAllowed ? "fa-unlock text-success" : "fa-lock text-muted";
-                    $lockTitle = $isAllowed ? "Η φόρμα είναι ήδη ανοιχτή" : "Άνοιγμα φόρμας για τον μαθητή";
+                    $lockTitle = $isAllowed ? "Κλείσιμο φόρμας / Αφαίρεση Παράτασης" : "Άνοιγμα φόρμας (Ορίστε ώρες)";
                 ?>
                     <div class="card mb-4 shadow-sm border-primary">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
@@ -1170,15 +1364,27 @@ class AdminFormMaker extends FormMaker
                                 <div class="alert alert-warning py-1 small d-flex justify-content-between align-items-center">
                                     <span><i class="fa fa-exclamation-triangle"></i> Ο μαθητής δεν έχει υποβάλει λύση.</span>
 
-                                    <form action="index.php?action=giveExtension" method="post" class="m-0">
+                                    <form action="index.php?action=giveExtension" method="post" class="form-inline m-0">
+                                        <?php if ($isAllowed):
+                                            $extInfo = $db->getExtensionInfo($stId, $mezeId, $userYear);
+                                            if ($extInfo && $extInfo['expires_at']): ?>
+                                                <span class="badge badge-success mr-2" style="font-size: 0.7rem;"><i class="fa fa-clock-o"></i> Λήγει: <?php echo date('d/m H:i', strtotime($extInfo['expires_at'])); ?></span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                         <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
                                         <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
-
-                                        <button type="submit" class="btn btn-xs <?php echo $isAllowed ? 'btn-outline-success' : 'btn-danger'; ?> py-0 px-2"
-                                            style="font-size:0.7rem;" title="<?php echo $lockTitle; ?>">
-                                            <i class="fa <?php echo $lockIcon; ?>"></i>
-                                            <?php echo $isAllowed ? "Ανοιχτή" : "Άνοιγμα Φόρμας"; ?>
-                                        </button>
+                                        <div class="input-group input-group-sm">
+                                            <?php if (!$isAllowed): ?>
+                                                <input type="number" name="hours" class="form-control" style="width: 45px; font-size: 0.7rem;" value="24" title="Ώρες παράτασης">
+                                            <?php endif; ?>
+                                            <div class="input-group-append">
+                                                <button type="submit" class="btn btn-xs <?php echo $isAllowed ? 'btn-outline-success' : 'btn-danger'; ?> py-0 px-2"
+                                                    style="font-size:0.7rem;" title="<?php echo $lockTitle; ?>">
+                                                    <i class="fa <?php echo $lockIcon; ?>"></i>
+                                                    <?php echo $isAllowed ? "Ανοιχτή" : "Άνοιγμα"; ?>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </form>
                                 </div>
                             <?php endif; ?>
@@ -1205,15 +1411,50 @@ class AdminFormMaker extends FormMaker
                         $sub = $item['sub'];
                         $grade = $item['grade'];
                         $st = $item['student'];
+                        $stId = $st['studentId'];
+
+                        // Έλεγχος αν επιτρέπεται η υποβολή (παράταση) ακόμα και αν έχει βαθμολογηθεί
+                        $isAllowed = $db->isSubmissionAllowed($stId, $mezeId, $userYear);
+                        $lockIcon = $isAllowed ? "fa-unlock text-success" : "fa-lock text-muted";
+                        $lockTitle = $isAllowed ? "Κλείσιμο φόρμας / Αφαίρεση Παράτασης" : "Άνοιγμα φόρμας (Ορίστε ώρες)";
                     ?>
                         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2" style="cursor: pointer; border-left: 5px solid #28a745;" onclick="$(this).next('.edit-row').toggle();">
                             <div>
                                 <span class="font-weight-bold mr-3"><?php echo $st['name'] . " " . $st['lastName']; ?></span>
                                 <span class="badge badge-success px-2 py-1">Βαθμός: <?php echo $grade['grade_value']; ?></span>
+                                <?php if ($isAllowed): ?>
+                                    <span class="badge badge-info ml-2" title="Η φόρμα υποβολής είναι ανοιχτή για αυτόν τον μαθητή"><i class="fa fa-unlock"></i> Ανοιχτή</span>
+                                <?php endif; ?>
                             </div>
                             <i class="fa fa-chevron-down text-muted"></i>
                         </div>
                         <div class="edit-row p-3 border border-top-0 mb-2 bg-light shadow-sm" style="display:none;">
+                            <!-- Δυνατότητα παράτασης και για ήδη βαθμολογημένους μαθητές -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white border rounded shadow-sm">
+                                <span class="small font-weight-bold"><i class="fa fa-info-circle text-info"></i> Κατάσταση Φόρμας:</span>
+                                <form action="index.php?action=giveExtension" method="post" class="form-inline m-0">
+                                    <?php if ($isAllowed):
+                                        $extInfo = $db->getExtensionInfo($stId, $mezeId, $userYear);
+                                        if ($extInfo && $extInfo['expires_at']): ?>
+                                            <span class="badge badge-success mr-2" style="font-size: 0.75rem;"><i class="fa fa-clock-o"></i> Λήγει: <?php echo date('d/m H:i', strtotime($extInfo['expires_at'])); ?></span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                    <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
+                                    <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                    <div class="input-group input-group-sm">
+                                        <?php if (!$isAllowed): ?>
+                                            <input type="number" name="hours" class="form-control" style="width: 45px; font-size: 0.75rem;" value="24" title="Ώρες παράτασης">
+                                        <?php endif; ?>
+                                        <div class="input-group-append">
+                                            <button type="submit" class="btn btn-xs <?php echo $isAllowed ? 'btn-outline-success' : 'btn-danger'; ?> py-1 px-3"
+                                                style="font-size:0.75rem;" title="<?php echo $lockTitle; ?>">
+                                                <i class="fa <?php echo $lockIcon; ?>"></i>
+                                                <?php echo $isAllowed ? "Ανοιχτή" : "Άνοιγμα"; ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                             <?php if ($sub): ?>
                                 <div class="submission-preview mb-3">
                                     <h6 class="font-weight-bold text-muted small text-uppercase">Απάντηση Μαθητή:</h6>
@@ -1251,19 +1492,19 @@ class AdminFormMaker extends FormMaker
         </div>
     <?php
     }
-    public function showPrintableReport($studentName, $mezeNumber, $grade, $comments, $average, $mezeId)
+    public function showPrintableReport($studentName, $mezeNumber, $grade, $comments, $average, $mezeId, $studentData = null)
     {
     ?>
-        <div id="printableReport" class="container mt-5 p-5 shadow border" style="background: white; color: black; font-family: 'DejaVu Sans', sans-serif; border-radius: 15px;">
+        <div id="printableReport" class="container mt-5 p-5 shadow border report-container">
             <div class="text-center mb-4">
                 <h2 class="font-weight-bold">Αναφορά Προόδου Μαθητή</h2>
                 <h4>Μάθημα: ΑΕΠΠ - Μεζεδάκια</h4>
-                <hr style="border-top: 2px solid #eee;">
+                <hr class="hr-light-grey">
             </div>
 
             <div class="mb-4">
-                <p style="font-size: 1.1rem;"><strong>Μαθητής:</strong> <?php echo $studentName; ?></p>
-                <p style="font-size: 1.1rem;"><strong>Ημερομηνία:</strong> <?php echo date('d/m/Y'); ?></p>
+                <p class="report-info-text"><strong>Μαθητής:</strong> <?php echo $studentName; ?></p>
+                <p class="report-info-text"><strong>Ημερομηνία:</strong> <?php echo date('d/m/Y'); ?></p>
             </div>
 
             <table class="table table-bordered">
@@ -1283,10 +1524,87 @@ class AdminFormMaker extends FormMaker
 
             <div class="mt-4">
                 <h5 class="font-weight-bold">Σχόλια Δασκάλου:</h5>
-                <div class="p-3 border rounded bg-light" style="min-height: 100px; font-style: italic;">
+                <div class="p-3 border rounded bg-light report-comments-box">
                     <?php echo nl2br($comments); ?>
                 </div>
             </div>
+
+            <?php
+            // 1. Μήνυμα για WhatsApp (Text with Markdown)
+            $msg_wa = "🎓 *ΕΝΗΜΕΡΩΣΗ ΠΡΟΟΔΟΥ: ΑΕΠΠ* \n";
+            $msg_wa .= "━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+            $msg_wa .= "Γεια σου *" . $studentName . "*! \n\n";
+            $msg_wa .= "Μόλις βαθμολογήθηκε το *Μεζεδάκι #" . $mezeNumber . "*. \n\n";
+            $msg_wa .= "✅ *Βαθμός:* " . $grade . "/20 \n";
+            $msg_wa .= "📊 *Συνολικός Μ.Ο.:* " . number_format($average, 2) . "/20 \n\n";
+            if (!empty($comments)) {
+                $msg_wa .= "💬 *Σχόλια:* \n";
+                $msg_wa .= "_" . html_entity_decode(strip_tags($comments), ENT_QUOTES, 'UTF-8') . "_ \n\n";
+            }
+            $msg_wa .= "🔗 *Δες την αναλυτική σου καρτέλα:* \n";
+            $msg_wa .= "https://jhouv.eu/aepp/index.php?action=myGrades";
+
+            // 2. Μήνυμα για HTML Email (Πιο απλή μορφή που δούλευε)
+            $msg_html = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee;'>
+                <h2 style='color: #dc3545;'>Ενημέρωση Προόδου: ΑΕΠΠ</h2>
+                <p>Γεια σου <b>" . $studentName . "</b>,</p>
+                <p>Μόλις βαθμολογήθηκε η εργασία σου:</p>
+                <table border='1' cellpadding='10' cellspacing='0' style='border-collapse: collapse; width: 100%;'>
+                    <tr style='background: #f8f9fa;'>
+                        <td><b>Δραστηριότητα</b></td>
+                        <td><b>Βαθμός</b></td>
+                    </tr>
+                    <tr>
+                        <td>Μεζεδάκι #" . $mezeNumber . "</td>
+                        <td><b style='color: #28a745; font-size: 1.2em;'>" . $grade . " / 20</b></td>
+                    </tr>
+                    <tr>
+                        <td>Συνολικός Μέσος Όρος</td>
+                        <td><b>" . number_format($average, 2) . " / 20</b></td>
+                    </tr>
+                </table>";
+
+            if (!empty($comments)) {
+                $msg_html .= "
+                    <p><b>Σχόλια Καθηγητή:</b><br>
+                    <i>" . nl2br($comments) . "</i></p>";
+            }
+
+            $msg_html .= "
+                <p><a href='https://jhouv.eu/aepp/index.php?action=myGrades'>Προβολή Αναλυτικής Καρτέλας</a></p>
+                <p>Με εκτίμηση,<br><b>Αντώνης Χουβαρδάς</b></p>
+            </div>";
+
+            // Για το mailto: (ως fallback αν δεν χρησιμοποιηθεί η sendReportEmail)
+            $msg_mail = "📚 ΕΝΗΜΕΡΩΣΗ ΠΡΟΟΔΟΥ: ΑΕΠΠ\n";
+            $msg_mail .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+            $msg_mail .= "Αγαπητέ/ή " . $studentName . ",\n\n";
+            $msg_mail .= "Σου στέλνω τη βαθμολογία σου για τη δραστηριότητα: Μεζεδάκι #" . $mezeNumber . "\n\n";
+            $msg_mail .= "🎯 Βαθμός: " . $grade . " / 20\n";
+            $msg_mail .= "📈 Συνολικός Μέσος Όρος: " . number_format($average, 2) . " / 20\n\n";
+            if (!empty($comments)) {
+                $msg_mail .= "💬 Σχόλια Καθηγητή:\n";
+                $msg_mail .= "\"" . html_entity_decode(strip_tags($comments), ENT_QUOTES, 'UTF-8') . "\"\n\n";
+            }
+            $msg_mail .= "🔗 Δες την αναλυτική καρτέλα σου στην πλατφόρμα:\n";
+            $msg_mail .= "https://jhouv.eu/aepp/index.php?action=myGrades\n\n";
+            $msg_mail .= "Με εκτίμηση,\nΑντώνης Χουβαρδάς";
+
+            $wa_link = "";
+            if (!empty($studentData['phone'])) {
+                // Καθαρισμός τηλεφώνου (μόνο νούμερα)
+                $phone = preg_replace('/[^0-9]/', '', $studentData['phone']);
+                if (strlen($phone) == 10) $phone = "30" . $phone;
+                $wa_link = "https://wa.me/" . $phone . "?text=" . urlencode($msg_wa);
+            }
+
+            $mail_link = "";
+            if (!empty($studentData['email'])) {
+                $subject = "Vathmologia: Mezedaki #" . $mezeNumber . " (" . $studentName . ")";
+                $mail_link = "mailto:" . $studentData['email'] . "?subject=" . urlencode($subject) . "&body=" . urlencode($msg_mail);
+            }
+            ?>
 
             <div class="mt-4 p-3 bg-dark text-white d-flex justify-content-between align-items-center rounded shadow">
                 <h5 class="mb-0">Συνολικός Μέσος Όρος:</h5>
@@ -1294,35 +1612,36 @@ class AdminFormMaker extends FormMaker
             </div>
 
             <div class="mt-5 text-center d-print-none">
-                <button onclick="window.print();" class="btn btn-success btn-lg shadow mr-2">
+                <button onclick="window.print();" class="btn btn-secondary btn-lg shadow mr-2">
                     <i class="fa fa-print"></i> Εκτύπωση / PDF
                 </button>
 
-                <a href="index.php?action=viewSubmissions&id=<?php echo $mezeId; ?>" class="btn btn-primary btn-lg shadow">
-                    <i class="fa fa-arrow-left"></i> Πίσω στις Λύσεις (#<?php echo $mezeNumber; ?>)
-                </a>
+                <?php if ($wa_link): ?>
+                    <a href="<?php echo $wa_link; ?>" target="_blank" class="btn btn-success btn-lg shadow mr-2">
+                        <i class="fa fa-whatsapp"></i> WhatsApp
+                    </a>
+                <?php endif; ?>
+
+                <?php if ($mail_link): ?>
+                    <form action="index.php?action=sendReportEmail" method="post" style="display:inline;">
+                        <input type="hidden" name="email" value="<?php echo $studentData['email']; ?>">
+                        <input type="hidden" name="subject" value="<?php echo $subject; ?>">
+                        <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                        <input type="hidden" name="html_message" value="<?php echo htmlspecialchars($msg_html); ?>">
+                        <button type="submit" class="btn btn-info btn-lg shadow mr-2">
+                            <i class="fa fa-envelope"></i> Αποστολή HTML Email
+                        </button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-
         <style>
-            @media print {
+            .hr-light-grey {
+                border-top: 2px solid #eee;
+            }
 
-                .navbar,
-                .d-print-none,
-                .btn {
-                    display: none !important;
-                }
-
-                body {
-                    background: white !important;
-                }
-
-                #printableReport {
-                    border: none !important;
-                    box-shadow: none !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
+            .report-info-text {
+                font-size: 1.1rem;
             }
         </style>
     <?php
@@ -1413,22 +1732,96 @@ class AdminFormMaker extends FormMaker
     <?php
     }
 
+    public function listAllTasks($tasks)
+    {
+    ?>
+        <div class="container mt-4">
+            <h3 class="mb-4"><i class="fa fa-history text-primary"></i> Ιστορικό Αναθέσεων Ομάδων</h3>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover shadow-sm bg-white">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th style="width: 15%">Ημερομηνία</th>
+                            <th style="width: 20%">Ομάδα</th>
+                            <th style="width: 45%">Περιγραφή Εργασίας</th>
+                            <th style="width: 20%">Ενέργειες</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($tasks)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center p-4 text-muted">Δεν έχουν βρεθεί αναθέσεις εργασιών.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($tasks as $task): ?>
+                                <tr>
+                                    <td class="align-middle small"><?php echo date('d/m/Y H:i', strtotime($task['date_added'])); ?></td>
+                                    <td class="align-middle font-weight-bold"><?php echo htmlspecialchars($task['group_name']); ?></td>
+                                    <td class="align-middle">
+                                        <?php if ($task['book_title']): ?>
+                                            <span class="badge badge-secondary mb-1"><?php echo htmlspecialchars($task['book_title']); ?></span><br>
+                                        <?php endif; ?>
+                                        <div class="small"><?php echo nl2br(htmlspecialchars($task['task_text'])); ?></div>
+                                        <?php if (!empty($task['task_file'])): ?>
+                                            <div class="mt-1 small"><i class="fa fa-paperclip"></i> <?php echo $task['task_file']; ?></div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <a href="index.php?action=grade_task&task_id=<?php echo $task['id']; ?>" class="btn btn-outline-primary btn-sm btn-block shadow-sm mb-1">
+                                            <i class="fa fa-pencil"></i> Βαθμολόγηση
+                                        </a>
+                                        <?php
+                                        $graded = $task['graded_count'] ?? 0;
+                                        $total = $task['total_students'] ?? 0;
+                                        $badgeClass = ($graded > 0) ? (($graded >= $total) ? 'badge-success' : 'badge-warning') : 'badge-secondary';
+                                        ?>
+                                        <div style="font-size: 0.75rem;">
+                                            <span class="badge <?php echo $badgeClass; ?> w-100 py-1">
+                                                <?php echo "$graded / $total"; ?> βαθμολογημένοι
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <a href="index.php?action=assign_tasks" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Επιστροφή</a>
+            </div>
+        </div>
+    <?php
+    }
+
     public function showTaskGradesForm($task, $students, $existingGrades)
     {
     ?>
-        <div class="container mt-4 border p-4 bg-white shadow-sm">
-            <h3><i class="fa fa-pencil"></i> Βαθμολόγηση Εργασίας</h3>
-            <div class="alert alert-info shadow-sm">
-                <strong>Περιγραφή:</strong> <?php echo nl2br($task['task_text']); ?>
-            </div>
-            <form action="index.php?action=save_task_grades" method="post">
+        <div class="container mt-4 border-0 p-0">
+            <form action="index.php?action=save_task_grades" method="post" class="bg-white shadow-sm rounded p-4">
+                <div class="sticky-top bg-white border-bottom mb-3 py-3 d-flex justify-content-between align-items-center" style="top: -1px; z-index: 1000;">
+                    <div>
+                        <h3 class="mb-0 text-primary"><i class="fa fa-pencil"></i> Βαθμολόγηση Εργασίας</h3>
+                        <small class="text-muted">Ομάδα: <strong><?php echo htmlspecialchars($task['group_name'] ?? ''); ?></strong></small>
+                    </div>
+                    <div>
+                        <a href="index.php?action=list_all_tasks" class="btn btn-outline-secondary">Επιστροφή</a>
+                        <button type="submit" class="btn btn-success shadow-sm ml-2"><i class="fa fa-save"></i> Αποθήκευση Όλων</button>
+                    </div>
+                </div>
+
+                <div class="alert alert-info shadow-sm mb-4">
+                    <strong>Περιγραφή Εργασίας:</strong><br>
+                    <?php echo nl2br(htmlspecialchars($task['task_text'])); ?>
+                </div>
+
                 <input type="hidden" name="task_id" value="<?php echo $task['id']; ?>">
                 <table class="table table-bordered table-striped">
                     <thead class="thead-dark">
                         <tr>
-                            <th>Ονοματεπώνυμο Μαθητή</th>
-                            <th style="width: 150px;">Βαθμός</th>
-                            <th>Σχόλια / Παρατηρήσεις</th>
+                            <th style="width: 20%;">Ονοματεπώνυμο Μαθητή</th>
+                            <th style="width: 85px;">Βαθμός</th>
+                            <th>Σχόλια / Παρατηρήσεις (HTML)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1439,18 +1832,34 @@ class AdminFormMaker extends FormMaker
                         ?>
                             <tr>
                                 <td class="align-middle"><?php echo $s['name'] . " " . $s['lastName']; ?></td>
-                                <td><input type="number" name="grades[<?php echo $stId; ?>]" step="0.5" min="0" max="20" class="form-control" value="<?php echo $grade; ?>" placeholder="-"></td>
+                                <td class="align-middle"><input type="number" name="grades[<?php echo $stId; ?>]" step="0.5" min="0" max="20" class="form-control px-2 text-center" value="<?php echo $grade; ?>" placeholder="-"></td>
                                 <td>
-                                    <textarea name="comments[<?php echo $stId; ?>]" class="form-control" rows="3" placeholder="Σχόλια..."><?php echo !empty($comments) ? htmlspecialchars($comments) : "<html>\n<body>\n\n</body>\n</html>"; ?></textarea>
+                                    <textarea name="comments[<?php echo $stId; ?>]" class="form-control task-comment-editor" rows="3" placeholder="Σχόλια..."><?php echo !empty($comments) ? htmlspecialchars($comments) : "<html>\n<body>\n\n</body>\n</html>"; ?></textarea>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                <button type="submit" class="btn btn-primary btn-lg shadow-sm"><i class="fa fa-save"></i> Αποθήκευση</button>
-                <a href="index.php?action=assign_tasks" class="btn btn-secondary btn-lg ml-2">Επιστροφή</a>
             </form>
         </div>
+
+        <style>
+            /* Override CKEditor height specifically for this table to keep it manageable */
+            .ck-editor__editable_inline {
+                min-height: 120px !important;
+            }
+        </style>
+        <script>
+            document.querySelectorAll('.task-comment-editor').forEach((element) => {
+                ClassicEditor
+                    .create(element, {
+                        toolbar: ['bold', 'italic', 'link', '|', 'bulletedList', 'numberedList', 'undo', 'redo']
+                    })
+                    .catch(error => {
+                        console.error('Task Comment Editor error:', error);
+                    });
+            });
+        </script>
     <?php
     }
 
@@ -1496,7 +1905,10 @@ class AdminFormMaker extends FormMaker
             </div>
 
             <div class="mt-4">
-                <h5>Τρέχουσες Ασκήσεις ανά Ομάδα</h5>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5>Τρέχουσες Ασκήσεις ανά Ομάδα</h5>
+                    <a href="index.php?action=list_all_tasks" class="btn btn-outline-info btn-sm"><i class="fa fa-history"></i> Όλο το Ιστορικό</a>
+                </div>
                 <table class="table table-sm table-bordered">
                     <thead class="bg-light">
                         <tr>
@@ -1529,9 +1941,61 @@ class AdminFormMaker extends FormMaker
                                             <div class="text-muted small mt-1">Ημ/νία: <?php echo $taskDate; ?></div>
                                         <?php endif; ?>
                                         <div class="mt-2">
-                                            <a href="index.php?action=grade_task&task_id=<?php echo $task['id']; ?>" class="btn btn-xs btn-outline-primary"><i class="fa fa-pencil"></i> Βαθμολόγηση</a>
+                                            <a href="index.php?action=grade_task&task_id=<?php echo $task['id']; ?>" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Βαθμολόγηση</a>
+                                            <?php
+                                            $graded = $task['graded_count'] ?? 0;
+                                            $total = $task['total_students'] ?? 0;
+                                            $badgeClass = ($graded > 0) ? (($graded >= $total) ? 'badge-success' : 'badge-warning') : 'badge-secondary';
+                                            ?>
+                                            <span class="badge <?php echo $badgeClass; ?> ml-1" style="font-size: 0.7rem;">
+                                                <i class="fa fa-check"></i> <?php echo "$graded / $total"; ?>
+                                            </span>
                                         </div>
                                     <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    public function manageExerciseTypesForm($types)
+    {
+    ?>
+        <div class="container mt-4">
+            <h3><i class="fa fa-tags text-info"></i> Διαχείριση Τύπων Ασκήσεων / Τεχνικών</h3>
+            <hr>
+            <div class="card p-4 mb-4 shadow-sm bg-light">
+                <h5>Προσθήκη Νέου Τύπου</h5>
+                <form action="index.php?action=save_exercise_type" method="post" class="form-inline">
+                    <input type="text" name="type_name" class="form-control mr-2 w-50" placeholder="π.χ. Δυναμικός Προγραμματισμός, Στοίβα" required>
+                    <button type="submit" class="btn btn-success"><i class="fa fa-plus"></i> Προσθήκη Τύπου</button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered bg-white shadow-sm">
+                    <thead class="thead-dark text-center">
+                        <tr>
+                            <th style="width: 10%">ID</th>
+                            <th>Ονομασία Τύπου / Τεχνικής</th>
+                            <th style="width: 20%">Ενέργειες</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($types as $t): ?>
+                            <tr>
+                                <td class="text-center align-middle"><?php echo $t['id']; ?></td>
+                                <td class="align-middle"><strong><?php echo htmlspecialchars($t['name']); ?></strong></td>
+                                <td class="text-center">
+                                    <a href="index.php?action=delete_exercise_type&id=<?php echo $t['id']; ?>"
+                                        class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Προσοχή! Η διαγραφή θα επηρεάσει την κατηγοριοποίηση στα υπάρχοντα μεζεδάκια. Σίγουρα διαγραφή;');">
+                                        <i class="fa fa-trash"></i> Διαγραφή
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

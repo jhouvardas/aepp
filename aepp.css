@@ -168,3 +168,200 @@
         display: block !important;
     }
 }
+
+/* SOS Badge Pulse Effect */
+@keyframes pulse-sos {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.pulse-sos {
+    animation: pulse-sos 2s infinite;
+}
+
+/* Custom Toggle Switch for Admin */
+.switch-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.switch-container input {
+    width: 40px;
+    height: 20px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 20px;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-right: 10px;
+}
+
+.switch-container input:checked {
+    background: #dc3545;
+}
+
+.switch-container input:before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    background: white;
+    transition: 0.3s;
+}
+
+.switch-container input:checked:before {
+    left: 22px;
+}
+
+/* --- ADMIN & LAYOUT OPTIMIZATIONS --- */
+
+/* Admin Specific Desktop Layout */
+@media (min-width: 1200px) {
+    .admin-body {
+        max-width: 1000px;
+        margin: 0 auto !important;
+        background-color: #f0f2f5;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        min-height: 100vh;
+        display: block;
+    }
+
+    .admin-body>div,
+    .admin-body>nav,
+    .admin-body>form {
+        background-color: #ffffff;
+    }
+}
+
+/* CKEditor Global Height */
+.ck-editor__editable {
+    min-height: 250px;
+}
+
+/* Task/Comment Editor (Smaller) */
+.task-comment-editor+.ck-editor .ck-editor__editable {
+    min-height: 120px !important;
+}
+
+/* Preview Box / Pane */
+.preview-box {
+    background: white;
+    padding: 30px;
+    border-left: 5px solid #17a2b8;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 100vh;
+}
+
+.editor-preview-pane {
+    padding: 20px;
+    width: 100%;
+    border-radius: 0;
+    margin: 0;
+}
+
+/* --- EXAM & PRINT STYLES --- */
+
+@media print {
+
+    .d-print-none,
+    .navbar,
+    .no-print,
+    .btn,
+    footer {
+        display: none !important;
+    }
+
+    .container,
+    .container-fluid,
+    #printableArea,
+    #printableReport {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    body {
+        background: white !important;
+        margin: 0.5cm;
+    }
+
+    .question-block {
+        page-break-inside: avoid;
+    }
+}
+
+.exam-sheet {
+    font-family: "Times New Roman", Times, serif;
+    background-color: white;
+}
+
+.exam-title-underline {
+    text-decoration: underline;
+}
+
+.exam-hr-bold {
+    border-top: 2px solid #000;
+}
+
+.question-block-text {
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+/* --- REPORT & SUCCESS STYLES --- */
+
+.report-container {
+    background: white;
+    color: black;
+    font-family: 'DejaVu Sans', sans-serif;
+    border-radius: 15px;
+}
+
+.report-comments-box {
+    min-height: 100px;
+    font-style: italic;
+}
+
+.success-card {
+    border-radius: 20px;
+}
+
+.success-icon-large {
+    font-size: 100px;
+    animation: grow 0.6s ease-in-out;
+}
+
+@keyframes grow {
+    0% {
+        transform: scale(0);
+    }
+
+    80% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}

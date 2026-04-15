@@ -1,10 +1,7 @@
-
-
-
 <?php
 
 //function __autoload($name) {
-    include_once 'PageMaker.php';
+include_once 'PageMaker.php';
 //}
 
 $page = new PageMaker();
@@ -12,47 +9,55 @@ $page->displayHeadMatter();
 $page->displayMenu();
 ?>
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-sm">
-            <h1>Η δομή πολλαπλής επιλογής ΕΠΙΛΕΞΕ</h1>
-            <img src="images/switch.png" class="img-fluid" alt="Η δομή επιλογής ΕΠΙΛΕΞΕ">
-            <p>Όπου:</p>
-            <dl>
-                <dt class="col-sm-3"><έκφραση></dt>
-                <dd class="col-sm-9">είναι μια μεταβλητή, η τιμή της οποίας θα ελεγχθεί 
-                    με τις τιμές που δίνονται στις ΠΕΡΙΠΤΩΣΕΙΣ και ανάλογα σε ποια ΠΕΡΙΠΤΩΣΗ 
-                    ανήκει θα εκτελεστούν οι αντίστοιχες εντολές ή η πράξη, που υπολογίζει την τιμή της. 
-                    <p>Δηλαδή η έκφραση μπορεί να είναι:</p>
-                    <ul>
-                        <li>Μεταβλητή</li>
-                        <li>Αριθμητική Πράξη</li>
-                        <li>Συγκριτική πράξη</li>
-                    </ul>
-                </dd>
-                <dt class="col-sm-3"><λίστα_τιμών_Ν>:</dt>
-                <dl class="col-sm-9">οι τιμές που μπορεί να πάρει μια έκφραση.
-                    <p>Οι τιμές μπορεί να είναι:</p>
-                    <ul>
-                        <li>διακριτές τιμές</li>
-                        <li>περιοχή τιμών από...έως</li>
-                        <li>να υπακούουν σε μια συνθήκη</li>
-                    </ul>
-                </dl>
-            </dl>
-        </div>
+  <div class="row">
+    <div class="col-sm">
+      <h1>Η δομή πολλαπλής επιλογής ΕΠΙΛΕΞΕ</h1>
+      <img src="images/switch.png" class="img-fluid" alt="Η δομή επιλογής ΕΠΙΛΕΞΕ">
+      <p>Όπου:</p>
+      <dl>
+        <dt class="col-sm-3">
+          <έκφραση>
+        </dt>
+        <dd class="col-sm-9">είναι μια μεταβλητή, η τιμή της οποίας θα ελεγχθεί
+          με τις τιμές που δίνονται στις ΠΕΡΙΠΤΩΣΕΙΣ και ανάλογα σε ποια ΠΕΡΙΠΤΩΣΗ
+          ανήκει θα εκτελεστούν οι αντίστοιχες εντολές ή η πράξη, που υπολογίζει την τιμή της.
+          <p>Δηλαδή η έκφραση μπορεί να είναι:</p>
+          <ul>
+            <li>Μεταβλητή</li>
+            <li>Αριθμητική Πράξη</li>
+            <li>Συγκριτική πράξη</li>
+          </ul>
+        </dd>
+        <dt class="col-sm-3">
+          <λίστα_τιμών_Ν>:
+        </dt>
+        <dl class="col-sm-9">οι τιμές που μπορεί να πάρει μια έκφραση.
+          <p>Οι τιμές μπορεί να είναι:</p>
+          <ul>
+            <li>διακριτές τιμές</li>
+            <li>περιοχή τιμών από...έως</li>
+            <li>να υπακούουν σε μια συνθήκη</li>
+          </ul>
+        </dl>
+      </dl>
     </div>
+  </div>
 
-    <div class="row">
-        <div class="col-sm">
-            <h2><έκφραση> = μεταβλητή</h2>
-        </div>
+  <div class="row">
+    <div class="col-sm">
+      <h2>
+        <έκφραση> = μεταβλητή
+      </h2>
     </div>
+  </div>
 
 
-    <div class="row">
-        <div class="col-sm"> 
-            <h3><λίστα_τιμών_1> Μια τιμή</h3>
-            <pre>
+  <div class="row">
+    <div class="col-sm">
+      <h3>
+        <λίστα_τιμών_1> Μια τιμή
+      </h3>
+      <pre>
 ΠΡΟΓΡΑΜΜΑ επίλεξεΜεταβλητή
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: μέρα
@@ -79,21 +84,23 @@ $page->displayMenu();
   ΤΕΛΟΣ_ΕΠΙΛΟΓΩΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
             </pre>
-        </div>
     </div>
+  </div>
 
 
-    <div class="row">
-        <div class="col-sm">  
-            <div class="embed-responsive embed-responsive-16by9">
-                <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/23MpIYcBnLg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>
-        </div>
+  <div class="row">
+    <div class="col-sm">
+      <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/23MpIYcBnLg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
     </div>
-    <div class="row">
-        <div class="col-sm">
-            <h3><λίστα_τιμών_Ν> Διακριτές τιμές</h3>
-            <pre>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <h3>
+        <λίστα_τιμών_Ν> Διακριτές τιμές
+      </h3>
+      <pre>
  ΠΡΟΓΡΑΜΜΑ επίλεξεΜεταβλητή
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: μήνα
@@ -103,7 +110,7 @@ $page->displayMenu();
   ΕΠΙΛΕΞΕ μήνα
     ΠΕΡΙΠΤΩΣΗ 1,3,5,7,8,10,12
       ΓΡΑΨΕ 'Ο',μήνα,'ος μήνας έχει 31 ημέρες'
-    ΠΕΡΙΠΤΩΣΗ 4,6,8,11
+    ΠΕΡΙΠΤΩΣΗ 4,6,9,11
       ΓΡΑΨΕ 'Ο',μήνα,'ος μήνας έχει 30 ημέρες'
     ΠΕΡΙΠΤΩΣΗ 2
       ΓΡΑΨΕ 'Ο',μήνα,'ος μήνας έχει 28 ημέρες και τα δίσεκτα έτη 29'
@@ -113,18 +120,20 @@ $page->displayMenu();
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
                
             </pre>
-        </div>
     </div>
-    <div class="row">
-        <div class="col-sm embed-responsive embed-responsive-16by9"">            
-            <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zdbM923pow4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
+  </div>
+  <div class="row">
+    <div class="col-sm embed-responsive embed-responsive-16by9">
+      <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zdbM923pow4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
+  </div>
 
-    <div class="row">
-        <div class="col-sm">
-            <h3><λίστα_τιμών_Ν> περιοχή τιμών από...έως</h3>
-            <pre>
+  <div class="row">
+    <div class="col-sm">
+      <h3>
+        <λίστα_τιμών_Ν> περιοχή τιμών από...έως
+      </h3>
+      <pre>
 ΠΡΟΓΡΑΜΜΑ επίλεξεΜεταβλητή
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: κ
@@ -143,18 +152,20 @@ $page->displayMenu();
   ΤΕΛΟΣ_ΕΠΙΛΟΓΩΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ                
             </pre>
-        </div>
     </div>
-    <div class="row">
-        <div class="col-sm embed-responsive embed-responsive-16by9">            
-            <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/QRL6plGRoOA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>           
-        </div>
+  </div>
+  <div class="row">
+    <div class="col-sm embed-responsive embed-responsive-16by9">
+      <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/QRL6plGRoOA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
+  </div>
 
-    <div class="row">
-        <div class="col-sm">
-            <h3><λίστα_τιμών_Ν> υπακούν σε μια συνθήκη</h3>
-            <pre>
+  <div class="row">
+    <div class="col-sm">
+      <h3>
+        <λίστα_τιμών_Ν> υπακούν σε μια συνθήκη
+      </h3>
+      <pre>
 ΠΡΟΓΡΑΜΜΑ επίλεξεΜεταβλητή
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: κ
@@ -173,23 +184,25 @@ $page->displayMenu();
   ΤΕΛΟΣ_ΕΠΙΛΟΓΩΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ               
             </pre>
-        </div>
     </div>
-    <!--    <div class="row">
+  </div>
+  <!--    <div class="row">
             <div class="col-sm embed-responsive embed-responsive-16by9">            
                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/sWyqJzhvaFc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>           
             </div>
         </div>-->\
 
-    <div class="row">
-        <div class="col-sm">
-            <h2><έκφραση> = αριθμητική πράξη</h2>
-        </div>
+  <div class="row">
+    <div class="col-sm">
+      <h2>
+        <έκφραση> = αριθμητική πράξη
+      </h2>
     </div>
+  </div>
 
-    <div class="row">
-        <div class="col-sm">
-            <pre>
+  <div class="row">
+    <div class="col-sm">
+      <pre>
 ΠΡΟΓΡΑΜΜΑ επίλεξεΠράξη
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: χ
@@ -205,21 +218,23 @@ $page->displayMenu();
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
                 
             </pre>
-        </div>
     </div>
-    <!--    <div class="row">
+  </div>
+  <!--    <div class="row">
             <div class="col-sm embed-responsive embed-responsive-16by9">            
                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/sWyqJzhvaFc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>             
             </div>
         </div>-->
-    <div class="row">
-        <div class="col-sm">
-            <h2><έκφραση> = λογική πράξη</h2>
-        </div>
+  <div class="row">
+    <div class="col-sm">
+      <h2>
+        <έκφραση> = λογική πράξη
+      </h2>
     </div>
-    <div class="row">
-        <div class="col-sm">
-            <pre>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      <pre>
 ΠΡΟΓΡΑΜΜΑ επίλεξεΣυνθήκη
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ: χ
@@ -235,20 +250,20 @@ $page->displayMenu();
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
                 
             </pre>
-        </div>
     </div>
-    <!--    <div class="row">
+  </div>
+  <!--    <div class="row">
             <div class="col-sm embed-responsive embed-responsive-16by9">            
                     <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/Lb9Z__eJDFo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe> 
             </div>
         </div>-->
-    <div class="row">
-        <div class="col-sm">
-            <pre>
-                
+  <div class="row">
+    <div class="col-sm">
+      <pre>
+
             </pre>
-        </div>
     </div>
+  </div>
 </div>
 <?php
 $page->displayEndMatter();

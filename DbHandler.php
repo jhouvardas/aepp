@@ -408,7 +408,7 @@ class DbHandler
         }
 
         // Φιλτράρουμε με status=1 και το συγκεκριμένο user (έτος)
-        $sql = "SELECT studentId, name, lastName FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
         $stmt = $connTutor->prepare($sql);
         $stmt->bind_param("s", $userYear);
         $stmt->execute();
@@ -531,24 +531,68 @@ class DbHandler
         return $year;
     }
 
-    public function allowLateSubmission($studentId, $mezeId, $userYear)
+    public function allowLateSubmission($studentId, $mezeId, $userYear, $hours = 24)
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "INSERT IGNORE INTO aepp_meze_extensions (student_id, meze_id, user_year) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO aepp_meze_extensions (student_id, meze_id, user_year, expires_at) 
+                VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ? HOUR)) 
+                ON DUPLICATE KEY UPDATE expires_at = DATE_ADD(NOW(), INTERVAL ? HOUR), user_year = VALUES(user_year)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iis", $studentId, $mezeId, $userYear);
+        $stmt->bind_param("iisii", $studentId, $mezeId, $userYear, $hours, $hours);
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();
         return $success;
     }
 
+    public function removeLateSubmission($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "DELETE FROM aepp_meze_extensions WHERE student_id = ? AND meze_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function hasExtension($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT id FROM aepp_meze_extensions WHERE student_id = ? AND meze_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $exists = ($res->num_rows > 0);
+        $stmt->close();
+        $conn->close();
+        return $exists;
+    }
+
+    public function getExtensionInfo($studentId, $mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        // Προσθήκη ελέγχου NOW() ώστε να μην φέρνει πληροφορίες για ληγμένες παρατάσεις στην προβολή βαθμολογίας
+        $sql = "SELECT expires_at FROM aepp_meze_extensions WHERE (student_id = ? OR student_id = 0) AND meze_id = ? AND (expires_at IS NULL OR expires_at > NOW()) ORDER BY student_id DESC LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $data = $res->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $data;
+    }
+
     public function isSubmissionAllowed($studentId, $mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
         $sql = "SELECT m.mezeId FROM aepp_mezedakia m 
-                LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND e.student_id = ?
-                WHERE m.mezeId = ? AND m.isLocked = 0 AND (m.solutionDate > NOW() OR e.id IS NOT NULL)";
+                LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND (e.student_id = ? OR e.student_id = 0)
+                WHERE m.mezeId = ? AND m.isLocked = 0 
+                AND (m.solutionDate > NOW() OR (e.expires_at IS NOT NULL AND e.expires_at > NOW()))";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $conn->close();
@@ -590,55 +634,20 @@ class DbHandler
             return false;
         }
 
-        // Get all students with extensions for this meze
-        $extensionSql = "SELECT DISTINCT student_id FROM aepp_meze_extensions WHERE meze_id = ? AND user_year = ?";
+        // Έλεγχος αν υπάρχουν ΕΝΕΡΓΕΣ παρατάσεις (ατομικές ή καθολικές).
+        // Αν υπάρχει έστω και μία ενεργή παράταση, η λύση παραμένει κρυφή για όλους.
+        $extensionSql = "SELECT COUNT(*) as extCount FROM aepp_meze_extensions 
+                         WHERE meze_id = ? AND user_year = ? 
+                         AND (expires_at IS NULL OR expires_at > NOW())";
         $extStmt = $conn->prepare($extensionSql);
         $extStmt->bind_param("is", $mezeId, $userYear);
         $extStmt->execute();
-        $extResult = $extStmt->get_result();
-
-        $extensionStudents = [];
-        while ($row = $extResult->fetch_assoc()) {
-            $extensionStudents[] = $row['student_id'];
-        }
+        $extRow = $extStmt->get_result()->fetch_assoc();
+        $hasActiveExtensions = ($extRow['extCount'] > 0);
         $extStmt->close();
 
-        // If no students with extensions, show solution
-        if (empty($extensionStudents)) {
-            $conn->close();
-            return true;
-        }
-
-        // Check if all extension students have either submitted or been graded
-        foreach ($extensionStudents as $studentId) {
-            // Check if submitted
-            $submitSql = "SELECT COUNT(*) as count FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
-            $submitStmt = $conn->prepare($submitSql);
-            $submitStmt->bind_param("ii", $studentId, $mezeId);
-            $submitStmt->execute();
-            $submitResult = $submitStmt->get_result();
-            $submitRow = $submitResult->fetch_assoc();
-            $hasSubmission = ($submitRow['count'] > 0);
-            $submitStmt->close();
-
-            // Check if graded with a value (including 0)
-            $gradeSql = "SELECT grade_value FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
-            $gradeStmt = $conn->prepare($gradeSql);
-            $gradeStmt->bind_param("iis", $studentId, $mezeId, $userYear);
-            $gradeStmt->execute();
-            $gradeResult = $gradeStmt->get_result();
-            $hasGrade = ($gradeResult->num_rows > 0);
-            $gradeStmt->close();
-
-            // If neither submitted nor graded, don't show solution yet
-            if (!$hasSubmission && !$hasGrade) {
-                $conn->close();
-                return false;
-            }
-        }
-
         $conn->close();
-        return true;
+        return !$hasActiveExtensions;
     }
 
     public function getStudentGradesForStudent($studentId, $userYear)

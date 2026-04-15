@@ -49,18 +49,22 @@ class PageMaker
                                 <i class="fa fa-graduation-cap"></i> Βαθμοί & Εργασίες
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php#max">Μεγαλύτερος</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php#akatalili">Ακατάλληλη τιμή</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php#egirotita">Έλεγχος εγκυρότητας</a>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropAlgos" data-toggle="dropdown">
+                                Αλγόριθμοι
+                            </a>
+                            <div class="dropdown-menu shadow">
+                                <a class="dropdown-item" href="index.php#max">Μεγαλύτερος - Μικρότερος</a>
+                                <a class="dropdown-item" href="index.php#akatalili">Ακατάλληλη τιμή</a>
+                                <a class="dropdown-item" href="index.php#egirotita">Έλεγχος εγκυρότητας</a>
+                                <a class="dropdown-item" href="select.php">Δομή "ΕΠΙΛΕΞΕ"</a>
+                                <a class="dropdown-item" href="index.php#moreAlgorithms">Αναζήτηση - Ταξινόμηση</a>
+                            </div>
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropData" data-toggle="dropdown">
                                 Δομές Δεδομένων
                             </a>
                             <div class="dropdown-menu shadow">
@@ -71,8 +75,8 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
-                                Πανελλήνιες 2025
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop2025" data-toggle="dropdown">
+                                Πανελλήνιες 2026
                             </a>
                             <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="instructions.php">Οδηγίες</a>
@@ -86,7 +90,7 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropPanell" data-toggle="dropdown">
                                 Πανελλήνιες
                             </a>
                             <div class="dropdown-menu shadow">
@@ -102,12 +106,9 @@ class PageMaker
                         <li class="nav-item">
                             <a class="nav-link" href="index.php#theoria">Θεωρία</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="select.php">Επίλεξε</a>
-                        </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropExercises" data-toggle="dropdown">
                                 Ασκήσεις
                             </a>
                             <div class="dropdown-menu shadow">
@@ -469,7 +470,12 @@ class PageMaker
                 <div class="container-fluid p-0 mt-4 mb-4">
                     <div class="card shadow-sm border-warning">
                         <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong></h6>
+                            <h6 class="mb-0">
+                                <strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong>
+                            </h6>
+                            <?php if (isset($row['isSos']) && $row['isSos'] == 1): ?>
+                                <span class="badge badge-danger pulse-sos shadow-sm"><i class="fa fa-fire"></i> SOS</span>
+                            <?php endif; ?>
                             <div class="text-right small">
                                 <i class="fa fa-hourglass-end"></i> Deadline: <?php echo $solDate->format('d/m/Y H:i'); ?>
                             </div>
