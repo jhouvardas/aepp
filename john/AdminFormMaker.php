@@ -1280,7 +1280,7 @@ class AdminFormMaker extends FormMaker
                                     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                     <div>
                                         <i class="fa fa-user-circle text-success mr-2" style="font-size: 1.2rem;"></i>
-                                        <span class="font-weight-bold"><?php echo $student['lastName'] . " " . $student['name']; ?></span>
+                                        <span class="font-weight-bold"><?php echo $student['name'] . " " . $student['lastName']; ?></span>
                                     </div>
                                     <div>
                                         <span class="badge badge-light border px-3 py-2">
@@ -1306,7 +1306,7 @@ class AdminFormMaker extends FormMaker
         <div class="container mt-4">
             <div class="card shadow border-0">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fa fa-user-circle"></i> Καρτέλα Μαθητή: <?php echo $student['lastName'] . " " . $student['name']; ?></h3>
+                    <h3 class="mb-0"><i class="fa fa-user-circle"></i> Καρτέλα Μαθητή: <?php echo $student['name'] . " " . $student['lastName']; ?></h3>
                     <div class="d-print-none">
                         <button onclick="window.print();" class="btn btn-light btn-sm"><i class="fa fa-print"></i> Εκτύπωση</button>
                         <a href="index.php?action=viewStudentProfile" class="btn btn-dark btn-sm">Επιστροφή</a>
@@ -1844,7 +1844,7 @@ class AdminFormMaker extends FormMaker
                                         // Αν ο μαθητής είναι ήδη σε ομάδα, τον προσπερνάμε
                                         if (array_key_exists($s['studentId'], $assignments)) continue;
                                     ?>
-                                        <option value="<?php echo $s['studentId']; ?>"><?php echo "{$s['lastName']} {$s['name']}"; ?></option>
+                                        <option value="<?php echo $s['studentId']; ?>"><?php echo "{$s['name']} {$s['lastName']}"; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <select name="group_id" class="form-control mb-2" required>
@@ -1886,7 +1886,7 @@ class AdminFormMaker extends FormMaker
                                         <ul class="list-unstyled mb-0 small">
                                             <?php foreach ($members as $m): ?>
                                                 <li>
-                                                    <?php echo "{$m['lastName']} {$m['name']}"; ?>
+                                                    <?php echo "{$m['name']} {$m['lastName']}"; ?>
                                                     <a href="index.php?action=remove_student_from_group&student_id=<?php echo $m['studentId']; ?>" class="text-danger ml-1" onclick="return confirm('Αφαίρεση μαθητή από την ομάδα;')"><i class="fa fa-times-circle"></i></a>
                                                 </li>
                                             <?php endforeach; ?>

@@ -682,7 +682,7 @@ class AdminDbHandler extends DbHandler
             return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
         }
 
-        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY lastName ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY name ASC";
         $stmt = $connTutor->prepare($sql);
         $stmt->bind_param("s", $userYear);
         $stmt->execute();
