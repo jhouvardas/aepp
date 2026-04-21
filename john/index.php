@@ -4,24 +4,32 @@
     ini_set('display_startup_errors', 1);
 
     error_reporting(E_ALL);
-    // Προσαρμοσμένο autoload για να βρίσκει κλάσεις και στον πάνω φάκελο
-    function __autoload($name)
-    {
+
+    // Χρήση spl_autoload_register αντί της deprecated __autoload
+    spl_autoload_register(function ($name) {
         if (file_exists($name . '.php')) {
             include_once $name . '.php';
         } else if (file_exists('../' . $name . '.php')) {
             include_once '../' . $name . '.php';
         }
-    }
+    });
 
     $page = new AdminPageMaker();
     $db = new AdminDbHandler();
-    $fm = new AdminFormMaker();
 
-    $page->displayHeadMatter();
-    $page->displayMenu();
+    $mezeFm   = new MezeAdminFormMaker();
+    $theoryFm = new TheoryAdminFormMaker();
+    $exFm     = new ExerciseAdminFormMaker();
+    $reportFm = new ReportAdminFormMaker();
 
-    $action = isset($_GET['action']) ? $_GET['action'] : 'dashboard';
+    $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+    $page->displayHeadMatter(); // Καλείται πρώτα το head
+    $page->displayMenu($userYear, $db); // Περιλαμβάνουμε το userYear και το $db object
+    if (isset($_GET['status'])) $page->showToast($_GET['status']);
+
+    // Sanitization της παραμέτρου action
+    $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['action']) : 'dashboard';
 
     switch ($action) {
         case 'save_theory':
@@ -43,13 +51,13 @@
             // No break - θέλουμε να ξαναδείξει τη φόρμα
         case 'add_theory':
             $books = $db->getTheoryBooks();
-            $fm->addTheoryForm($books);
+            $theoryFm->addTheoryForm($books);
             break;
 
         // Πρόσθεσε αυτά τα cases στο switch σου
         case 'manage_books':
             $books = $db->getTheoryBooks();
-            $fm->manageBooksForm($books);
+            $theoryFm->manageBooksForm($books);
             break;
 
         case 'save_book':
@@ -75,7 +83,7 @@
             if (isset($_GET['id'])) {
                 $questionData = $db->getQuestionById($_GET['id']);
                 $books = $db->getTheoryBooks();
-                $fm->editTheoryForm($questionData, $books);
+                $theoryFm->editTheoryForm($questionData, $books);
             }
             break;
 
@@ -108,26 +116,26 @@
             // 1. Παίρνουμε τα δεδομένα από την AdminDbHandler
             $questions = $db->getAllTheoryQuestions();
             // 2. Τα στέλνουμε στην AdminFormMaker για να φτιάξει τον πίνακα
-            $fm->listTheoryQuestions($questions);
+            $theoryFm->listTheoryQuestions($questions);
             break;
 
         case 'list_for_test':
             $questions = $db->getAllQuestionsOrdered(); // Χρησιμοποιούμε την ήδη υπάρχουσα μέθοδο
-            $fm->listTheoryQuestionsForTests($questions);
+            $theoryFm->listTheoryQuestionsForTests($questions);
             break;
 
         case 'create_exam':
             if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['selected_questions'])) {
                 $selectedIds = $_POST['selected_questions'];
                 $examQuestions = $db->getMultipleQuestionsByIds($selectedIds);
-                $fm->previewExam($examQuestions);
+                $theoryFm->previewExam($examQuestions);
             } else {
                 echo "<div class='container mt-5'><div class='alert alert-warning'>Δεν επιλέξατε ερωτήσεις!</div></div>";
             }
             break;
 
         case 'addKena':
-            $fm->displayKenaForm();
+            $exFm->displayKenaForm();
             break;
 
         case 'saveKena':
@@ -137,24 +145,24 @@
                 <div class="container mt-3">
                     <?php if ($success): ?>
                         <div class="alert alert-success alert-dismissible fade show">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             <strong>Επιτυχία!</strong> Η άσκηση αποθηκεύτηκε και η εικόνα ανέβηκε.
                         </div>
                     <?php else: ?>
                         <div class="alert alert-danger alert-dismissible fade show">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             <strong>Σφάλμα!</strong> Η αποθήκευση απέτυχε. Ελέγξτε αν ο φάκελος images/themata/kenaNew υπάρχει και έχει δικαιώματα εγγραφής.
                         </div>
                     <?php endif; ?>
                 </div>
             <?php
             }
-            $fm->displayKenaForm();
+            $exFm->displayKenaForm();
             break;
 
         case 'listKena':
             $result = $db->getAllKena();
-            $fm->listKenaExercises($result);
+            $exFm->listKenaExercises($result);
             break;
 
         case 'deleteKena':
@@ -166,7 +174,7 @@
             break;
 
         case 'addThemaG':
-            $fm->displayThemaGForm();
+            $exFm->displayThemaGForm();
             break;
 
         case 'saveThemaG':
@@ -174,12 +182,12 @@
                 $success = $db->insertThemaG($_POST, $_FILES);
                 echo $success ? "<div class='alert alert-success'>Επιτυχής αποθήκευση!</div>" : "<div class='alert alert-danger'>Αποτυχία.</div>";
             }
-            $fm->displayThemaGForm();
+            $exFm->displayThemaGForm();
             break;
 
         case 'listThemaG':
             $res = $db->getAllThemataG();
-            $fm->listThemataG($res);
+            $exFm->listThemataG($res);
             break;
 
         case 'deleteThemaG':
@@ -197,16 +205,18 @@
                     echo "<div class='container mt-2'><div class='alert alert-success shadow'>Το Μεζεδάκι #" . $_POST['mezeNumber'] . " αποθηκεύτηκε επιτυχώς!</div></div>";
                 }
             }
-            $fm->addMezedakiForm();
+            $nextNum = $db->getNextMezeNumber();
+            $mezeFm->addMezedakiForm([], $nextNum);
             break;
 
         case 'addMezedaki':
-            $fm->addMezedakiForm();
+            $nextNum = $db->getNextMezeNumber();
+            $mezeFm->addMezedakiForm([], $nextNum);
             break;
 
         case 'manage_exercise_types':
             $types = $db->getExerciseTypes();
-            $fm->manageExerciseTypesForm($types);
+            $mezeFm->manageExerciseTypesForm($types);
             break;
 
         case 'save_exercise_type':
@@ -225,7 +235,7 @@
 
         case 'listMezedakia':
             $result = $db->getAllMezedakiaForAdmin();
-            $fm->listMezedakia($result, $db); // Περνάμε το $db object
+            $mezeFm->listMezedakia($result, $db); // Περνάμε το $db object
             break;
 
         case 'deleteMezedaki':
@@ -243,7 +253,7 @@
         case 'editMezedaki':
             if (isset($_GET['id'])) {
                 $result = $db->getMezedakiById($_GET['id']);
-                $fm->editMezedakiForm($result->fetch_assoc());
+                $mezeFm->editMezedakiForm($result->fetch_assoc());
             }
             break;
 
@@ -293,7 +303,7 @@
                                 <h4 class="text-primary mb-3"><i class="fa fa-file-text-o"></i> Εκφώνηση</h4>
                                 <?php if (!empty($meze['mezeImage'])): ?>
                                     <div class="text-center mb-3">
-                                        <img src="images/mezedakia/<?php echo $meze['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-height: 400px;">
+                                        <img src="images/mezedakia/<?php echo $meze['mezeImage']; ?>" class="img-fluid exam-img">
                                     </div>
                                 <?php endif; ?>
                                 <div class="html-content-wrapper p-3 border rounded bg-white">
@@ -317,7 +327,7 @@
                                 <div class="p-3 border border-success rounded bg-light shadow-sm">
                                     <?php if (!empty($meze['mezeSolutionImage'])): ?>
                                         <div class="text-center mb-3">
-                                            <img src="images/mezedakia/<?php echo $meze['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success" style="max-height: 400px;">
+                                            <img src="images/mezedakia/<?php echo $meze['mezeSolutionImage']; ?>" class="img-fluid exam-img border-success">
                                         </div>
                                     <?php endif; ?>
                                     <div class="solution-text">
@@ -327,6 +337,8 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Bootstrap 5 JS Bundle (Περιλαμβάνει Popper) -->
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
                 </body>
 
                 </html>
@@ -341,7 +353,6 @@
                 $mezeRes = $db->getMezedakiById($mezeId);
                 $meze = $mezeRes->fetch_assoc();
 
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $students = $db->getTutorStudents($userYear);
 
                 // Φέρνουμε τους βαθμούς
@@ -356,14 +367,13 @@
                     }
                 }
 
-                $fm->showGradesForm($students, $mezeId, $meze['mezeNumber'], $indexedGrades);
+                $mezeFm->showGradesForm($students, $mezeId, $meze['mezeNumber'], $indexedGrades);
             }
             break;
 
         case 'saveGrades':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $mezeId = $_POST['meze_id'];
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $count = 0;
                 foreach ($_POST['grades'] as $studentId => $grade) {
                     if ($grade !== '') { // Αποθηκεύουμε μόνο αν έχει μπει βαθμός
@@ -374,7 +384,7 @@
                 echo "<div class='container mt-3'><div class='alert alert-success shadow'>Επιτυχής αποθήκευση $count βαθμολογιών!</div></div>";
                 // Επιστροφή στη λίστα (χρησιμοποιούμε getAllMezedakiaForAdmin για την admin view)
                 $result = $db->getAllMezedakiaForAdmin();
-                $fm->listMezedakia($result, $db);
+                $mezeFm->listMezedakia($result, $db);
             }
             break;
         case 'setYear':
@@ -383,50 +393,45 @@
                 echo "<div class='container mt-2'><div class='alert alert-info'>Το έτος εργασίας ορίστηκε σε: " . $_SESSION['tutor_user'] . "</div></div>";
             }
             // Επιστροφή στο dashboard
-            $fm->listMezedakia($db->getAllMezedakiaForAdmin(), $db);
+            $mezeFm->listMezedakia($db->getAllMezedakiaForAdmin(), $db);
             break;
         case 'fullReport':
-            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
             $students = $db->getTutorStudents($userYear);
             $gradesReport = $db->getFullGradesReport($userYear);
-            $fm->showFullGradesTable($students, $gradesReport);
+            $reportFm->showFullGradesTable($students, $gradesReport);
             break;
         case 'studentReport':
         case 'viewStudentProfile':
-            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
             $students = $db->getTutorStudents($userYear);
 
             if (isset($_GET['studentId'])) {
                 $studentId = $_GET['studentId'];
-                $studentInfo = null;
-                foreach ($students as $s) {
-                    if ($s['studentId'] == $studentId) {
-                        $studentInfo = $s;
-                        break;
-                    }
-                }
+
+                // Βελτίωση: Αναζήτηση απευθείας στον πίνακα αντί για loop στην PHP
+                $studentKey = array_search($studentId, array_column($students, 'studentId'));
+                $studentInfo = ($studentKey !== false) ? $students[$studentKey] : null;
+
                 if ($studentInfo) {
                     $grades = $db->getStudentGradesForStudent($studentId, $userYear);
                     $average = $db->getStudentOverallAverage($studentId, $userYear);
                     $tasks = $db->getStudentGroupTasks($studentId);
                     $financials = $db->getStudentFinancials($studentId);
-                    $fm->showFullStudentProfile($studentInfo, $grades, $tasks, $financials, $average);
+                    $trend = $db->getStudentPerformanceTrend($studentId, $userYear);
+                    $reportFm->showFullStudentProfile($studentInfo, $grades, $tasks, $financials, $average, $trend);
                 }
             } else {
-                $fm->showStudentSelectionList($students);
+                $reportFm->showStudentSelectionList($students);
             }
             break;
         case 'oldStudentReport':
             if (isset($_GET['studentId']) && isset($_GET['name'])) {
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $grades = $db->getStudentGrades($_GET['studentId'], $userYear);
-                $fm->showStudentReport($_GET['name'], $grades);
+                $reportFm->showStudentReport($_GET['name'], $grades);
             }
             break;
 
         case 'deleteSpecificGrade':
             if (isset($_GET['studentId']) && isset($_GET['mezeId'])) {
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $db->deleteSpecificGrade($_GET['studentId'], $_GET['mezeId'], $userYear);
 
                 // Αντί για header, χρησιμοποιούμε JavaScript για να γυρίσουμε πίσω
@@ -440,7 +445,6 @@
                 $mezeRes = $db->getMezedakiById($_GET['id']);
                 $meze = $mezeRes->fetch_assoc();
 
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $studentsList = $db->getTutorStudents($userYear);
                 $submissions = $db->getSubmissionsByMeze($_GET['id']);
 
@@ -455,7 +459,7 @@
                 }
 
                 // Στέλνουμε και τις 5 παραμέτρους
-                $fm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
+                $mezeFm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
             }
             break;
 
@@ -465,7 +469,6 @@
                 $mezeId = $_POST['meze_id'];
                 $grade = $_POST['grade'];
                 $comments = isset($_POST['teacher_comments']) ? $_POST['teacher_comments'] : "";
-                $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
 
                 // 1. Αποθήκευση ή Ενημέρωση του βαθμού και των σχολίων
                 $db->updateOrInsertGrade($studentId, $mezeId, $grade, $userYear, $comments);
@@ -486,7 +489,7 @@
                 $studentName = $student ? $student['name'] . " " . $student['lastName'] : "Μαθητής";
 
                 // 4. Εμφάνιση της εκτυπώσιμης αναφοράς (PDF Report)
-                $fm->showPrintableReport($studentName, $mezeNum, $grade, $comments, $avg, $mezeId, $student);
+                $mezeFm->showPrintableReport($studentName, $mezeNum, $grade, $comments, $avg, $mezeId, $student);
             }
             break;
 
@@ -536,20 +539,19 @@
                 // Επιστροφή στις λύσεις
                 $mezeRes = $db->getMezedakiById($mezeId);
                 $meze = $mezeRes->fetch_assoc();
-                $fm->showSubmissionsForGrading($db->getSubmissionsByMeze($mezeId), $db->getTutorStudents($_SESSION['tutor_user']), $meze, [], $db->getGradesForMeze($mezeId));
+                $mezeFm->showSubmissionsForGrading($db->getSubmissionsByMeze($mezeId), $db->getTutorStudents($_SESSION['tutor_user']), $meze, [], $db->getGradesForMeze($mezeId));
             }
             break;
 
         case 'giveExtension':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
                 $stId = $_POST['student_id'];
                 $mId = $_POST['meze_id'];
                 $hours = isset($_POST['hours']) ? (int)$_POST['hours'] : 24;
-                if ($db->hasExtension($stId, $mId, $uYear)) {
-                    $db->removeLateSubmission($stId, $mId, $uYear);
+                if ($db->hasExtension($stId, $mId, $userYear)) {
+                    $db->removeLateSubmission($stId, $mId, $userYear);
                 } else {
-                    $db->allowLateSubmission($stId, $mId, $uYear, $hours);
+                    $db->allowLateSubmission($stId, $mId, $userYear, $hours);
                 }
             ?>
                 <script>
@@ -563,12 +565,11 @@
         case 'extendMezeForAll':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $mId = $_POST['meze_id'];
-                $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-                if ($db->hasGlobalExtension($mId, $uYear)) {
-                    $db->removeGlobalExtension($mId, $uYear);
+                if ($db->hasGlobalExtension($mId, $userYear)) {
+                    $db->removeGlobalExtension($mId, $userYear);
                 } else {
                     $hours = isset($_POST['hours']) ? (int)$_POST['hours'] : 24;
-                    $db->extendMezeForAll($mId, $hours, $uYear);
+                    $db->extendMezeForAll($mId, $hours, $userYear);
                 }
             ?>
                 <script>
@@ -576,6 +577,81 @@
                 </script>
     <?php
                 exit();
+            }
+            break;
+
+        case 'view_extension_requests':
+            $requests = $db->getPendingExtensionRequests($userYear);
+            $students = $db->getTutorStudents($userYear);
+            $mezeFm->listExtensionRequests($requests, $students);
+            break;
+
+        case 'processExtension':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $requestId = $_POST['request_id'];
+                $stId = $_POST['student_id'];
+                $mId = $_POST['meze_id'];
+                $hours = $_POST['hours'];
+                $approve = isset($_POST['approve']);
+
+                $success = $db->processExtensionRequest($requestId, $stId, $mId, $hours, $userYear, $approve);
+
+                // Αυτόματη αποστολή email ειδοποίησης για το αποτέλεσμα του αιτήματος
+                if ($success) {
+                    $students = $db->getTutorStudents($userYear);
+                    $studentKey = array_search($stId, array_column($students, 'studentId'));
+                    $student = ($studentKey !== false) ? $students[$studentKey] : null;
+                    $mezeNum = $db->getMezeNumberById($mId);
+
+                    if ($student && !empty($student['email'])) {
+                        require_once '../phpmailer/class.phpmailer.php';
+                        require_once '../phpmailer/class.smtp.php';
+                        require_once 'config.php';
+
+                        $mail = new PHPMailer(true);
+                        try {
+                            $mail->isSMTP();
+                            $mail->Host       = 'smtp.gmail.com';
+                            $mail->SMTPAuth   = true;
+                            $mail->Username   = SMTP_USER;
+                            $mail->Password   = SMTP_PASS;
+                            $mail->SMTPSecure = 'tls';
+                            $mail->Port       = 587;
+                            $mail->CharSet    = 'UTF-8';
+
+                            $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
+                            $mail->addAddress($student['email']);
+                            $mail->isHTML(true);
+
+                            if ($approve) {
+                                $mail->Subject = "Έγκριση Παράτασης: Μεζεδάκι #$mezeNum";
+                                $mail->Body = "
+                                <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                                    <h2 style='color: #28a745;'>Έγκριση Παράτασης!</h2>
+                                    <p>Γεια σου <b>" . $student['name'] . "</b>,</p>
+                                    <p>Το αίτημά σου για παράταση στο <b>Μεζεδάκι #$mezeNum</b> εγκρίθηκε από τον δάσκαλο.</p>
+                                    <p>Έχεις πλέον <b>$hours επιπλέον ώρες</b> από τώρα για να υποβάλεις τη λύση σου στην πλατφόρμα.</p>
+                                    <p><a href='https://jhouv.eu/aepp/index.php?action=viewMezedakia' style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Μετάβαση στα Μεζεδάκια</a></p>
+                                    <p>Καλή συνέχεια και καλή μελέτη,<br><b>Αντώνης Χουβαρδάς</b></p>
+                                </div>";
+                            } else {
+                                $mail->Subject = "Ενημέρωση Αιτήματος Παράτασης: Μεζεδάκι #$mezeNum";
+                                $mail->Body = "
+                                <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                                    <h2 style='color: #dc3545;'>Απόρριψη Αιτήματος Παράτασης</h2>
+                                    <p>Γεια σου <b>" . $student['name'] . "</b>,</p>
+                                    <p>Σε ενημερώνουμε ότι το αίτημά σου για παράταση στο <b>Μεζεδάκι #$mezeNum</b> δεν έγινε δεκτό από τον δάσκαλο.</p>
+                                    <p>Μπορείς να επικοινωνήσεις με τον δάσκαλό σου για οποιαδήποτε διευκρίνιση.</p>
+                                    <p>Καλή συνέχεια,<br><b>Αντώνης Χουβαρδάς</b></p>
+                                </div>";
+                            }
+                            $mail->send();
+                        } catch (Exception $e) { /* Silent fail */
+                        }
+                    }
+                }
+                $status = $approve ? 'ext_approved' : 'ext_rejected';
+                echo "<script>window.location.href='index.php?action=view_extension_requests&status=$status';</script>";
             }
             break;
 
@@ -588,29 +664,25 @@
             break;
 
         case 'manage_groups':
-            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-            $groups = $db->getGroups($uYear);
-            $students = $db->getTutorStudents($uYear);
+            $groups = $db->getGroups($userYear);
+            $students = $db->getTutorStudents($userYear);
             $assignments = $db->getAssignedStudents();
-            $fm->manageGroupsForm($groups, $students, $db, $assignments);
+            $reportFm->manageGroupsForm($groups, $students, $db, $assignments);
             break;
 
         case 'assign_tasks':
-            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-            $groups = $db->getGroups($uYear);
+            $groups = $db->getGroups($userYear);
             $books = $db->getTheoryBooks();
-            $fm->assignTasksForm($groups, $db, $books);
+            $exFm->assignTasksForm($groups, $db, $books);
             break;
 
         case 'list_all_tasks':
-            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-            $tasks = $db->getAllGroupTasks($uYear);
-            $fm->listAllTasks($tasks);
+            $tasks = $db->getAllGroupTasks($userYear);
+            $exFm->listAllTasks($tasks);
             break;
 
         case 'save_group':
-            $uYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-            $db->createGroup($_POST['group_name'], $uYear);
+            $db->createGroup($_POST['group_name'], $userYear);
             echo "<script>window.location.href='index.php?action=manage_groups';</script>";
             break;
 
@@ -634,9 +706,9 @@
         case 'grade_task':
             if (isset($_GET['task_id'])) {
                 $task = $db->getTaskById($_GET['task_id']);
-                $students = $db->getStudentsByGroupId($task['group_id']);
+                $students = $db->getStudentsByGroupId($task['group_id'], $userYear);
                 $grades = $db->getTaskGrades($_GET['task_id']);
-                $fm->showTaskGradesForm($task, $students, $grades);
+                $reportFm->showTaskGradesForm($task, $students, $grades);
             }
             break;
 
@@ -650,8 +722,6 @@
             break;
 
         default:
-            $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-
             // Παίρνουμε τα μεζεδάκια (η μέθοδος πλέον δεν θα "σκάσει" ποτέ)
             $mezedakia = $db->getAllMezedakiaForAdmin();
 
@@ -662,7 +732,7 @@
                       </div></div>";
             } else {
                 // Κλήση της λίστας
-                $fm->listMezedakia($mezedakia, $db);
+                $mezeFm->listMezedakia($mezedakia, $db);
             }
             break;
     }

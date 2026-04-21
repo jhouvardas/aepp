@@ -13,10 +13,9 @@ class PageMaker
             <title>ΑΕΠΠ</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
             <link rel="icon" href="images/favicon.jpg" sizes="16x16" type="image/jpg">
             <link rel="stylesheet" href="aepp.css">
         </head>
@@ -33,25 +32,25 @@ class PageMaker
                     <i class="fa fa-code"></i> ΑΕΠΠ
                 </a>
 
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link text-warning font-weight-bold" href="index.php?action=viewMezedakia">
+                            <a class="nav-link text-warning fw-bold" href="index.php?action=viewMezedakia">
                                 <i class="fa fa-star"></i> Μεζεδάκια
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-info font-weight-bold" href="index.php?action=myGrades">
+                            <a class="nav-link text-info fw-bold" href="index.php?action=myGrades">
                                 <i class="fa fa-graduation-cap"></i> Βαθμοί & Εργασίες
                             </a>
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropAlgos" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropAlgos" data-bs-toggle="dropdown">
                                 Αλγόριθμοι
                             </a>
                             <div class="dropdown-menu shadow">
@@ -64,7 +63,7 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropData" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropData" data-bs-toggle="dropdown">
                                 Δομές Δεδομένων
                             </a>
                             <div class="dropdown-menu shadow">
@@ -75,7 +74,7 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop2025" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop2025" data-bs-toggle="dropdown">
                                 Πανελλήνιες 2026
                             </a>
                             <div class="dropdown-menu shadow">
@@ -90,7 +89,7 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropPanell" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropPanell" data-bs-toggle="dropdown">
                                 Πανελλήνιες
                             </a>
                             <div class="dropdown-menu shadow">
@@ -108,7 +107,7 @@ class PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropExercises" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardropExercises" data-bs-toggle="dropdown">
                                 Ασκήσεις
                             </a>
                             <div class="dropdown-menu shadow">
@@ -141,7 +140,7 @@ class PageMaker
                                 <div class="mb-4">
                                     <i class="fa fa-check-circle text-success" style="font-size: 100px;"></i>
                                 </div>
-                                <h1 class="font-weight-bold">Έγινε!</h1>
+                                <h1 class="fw-bold">Έγινε!</h1>
                                 <p class="lead text-muted">Η λύση σου στάλθηκε επιτυχώς στον δάσκαλο.</p>
 
                                 <div class="alert alert-success bg-light border-success mt-4">
@@ -150,7 +149,7 @@ class PageMaker
                                 </div>
 
                                 <div class="mt-4">
-                                    <a href="index.php" class="btn btn-primary btn-lg btn-block shadow">
+                                    <a href="index.php" class="btn btn-primary btn-lg w-100 shadow d-grid">
                                         <i class="fa fa-home"></i> Επιστροφή στην Αρχική
                                     </a>
                                 </div>
@@ -186,9 +185,52 @@ class PageMaker
         <?php
     }
 
+    public function displayRequestSuccess()
+    {
+        ?>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-sm-12">
+                        <div class="card shadow border-0 text-center" style="border-radius: 20px; border-left: 8px solid #ffc107 !important;">
+                            <div class="card-body p-5">
+                                <div class="mb-4">
+                                    <i class="fa fa-clock-o text-warning" style="font-size: 100px;"></i>
+                                </div>
+                                <h1 class="fw-bold">Το αίτημα εστάλη!</h1>
+                                <p class="lead text-muted">Ειδοποιήσαμε τον δάσκαλο για την παράταση που ζήτησες.</p>
+
+                                <div class="alert alert-warning bg-light border-warning mt-4 text-start">
+                                    <strong><i class="fa fa-info-circle"></i> Τι γίνεται τώρα;</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li>Ο δάσκαλος θα δει το αίτημά σου σύντομα.</li>
+                                        <li>Αν εγκριθεί, θα λάβεις email ειδοποίησης.</li>
+                                        <li>Μόλις εγκριθεί, η φόρμα υποβολής θα ανοίξει αυτόματα.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="mt-4">
+                                    <a href="index.php?action=showMyGrades" class="btn btn-warning btn-lg w-100 shadow fw-bold">
+                                        <i class="fa fa-arrow-left"></i> Επιστροφή στις Βαθμολογίες
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php
+    }
+
     public function displayEndMatter()
     {
         ?>
+            <footer>
+                <div class="container">Αντώνης Χουβαρδάς 2021-26.
+
+                </div>
+            </footer>
+            <!-- Bootstrap 5 JS Bundle για συμβατότητα με τα νέα Accordions -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         </body>
 
         </html>
@@ -249,13 +291,13 @@ class PageMaker
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4 px-2">
                             <div class="card h-100 shadow-sm border-0 exercise-card">
-                                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2 px-3">
-                                    <span class="badge badge-warning"><?php echo $row['exerciseYear']; ?></span>
-                                    <small class="font-weight-bold"><?php echo $row['examType']; ?></small>
+                                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
+                                    <span class="badge bg-warning text-dark ms-0 me-0"><?php echo $row['exerciseYear']; ?></span>
+                                    <small class="fw-bold"><?php echo $row['examType']; ?></small>
                                 </div>
                                 <div class="card-body d-flex flex-column exercise-body">
                                     <div class="px-3 pt-2">
-                                        <h6 class="card-title font-weight-bold text-primary mb-1">
+                                        <h6 class="card-title fw-bold text-primary mb-1">
                                             <?php echo $row['schoolType']; ?>
                                         </h6>
 
@@ -406,14 +448,14 @@ class PageMaker
                             <?php if (!empty($row['lysi'])): ?>
                                 <div id="accordion<?php echo $uniqueID; ?>">
                                     <div class="card border-success">
-                                        <div class="card-header p-0">
-                                            <button class="btn btn-success btn-block btn-sm"
-                                                data-toggle="collapse"
-                                                data-target="#collapseLysi<?php echo $uniqueID; ?>">
+                                        <div class="card-header p-0 border-0">
+                                            <button class="btn btn-success w-100 btn-sm"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#collapseLysi<?php echo $uniqueID; ?>">
                                                 Εμφάνιση Λύσης
                                             </button>
                                         </div>
-                                        <div id="collapseLysi<?php echo $uniqueID; ?>" class="collapse" data-parent="#accordion<?php echo $uniqueID; ?>">
+                                        <div id="collapseLysi<?php echo $uniqueID; ?>" class="collapse" data-bs-parent="#accordion<?php echo $uniqueID; ?>">
                                             <div class="card-body p-1 bg-light">
                                                 <pre class="aepp-code" style="white-space: pre-wrap; margin:0;"><?php echo htmlspecialchars($row['lysi']); ?></pre>
                                             </div>
@@ -444,6 +486,9 @@ class PageMaker
                 $studentsArray = [];
             }
 
+            echo '<div class="accordion" id="mezedakiaAccordion">';
+            $isFirst = true; // Flag για να ανοίξουμε μόνο το πρώτο
+
             while ($row = $result->fetch_assoc()) {
                 $mId = $row['mezeId'];
                 $now = new DateTime();
@@ -466,105 +511,125 @@ class PageMaker
                 }
 
                 $showButton = (!$isPastDeadline || !empty($allowedStudents));
+
+                // Χρωματική σήμανση για το deadline
+                $deadlineClass = $isPastDeadline ? 'bg-danger' : 'bg-success';
+                $showClass = $isFirst ? 'show' : ''; // Το πρώτο είναι ανοιχτό
+                $collapsedClass = $isFirst ? '' : 'collapsed'; // Το πρώτο δεν είναι collapsed
             ?>
-                <div class="container-fluid p-0 mt-4 mb-4">
-                    <div class="card shadow-sm border-warning">
-                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">
-                                <strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong>
-                            </h6>
-                            <?php if (isset($row['isSos']) && $row['isSos'] == 1): ?>
-                                <span class="badge badge-danger pulse-sos shadow-sm"><i class="fa fa-fire"></i> SOS</span>
-                            <?php endif; ?>
-                            <div class="text-right small">
-                                <i class="fa fa-hourglass-end"></i> Deadline: <?php echo $solDate->format('d/m/Y H:i'); ?>
+                <div class="container-fluid p-0 mt-2 mb-2">
+                    <div class="card shadow-sm border-warning meze-card border-0">
+                        <!-- Η κεφαλίδα λειτουργεί πλέον ως Toggle για το Accordion -->
+                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center meze-header <?php echo $collapsedClass; ?>"
+                            style="cursor: pointer;"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#mezeCollapse<?php echo $mId; ?>">
+                            <div class="d-flex align-items-center">
+                                <!-- Εικονίδιο ένδειξης accordion -->
+                                <i class="fa fa-chevron-down me-3 accordion-icon" style="transition: transform 0.3s;"></i>
+                                <h6 class="mb-0 me-3">
+                                    <strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong>
+                                </h6>
+                                <?php if (isset($row['isSos']) && $row['isSos'] == 1): ?>
+                                    <span class="badge bg-danger pulse-sos shadow-sm"><i class="fa fa-fire"></i> SOS</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge <?php echo $deadlineClass; ?> py-2 px-3 shadow-sm border border-white">
+                                    <i class="fa fa-clock-o"></i> <?php echo $solDate->format('d/m/Y H:i'); ?>
+                                </span>
                             </div>
                         </div>
 
-                        <div class="card-body p-2">
-                            <?php if (!empty($row['mezeImage'])): ?>
-                                <div class="text-center mb-3">
-                                    <img src="images/mezedakia/<?php echo $row['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-width: 100%;">
+                        <!-- Το σώμα του μεζεδακίου κρυμμένο αρχικά -->
+                        <div id="mezeCollapse<?php echo $mId; ?>" class="collapse <?php echo $showClass; ?>" data-bs-parent="#mezedakiaAccordion">
+                            <div class="card-body p-2">
+                                <?php if (!empty($row['mezeImage'])): ?>
+                                    <div class="text-center mb-3">
+                                        <img src="images/mezedakia/<?php echo $row['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-width: 100%;">
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="meze-text px-1">
+                                    <?php echo str_replace('src="../images/', 'src="images/', $row['mezeText']); ?>
                                 </div>
-                            <?php endif; ?>
 
-                            <div class="meze-text px-1">
-                                <?php echo str_replace('src="../images/', 'src="images/', $row['mezeText']); ?>
-                            </div>
-
-                            <?php if (!empty($row['mezeHints'])): ?>
-                                <div class="mt-3 px-1">
-                                    <button class="btn btn-outline-info btn-sm btn-block shadow-sm font-weight-bold"
-                                        type="button"
-                                        data-toggle="collapse"
-                                        data-target="#hints<?php echo $mId; ?>"
-                                        aria-expanded="false">
-                                        <i class="fa fa-lightbulb-o"></i> Οδηγίες - Συμβουλές (Hints)
-                                    </button>
-                                    <div class="collapse mt-2 text-left" id="hints<?php echo $mId; ?>">
-                                        <div class="alert alert-info border-info shadow-sm small mb-0">
-                                            <strong><i class="fa fa-info-circle"></i> Οδηγίες / Υποδείξεις:</strong><br>
-                                            <?php echo nl2br($row['mezeHints']); ?>
+                                <?php if (!empty($row['mezeHints'])): ?>
+                                    <div class="mt-3 px-1">
+                                        <button class="btn btn-outline-info btn-sm w-100 shadow-sm font-weight-bold"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#hints<?php echo $mId; ?>"
+                                            aria-expanded="false">
+                                            <i class="fa fa-lightbulb-o"></i> Οδηγίες - Συμβουλές (Hints)
+                                        </button>
+                                        <div class="collapse mt-2 text-left" id="hints<?php echo $mId; ?>">
+                                            <div class="alert alert-info border-info shadow-sm small mb-0">
+                                                <strong><i class="fa fa-info-circle"></i> Οδηγίες / Υποδείξεις:</strong><br>
+                                                <?php echo nl2br($row['mezeHints']); ?>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            <?php endif; ?>
+                                <?php endif; ?>
 
-                            <hr>
+                                <hr>
 
-                            <?php if ($showButton): ?>
-                                <div class="mt-2 text-center">
-                                    <button class="btn btn-primary btn-block shadow-sm font-weight-bold"
-                                        type="button"
-                                        data-toggle="collapse"
-                                        data-target="#formMeze<?php echo $mId; ?>"
-                                        aria-expanded="false">
-                                        <i class="fa fa-paper-plane"></i> Υποβολή Λύσης
-                                    </button>
+                                <?php if ($showButton): ?>
+                                    <div class="mt-2 text-center">
+                                        <button class="btn btn-primary w-100 shadow-sm font-weight-bold"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#formMeze<?php echo $mId; ?>"
+                                            aria-expanded="false">
+                                            <i class="fa fa-paper-plane"></i> Υποβολή Λύσης
+                                        </button>
 
-                                    <div class="collapse mt-3 text-left" id="formMeze<?php echo $mId; ?>">
-                                        <?php if ($isPastDeadline && !empty($allowedNames)): ?>
-                                            <div class="alert alert-danger py-2 mb-3 small shadow-sm border-danger">
-                                                <i class="fa fa-unlock-alt fa-lg mr-2"></i>
-                                                <strong>Ειδική Παράταση:</strong> Επιτρεπτοί:
-                                                <b class="text-dark"><?php echo implode(', ', $allowedNames); ?></b>.
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <?php $fm->studentSubmissionForm($allowedStudents, $mId); ?>
-                                    </div>
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-secondary py-2 small text-center">
-                                    <i class="fa fa-lock mr-1"></i> Η προθεσμία υποβολής έληξε.
-                                </div>
-                            <?php endif; ?>
-
-                            <?php
-                            $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
-                            $canShowSolution = $db->canShowMezeSolution($mId, $userYear);
-                            if ($hasSolution && $canShowSolution): ?>
-                                <div id="accMeze<?php echo $mId; ?>" class="mt-3">
-                                    <button class="btn btn-success btn-block btn-sm font-weight-bold shadow-sm" data-toggle="collapse" data-target="#sol<?php echo $mId; ?>">
-                                        <i class="fa fa-key"></i> Εμφάνιση Λύσης
-                                    </button>
-                                    <div id="sol<?php echo $mId; ?>" class="collapse mt-2">
-                                        <div class="p-2 bg-light border rounded shadow-sm text-left">
-                                            <?php if (!empty($row['mezeSolutionImage'])): ?>
-                                                <div class="text-center mb-2">
-                                                    <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success">
+                                        <div class="collapse mt-3 text-left" id="formMeze<?php echo $mId; ?>">
+                                            <?php if ($isPastDeadline && !empty($allowedNames)): ?>
+                                                <div class="alert alert-danger py-2 mb-3 small shadow-sm border-danger">
+                                                    <i class="fa fa-unlock-alt fa-lg mr-2"></i>
+                                                    <strong>Ειδική Παράταση:</strong> Επιτρεπτοί:
+                                                    <b class="text-dark"><?php echo implode(', ', $allowedNames); ?></b>.
                                                 </div>
                                             <?php endif; ?>
-                                            <div class="solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
+
+                                            <?php $fm->studentSubmissionForm($allowedStudents, $mId); ?>
                                         </div>
                                     </div>
-                                </div>
-                            <?php endif; ?>
+                                <?php else: ?>
+                                    <div class="alert alert-secondary py-2 small text-center">
+                                        <i class="fa fa-lock mr-1"></i> Η προθεσμία υποβολής έληξε.
+                                    </div>
+                                <?php endif; ?>
+
+                                <?php
+                                $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
+                                $canShowSolution = $db->canShowMezeSolution($mId, $userYear);
+                                if ($hasSolution && $canShowSolution): ?>
+                                    <div id="accMeze<?php echo $mId; ?>" class="mt-3">
+                                        <button class="btn btn-success w-100 btn-sm font-weight-bold shadow-sm" data-bs-toggle="collapse" data-bs-target="#sol<?php echo $mId; ?>">
+                                            <i class="fa fa-key"></i> Εμφάνιση Λύσης
+                                        </button>
+                                        <div id="sol<?php echo $mId; ?>" class="collapse mt-2">
+                                            <div class="p-2 bg-light border rounded shadow-sm text-left">
+                                                <?php if (!empty($row['mezeSolutionImage'])): ?>
+                                                    <div class="text-center mb-2">
+                                                        <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success">
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 <?php
+                $isFirst = false; // Μετά το πρώτο, όλα τα επόμενα θα είναι κλειστά
             }
+            echo '</div>';
         }
     }
 }

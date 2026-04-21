@@ -2,141 +2,442 @@
 <html lang="el">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="../">
-    <title>Λύση: Παραγωγή Πτηνοτροφικής Μονάδας</title>
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        body {
-            padding: 0 !important;
-            margin: 0;
-            background-color: #f8f9fa;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="../">
+  <title>Λύση: Παραγωγή Πτηνοτροφικής Μονάδας</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    body {
+      padding: 0 !important;
+      margin: 0;
+      background-color: #f1f3f5;
+    }
 
-        .preview-box {
-            background: white;
-            padding: 20px;
-            border-left: 5px solid #28a745;
-            min-height: 100vh;
-        }
+    .preview-box {
+      background: white;
+      padding: 20px;
+      border-left: 5px solid #28a745;
+      min-height: 100vh;
+    }
 
-        .aepp-code {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre;
-            overflow-x: auto;
-        }
-    </style>
+    /* Answer Styling Improvements */
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      padding: 5px 0;
+    }
+
+    .answer-item {
+      background: #fdfdfd;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: transform 0.15s ease-in-out, border-color 0.15s;
+    }
+
+    .answer-item:hover {
+      transform: translateY(-2px);
+      border-color: #28a745;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .ans-num {
+      font-weight: 700;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      letter-spacing: 0.3px;
+      padding: 6px 8px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container-fluid px-0">
-        <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
-            <span class="text-white ms-3 fw-bold small"><i class="fa fa-code text-success"></i> ΛΥΣΗ ΘΕΜΑΤΟΣ 4 -
-                ΠΤΗΝΟΤΡΟΦΙΚΗ ΜΟΝΑΔΑ</span>
-            <div>
-                <button onclick="copySolution()" class="btn btn-success btn-sm me-3 fw-bold"><i class="fa fa-copy"></i>
-                    Αντιγραφή Κώδικα</button>
-            </div>
-        </div>
-        <div class="preview-box">
-            <div class="solution-container" id="solutionCode" contenteditable="true">
-                <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύση Θέματος 4 - Διαχείριση Παραγωγής
-                    Αυγών</h4>
-                <pre class="aepp-code">
-ΠΡΟΓΡΑΜΜΑ παραγωγήΑυγών
-ΜΕΤΑΒΛΗΤΕΣ
-  ΑΚΕΡΑΙΕΣ: έτος, μήνας, μέρα, πλΗμερών[12], παραγωγή[12, 31], σύνΜήνα, σύνΈτους
-ΑΡΧΗ
-  ! Α1: Είσοδος έτους με έλεγχο εγκυρότητας (άγνωστες επαναλήψεις)
-  έτος <- 0
-  ΟΣΟ έτος < 2000 Η έτος > 2099 ΕΠΑΝΑΛΑΒΕ
-    ΓΡΑΨΕ 'Δώστε έτος (2000-2099):'
-    ΔΙΑΒΑΣΕ έτος
-  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-
-  ! Υπολογισμός ημερών κάθε μήνα (γνωστές επαναλήψεις)
-  ΓΙΑ μήνας ΑΠΟ 1 ΜΕΧΡΙ 12
-    πλΗμερών[μήνας] <- ημέρεςΜήνα(έτος, μήνας)
-  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-
-  ! Α2: Είσοδος ημερήσιας παραγωγής
-  ΓΙΑ μήνας ΑΠΟ 1 ΜΕΧΡΙ 12
-    ΓΡΑΨΕ 'Μήνας: ', μήνας
-    ΓΙΑ μέρα ΑΠΟ 1 ΜΕΧΡΙ πλΗμερών[μήνας]
-      ΓΡΑΨΕ 'Μέρα ', μέρα, ', αυγά: '
-      ΔΙΑΒΑΣΕ παραγωγή[μήνας, μέρα]
-    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-
-  ! Α3: Στατιστικά παραγωγής
-  σύνΈτους <- 0
-  ΓΙΑ μήνας ΑΠΟ 1 ΜΕΧΡΙ 12
-    σύνΜήνα <- 0
-    ΓΙΑ μέρα ΑΠΟ 1 ΜΕΧΡΙ πλΗμερών[μήνας]
-      σύνΜήνα <- σύνΜήνα + παραγωγή[μήνας, μέρα]
-    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    ΓΡΑΨΕ 'Μήνας ', μήνας, ': ', σύνΜήνα
-    σύνΈτους <- σύνΈτους + σύνΜήνα
-  ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-  ΓΡΑΨΕ 'Σύνολο έτους: ', σύνΈτους
-
-ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ
-
-! Β: Υποπρόγραμμα Συνάρτηση (camelCase)
-ΣΥΝΑΡΤΗΣΗ ημέρεςΜήνα(έτος, μήνας) : ΑΚΕΡΑΙΑ
-ΜΕΤΑΒΛΗΤΕΣ
-  ΑΚΕΡΑΙΕΣ: έτος, μήνας
-  ΛΟΓΙΚΕΣ: δίσεκτο
-ΑΡΧΗ
-  ΑΝ μήνας = 2 ΤΟΤΕ
-    δίσεκτο <- (έτος MOD 4 = 0 ΚΑΙ έτος MOD 100 <> 0) Η (έτος MOD 400 = 0)
-    ΑΝ δίσεκτο = ΑΛΗΘΗΣ ΤΟΤΕ
-      ημέρεςΜήνα <- 29
-    ΑΛΛΙΩΣ
-      ημέρεςΜήνα <- 28
-    ΤΕΛΟΣ_ΑΝ
-  ΑΛΛΙΩΣ_ΑΝ μήνας <= 7 ΤΟΤΕ
-    ΑΝ μήνας MOD 2 <> 0 ΤΟΤΕ
-      ημέρεςΜήνα <- 31
-    ΑΛΛΙΩΣ
-      ημέρεςΜήνα <- 30
-    ΤΕΛΟΣ_ΑΝ
-  ΑΛΛΙΩΣ
-    ΑΝ μήνας MOD 2 = 0 ΤΟΤΕ
-      ημέρεςΜήνα <- 31
-    ΑΛΛΙΩΣ
-      ημέρεςΜήνα <- 30
-    ΤΕΛΟΣ_ΑΝ
-  ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΣΥΝΑΡΤΗΣΗΣ</pre>
-            </div>
-        </div>
+  <div class="container-fluid px-0">
+    <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
+      <span class="text-white ms-3 fw-bold small"><i class="fa fa-check-square text-success"></i> ΛΥΣΕΙΣ: ΣΩΣΤΟ / ΛΑΘΟΣ
+        (Συγκεντρωτικά)</span>
+      <div>
+        <button onclick="copySolution()" class="btn btn-success btn-sm me-3 fw-bold"><i class="fa fa-copy"></i>
+          Αντιγραφή Κώδικα</button>
+      </div>
     </div>
-    <script>
-        function copySolution() {
-            const code = document.querySelector('.aepp-code').innerText;
-            const finalHtml = "<html>\n<body>\n<pre class=\"aepp-code\">\n" + code + "\n</pre>\n</body>\n</html>";
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(finalHtml).then(() => showSuccess());
-            }
-        }
-        function showSuccess() {
-            const btn = document.querySelector('.btn-success');
-            const original = btn.innerHTML;
-            btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-            setTimeout(() => btn.innerHTML = original, 2000);
-        }
-    </script>
+    <div class="preview-box">
+      <div class="solution-container" id="solutionCode" contenteditable="true">
+        <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύσεις: ΘΕΜΑ Α (True/False)
+        </h4>
+        <p class="text-muted small mb-4">Κάντε κλικ σε κάθε ομάδα για να δείτε τις απαντήσεις.</p>
+
+        <div class="accordion shadow-sm" id="accordionSolutions">
+
+          <!-- Ομάδα 1 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading1">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse1">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 1 (Θεωρία & Δομές)
+              </button>
+            </h2>
+            <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 2 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading2">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse2">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 2 (Έλεγχος & Λίστες)
+              </button>
+            </h2>
+            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 3 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading3">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse3">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 3 (Δομές & Συναρτήσεις)
+              </button>
+            </h2>
+            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 4 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading4">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse4">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 4 (Αντικείμενα & Δένδρα)
+              </button>
+            </h2>
+            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 5 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading5">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse5">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 5 (Σχεδίαση & Λογική)
+              </button>
+            </h2>
+            <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 6 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading6">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse6">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 6 (Συγκρίσεις & Σφάλματα)
+              </button>
+            </h2>
+            <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 7 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading7">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse7">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 7 (Λίστες & Αναζήτηση)
+              </button>
+            </h2>
+            <div id="collapse7" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 8 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading8">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse8">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 8 (Προγραμματισμός & Βρόχοι)
+              </button>
+            </h2>
+            <div id="collapse8" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 9 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading9">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse9">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 9 (Επιλογή & Ουρά)
+              </button>
+            </h2>
+            <div id="collapse9" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ομάδα 10 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading10">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse10">
+                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 10 (Μεταγλωττιστής & Σφάλματα)
+              </button>
+            </h2>
+            <div id="collapse10" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
+              <div class="accordion-body">
+                <div class="answer-grid">
+                  <div class="answer-item">
+                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                  <div class="answer-item">
+                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- End of Accordion -->
+
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Bootstrap 5 JS Bundle (Περιλαμβάνει Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function copySolution() {
+      const wrapper = document.querySelector('#solutionCode');
+      if (!wrapper) return;
+
+      // Παίρνουμε μόνο το καθαρό HTML για επικόλληση
+      const finalHtml = wrapper.innerHTML;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(finalHtml).then(() => {
+          showSuccess();
+        }).catch(() => {
+          fallbackCopy(finalHtml);
+        });
+      } else {
+        fallbackCopy(finalHtml);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      showSuccess();
+      document.body.removeChild(textArea);
+    }
+
+    function showSuccess() {
+      const btn = document.querySelector('.btn-success');
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+      setTimeout(() => btn.innerHTML = original, 2000);
+    }
+  </script>
 </body>
 
 </html>

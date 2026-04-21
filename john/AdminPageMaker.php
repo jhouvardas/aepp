@@ -14,13 +14,10 @@ class AdminPageMaker extends PageMaker
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
 
-            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
             <link rel="stylesheet" href="../aepp.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
             <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 
         </head>
@@ -29,13 +26,18 @@ class AdminPageMaker extends PageMaker
         <?php
     }
 
-    public function displayMenu()
+    // Προσθέτουμε παραμέτρους για το userYear και το dbHandler
+    public function displayMenu($userYear = '', $dbHandler = null)
     {
+        $pendingRequestsCount = 0;
+        if ($dbHandler && !empty($userYear)) {
+            $pendingRequestsCount = $dbHandler->getPendingExtensionRequestsCount($userYear);
+        }
         ?>
             <nav class="navbar navbar-dark bg-danger shadow mb-4">
                 <a class="navbar-brand font-weight-bold" href="index.php">ADMIN PANEL</a>
 
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#adminNavbar">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -75,7 +77,7 @@ class AdminPageMaker extends PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-warning" href="#" id="mezedakiaDrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle text-warning" href="#" id="mezedakiaDrop" data-bs-toggle="dropdown">
                                 <i class="fa fa-coffee"></i> Μεζεδάκια
                             </a>
                             <div class="dropdown-menu shadow border-danger">
@@ -85,8 +87,14 @@ class AdminPageMaker extends PageMaker
                                 <a class="dropdown-item" href="index.php?action=listMezedakia">
                                     <i class="fa fa-list text-secondary"></i> 2. Λίστα / Διαχείριση
                                 </a>
+                                <a class="dropdown-item" href="index.php?action=view_extension_requests">
+                                    <i class="fa fa-clock-o text-danger"></i> 3. Αιτήματα Παράτασης
+                                    <?php if ($pendingRequestsCount > 0): ?>
+                                        <span class="badge bg-danger rounded-pill ms-2"><?php echo $pendingRequestsCount; ?></span>
+                                    <?php endif; ?>
+                                </a>
                                 <a class="dropdown-item" href="index.php?action=manage_exercise_types">
-                                    <i class="fa fa-tags text-info"></i> 3. Διαχείριση Τύπων/Τεχνικών
+                                    <i class="fa fa-tags text-info"></i> 4. Διαχείριση Τύπων/Τεχνικών
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="index.php?action=fullReport">
@@ -96,7 +104,7 @@ class AdminPageMaker extends PageMaker
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-bs-toggle="dropdown">
                                 Πανελλήνιες
                             </a>
                             <div class="dropdown-menu shadow">
@@ -126,13 +134,67 @@ class AdminPageMaker extends PageMaker
                                 value="<?php echo isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : ''; ?>"
                                 style="width: 120px;"
                                 autocomplete="off">
-                            <div class="input-group-append">
-                                <button class="btn btn-dark border-0 text-success font-weight-bold" type="submit">Ορισμός</button>
+                            <div>
+                                <button class="btn btn-dark border-0 text-success fw-bold" type="submit">Ορισμός</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </nav>
+        <?php
+    }
+
+    /**
+     * Εμφανίζει μια ειδοποίηση (Toast) βασισμένη σε ένα status code.
+     */
+    public function showToast($status)
+    {
+        $message = "";
+        $bgClass = "bg-primary";
+        $icon = "fa-info-circle";
+
+        switch ($status) {
+            case 'ext_approved':
+                $message = "Το αίτημα εγκρίθηκε και στάλθηκε email ενημέρωσης!";
+                $bgClass = "bg-success";
+                $icon = "fa-check-circle";
+                break;
+            case 'ext_rejected':
+                $message = "Το αίτημα απορρίφθηκε και στάλθηκε email ενημέρωσης.";
+                $bgClass = "bg-danger";
+                $icon = "fa-times-circle";
+                break;
+        }
+
+        if (empty($message)) return;
+        ?>
+            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+                <div id="liveToast" class="toast align-items-center text-white <?php echo $bgClass; ?> border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fa <?php echo $icon; ?> me-2"></i> <?php echo $message; ?>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var toastEl = document.getElementById('liveToast');
+                    if (toastEl) {
+                        var toast = new bootstrap.Toast(toastEl, {
+                            delay: 5000
+                        });
+                        toast.show();
+                        // Καθαρισμός του URL από το status χωρίς reload
+                        if (window.history.replaceState) {
+                            var url = new URL(window.location.href);
+                            url.searchParams.delete('status');
+                            window.history.replaceState({}, document.title, url.toString());
+                        }
+                    }
+                });
+            </script>
     <?php
     }
 }

@@ -42,11 +42,16 @@ class DbHandler
     public function login($username, $password)
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT * FROM italiano_user WHERE username = '" . $username . "' AND password = '" . $password . "'";
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare("SELECT * FROM italiano_user WHERE username = ? AND password = ?");
+        $stmt->bind_param("ss", $username, $password);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
         if ($result->num_rows > 0) {
+            $stmt->close();
             return true;
         } else {
+            $stmt->close();
             throw new Exception('Could not log you in');
         }
     }
@@ -61,12 +66,13 @@ class DbHandler
         $section = $_POST['section'];
         $type = $_POST['type'];
         $file = $_FILES['fileToUpload']['name'];
-        $sql = "INSERT INTO aepp_themata (school,year,thema,file,period,section,type) VALUES ('$school',$year,'$thema','$file','$period','$section','$type')";
-        if ($conn->query($sql) === TRUE) {
-        } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
+
+        $stmt = $conn->prepare("INSERT INTO aepp_themata (school, year, thema, file, period, section, type) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sisssss", $school, $year, $thema, $file, $period, $section, $type);
+        if (!$stmt->execute()) {
+            echo "Error: " . $stmt->error;
         }
-        $conn->close();
+        $stmt->close();
     }
 
     public function addNote()
@@ -75,13 +81,14 @@ class DbHandler
         $note = $_POST['note'];
         $date = $_POST['date'];
         if (isset($_POST['submitNote'])) {
-            //echo 'eeeeeeeeeeeeeeeeeeee';
-            $sql = "INSERT INTO italiano_note (note,date) VALUES ('" . $note . "','" . $date . "')";
-            if ($conn->query($sql) === TRUE) {
+            $stmt = $conn->prepare("INSERT INTO italiano_note (note, date) VALUES (?, ?)");
+            $stmt->bind_param("ss", $note, $date);
+            if ($stmt->execute()) {
                 echo "Η σημείωση αποθηκεύτηκε";
             } else {
-                echo "Error: " . $sql . "<br>" . $conn->error;
+                echo "Error: " . $stmt->error;
             }
+            $stmt->close();
         }
     }
 
@@ -412,8 +419,8 @@ class DbHandler
     public function getTutorStudents($userYear)
     {
         $connTutor = $this->connectToTutorDB();
-        if (!$connTutor) {
-            return false;
+        if (!$connTutor || $connTutor->connect_error) {
+            return [];
         }
 
         // Φιλτράρουμε με status=1 και το συγκεκριμένο user (έτος)
@@ -540,6 +547,32 @@ class DbHandler
         return $year;
     }
 
+    public function submitExtensionRequest($studentId, $mezeId, $hours, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_meze_requests (student_id, meze_id, requested_hours, user_year, status) 
+                                VALUES (?, ?, ?, ?, 0) 
+                                ON DUPLICATE KEY UPDATE requested_hours = VALUES(requested_hours), status = 0, created_at = NOW()");
+        $stmt->bind_param("iiis", $studentId, $mezeId, $hours, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getStudentPendingRequests($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT meze_id FROM aepp_meze_requests WHERE student_id = ? AND status = 0");
+        $stmt->bind_param("i", $studentId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $ids = [];
+        while ($row = $res->fetch_assoc()) $ids[] = $row['meze_id'];
+        $conn->close();
+        return $ids;
+    }
+
     public function allowLateSubmission($studentId, $mezeId, $userYear, $hours = 24)
     {
         $conn = $this->connectToFamilyDB();
@@ -662,7 +695,7 @@ class DbHandler
     public function getStudentGradesForStudent($studentId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT g.grade_value, g.teacher_comments, m.mezeNumber, m.mezeDate 
+        $sql = "SELECT g.grade_value, g.first_grade_value, g.is_on_time, g.teacher_comments, m.mezeNumber, m.mezeDate 
             FROM meze_grades g 
             JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
             WHERE g.student_id = ? AND g.user_year = ? 
@@ -715,7 +748,13 @@ class DbHandler
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $studentId, $studentId);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $res = $stmt->get_result();
+        $tasks = [];
+        while ($row = $res->fetch_assoc()) {
+            $tasks[] = $row;
+        }
+        $conn->close();
+        return $tasks;
     }
 
     /**
@@ -741,9 +780,12 @@ class DbHandler
         $stmtL = $connTutor->prepare($sqlEntries);
         $stmtL->bind_param("i", $studentId);
         $stmtL->execute();
-        $allEntries = $stmtL->get_result()->fetch_all(MYSQLI_ASSOC);
+        $resL = $stmtL->get_result();
+        $allEntries = [];
+        while ($row = $resL->fetch_assoc()) {
+            $allEntries[] = $row;
+        }
         $stmtL->close();
-
         $connTutor->close();
 
         // Διαχωρισμός πληρωμών και υπολογισμός εξοφλημένων μαθημάτων (FIFO logic)

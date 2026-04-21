@@ -18,7 +18,7 @@ class FormMaker
                 $this->selectType();
                 $this->selectType2();
                 ?>
-                <div class="form-group">
+                <div class="mb-3">
                     Select image to upload:
                     <input type="file" name="fileToUpload" id="fileToUpload" required>
                 </div>
@@ -61,7 +61,7 @@ class FormMaker
     public function selectThema()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <lable for="thema">Θέμα:</lable>
             <select class="form-control" id="thema" name="thema">
                 <option value="Α">Α</option>
@@ -76,7 +76,7 @@ class FormMaker
     public function selectSection()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <lable for="section">Ερώτημα:</lable>
             <select class="form-control" id="section" name="section">
                 <option value=""></option>
@@ -93,7 +93,7 @@ class FormMaker
     public function selectType()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <label for="type">Τύπος</label>
             <select class="form-control" id="type" name="type">
                 <option value=""></option>
@@ -111,7 +111,7 @@ class FormMaker
     public function selectType2()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <label for="type2">Τύπος</label>
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="check1" name="pinakes" value="Πίνακες">
@@ -133,7 +133,7 @@ class FormMaker
     public function selectType3()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <label for="type">Πίνακες</label>
             <div class="form-check">
                 <input type="radio" class="form-check-input" id="radio1" name="optradio" value="yes" required>Ναι
@@ -150,7 +150,7 @@ class FormMaker
     public function selectSchool()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <label for="school">Λύκειο</label>
             <select class="form-control" id="school" name="school">
                 <option value="Ημερήσιο">Ημερήσιο</option>
@@ -163,7 +163,7 @@ class FormMaker
     public function selectPeriod()
     {
     ?>
-        <div class="form-group">
+        <div class="mb-3">
             <label for="period">Περίοδος</label>
             <select class="form-control" id="period" name="period">
                 <option value="Απολυτήριες">Απολυτήριες</option>
@@ -179,8 +179,8 @@ class FormMaker
         <div class="container mt-4 border p-4 bg-light shadow-sm">
             <h3 class="mb-4">Νέα Ερώτηση Θεωρίας</h3>
             <form action="" method="post">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label>Βιβλίο</label>
                         <select name="book_id" class="form-control">
                             <?php
@@ -194,20 +194,20 @@ class FormMaker
                             ?>
                         </select>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="col-md-6 mb-3">
                         <label>Κεφάλαιο</label>
                         <input type="text" name="chapter_num" class="form-control" placeholder="π.χ. 2.1">
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <label>Ερώτηση</label>
                     <input type="text" name="question_text" class="form-control" required>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <label>Απάντηση</label>
                     <textarea name="answer_text" class="form-control" rows="5" required></textarea>
                 </div>
-                <div class="form-group">
+                <div class="mb-3">
                     <label>Σελίδα Βιβλίου</label>
                     <input type="number" name="page_number" class="form-control">
                 </div>
@@ -224,8 +224,8 @@ class FormMaker
             <h2 class="text-center mb-4"><i class="fa fa-search"></i> Αναζήτηση Θεμάτων Γ & Δ</h2>
             <div class="card p-4 shadow-sm bg-light">
                 <form action="index.php?action=viewThemaGD" method="post">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
                             <label><i class="fa fa-list-ol"></i> Επιλογή Θέματος</label>
                             <select name="thema_type" class="form-control">
                                 <option value="G">Θέμα Γ (Πρόγραμμα)</option>
@@ -233,12 +233,12 @@ class FormMaker
                             </select>
                         </div>
 
-                        <div class="form-group col-md-3">
+                        <div class="col-md-3 mb-3">
                             <label><i class="fa fa-calendar"></i> Έτος</label>
                             <?php $this->selectYear(); ?>
                         </div>
 
-                        <div class="form-group col-md-3">
+                        <div class="col-md-3 mb-3">
                             <label><i class="fa fa-university"></i> Τύπος Σχολείου</label>
                             <select name="typosSxoleiou" class="form-control">
                                 <option value="Hmerisio">Ημερήσιο</option>
@@ -246,7 +246,7 @@ class FormMaker
                             </select>
                         </div>
 
-                        <div class="form-group col-md-3">
+                        <div class="col-md-3 mb-3">
                             <label><i class="fa fa-pencil-square-o"></i> Τύπος Εξετάσεων</label>
                             <select name="typosEksetaseon" class="form-control">
                                 <option value="Kanonikes">Κανονικές</option>
@@ -256,7 +256,7 @@ class FormMaker
                     </div>
 
                     <div class="mt-3">
-                        <button type="submit" class="btn btn-primary btn-block" name="viewThemaGD">
+                        <button type="submit" class="btn btn-primary w-100" name="viewThemaGD">
                             <i class="fa fa-eye"></i> Εμφάνιση Θέματος
                         </button>
                     </div>
@@ -274,11 +274,11 @@ class FormMaker
                 <h5 class="mb-0"><i class="fa fa-upload"></i> Υποβολή Λύσης</h5>
             </div>
             <div class="card-body">
-                <form action="index.php?action=submitMezeAnswer" method="post" enctype="multipart/form-data">
+                <form action="index.php?action=submitMezeAnswer" method="post" enctype="multipart/form-data" autocomplete="off">
                     <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
 
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label>Επίλεξε το όνομά σου:</label>
                             <select name="student_id" class="form-control" required>
                                 <option value="">-- Ποιος είσαι; --</option>
@@ -291,18 +291,23 @@ class FormMaker
                                 ?>
                             </select>
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="col-md-6 mb-3">
                             <label>6-ψήφιος Κωδικός:</label>
-                            <input type="password" name="pass" class="form-control" maxlength="6" placeholder="******" required>
+                            <input type="password" name="pass"
+                                class="form-control" maxlength="6"
+                                placeholder="******" required
+                                autocomplete="new-password"
+                                readonly onfocus="this.removeAttribute('readonly');"
+                                style="background-color: white;">
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label>Σχόλια ή Απάντηση (αν θέλεις):</label>
                         <textarea name="student_text" class="form-control" rows="3" placeholder="Γράψε εδώ αν θέλεις να μου πεις κάτι..."></textarea>
                     </div>
 
-                    <div class="form-group p-3 border rounded bg-light">
+                    <div class="mb-3 p-3 border rounded bg-light">
                         <label class="font-weight-bold text-primary"><i class="fa fa-paperclip"></i> Ανέβασε τα αρχεία σου (έως 3):</label>
 
                         <div class="mb-3">
@@ -325,7 +330,7 @@ class FormMaker
                         </small>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block shadow-lg btn-lg mt-3">
+                    <button type="submit" class="btn btn-primary w-100 shadow-lg btn-lg mt-3">
                         <i class="fa fa-paper-plane"></i> Αποστολή στον Δάσκαλο
                     </button>
                 </form>

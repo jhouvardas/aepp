@@ -30,24 +30,34 @@ class AdminDbHandler extends DbHandler
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function getStudentsByGroupId($groupId)
+    public function getStudentsByGroupId($groupId, $userYear)
     {
-        $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
-        $allTutorStudents = $this->getTutorStudents($userYear);
-
         $conn = $this->connectToFamilyDB();
         $stmt = $conn->prepare("SELECT student_id FROM aepp_student_groups WHERE group_id = ?");
         $stmt->bind_param("i", $groupId);
         $stmt->execute();
         $res = $stmt->get_result();
-        $groupIds = [];
-        while ($row = $res->fetch_assoc()) $groupIds[] = $row['student_id'];
+        $studentIds = [];
+        while ($row = $res->fetch_assoc()) $studentIds[] = $row['student_id'];
+        $stmt->close();
+        $conn->close();
 
-        $groupStudents = [];
-        foreach ($allTutorStudents as $ts) {
-            if (in_array($ts['studentId'], $groupIds)) $groupStudents[] = $ts;
-        }
-        return $groupStudents;
+        if (empty($studentIds)) return [];
+
+        // Φιλτραρισμένο query στη βάση Tutor για καλύτερη απόδοση
+        $connTutor = $this->connectToTutorDB();
+        if (!$connTutor) return [];
+
+        $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE studentId IN ($placeholders) AND user = ? ORDER BY name ASC";
+        $stmtT = $connTutor->prepare($sql);
+
+        $types = str_repeat('i', count($studentIds)) . 's';
+        $params = array_merge($studentIds, [$userYear]);
+        $stmtT->bind_param($types, ...$params);
+        $stmtT->execute();
+
+        return $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
     public function getTaskGrades($taskId)
@@ -143,6 +153,12 @@ class AdminDbHandler extends DbHandler
     {
         if (isset($file) && $file['error'] === UPLOAD_ERR_OK) {
             $uploadDir = '../uploads/';
+
+            // Ασφάλεια: Έλεγχος κατάληξης αρχείου
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed)) return null;
+
             // Δημιουργία μοναδικού ονόματος για να μην υπάρχουν διπλότυπα
             $fileName = time() . '_' . basename($file['name']);
             $targetPath = $uploadDir . $fileName;
@@ -261,26 +277,6 @@ class AdminDbHandler extends DbHandler
             $newFileName
         );
 
-        $success = $stmt->execute();
-        $stmt->close();
-        $conn->close();
-        return $success;
-    }
-
-    public function deleteKenaExercise($id)
-    {
-        $conn = $this->connectToFamilyDB();
-        // Πρώτα βρίσκουμε το όνομα του αρχείου για να το σβήσουμε από το δίσκο
-        $stmt = $conn->prepare("SELECT imageName FROM kena_exercises WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            unlink("../images/themata/kenaNew/" . $row['imageName']);
-        }
-
-        $stmt = $conn->prepare("DELETE FROM kena_exercises WHERE id = ?");
-        $stmt->bind_param("i", $id);
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();
@@ -651,7 +647,11 @@ class AdminDbHandler extends DbHandler
 
         if ($success) {
             // Ενημέρωση των Types (delete and re-insert)
-            $conn->query("DELETE FROM aepp_meze_type_mapping WHERE meze_id = $mezeId");
+            $stmtDel = $conn->prepare("DELETE FROM aepp_meze_type_mapping WHERE meze_id = ?");
+            $stmtDel->bind_param("i", $mezeId);
+            $stmtDel->execute();
+            $stmtDel->close();
+
             $stmtType = $conn->prepare("INSERT INTO aepp_meze_type_mapping (meze_id, type_id) VALUES (?, ?)");
             foreach ($selectedTypes as $typeId) {
                 $stmtType->bind_param("ii", $mezeId, $typeId);
@@ -765,7 +765,7 @@ class AdminDbHandler extends DbHandler
     {
         $conn = $this->connectToFamilyDB();
         // Φέρνουμε τους βαθμούς μαζί με τον αριθμό από το μεζεδάκι
-        $sql = "SELECT g.student_id, g.grade_value, m.mezeNumber 
+        $sql = "SELECT g.student_id, g.grade_value, g.first_grade_value, g.is_on_time, m.mezeNumber 
             FROM meze_grades g 
             JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
             WHERE g.user_year = ? 
@@ -778,7 +778,11 @@ class AdminDbHandler extends DbHandler
 
         $report = [];
         while ($row = $result->fetch_assoc()) {
-            $report[$row['student_id']][$row['mezeNumber']] = $row['grade_value'];
+            $report[$row['student_id']][$row['mezeNumber']] = [
+                'val' => $row['grade_value'],
+                'first' => $row['first_grade_value'],
+                'on_time' => $row['is_on_time']
+            ];
         }
         $stmt->close();
         $conn->close();
@@ -843,36 +847,56 @@ class AdminDbHandler extends DbHandler
     {
         $conn = $this->connectToFamilyDB();
 
-        // 1. ΕΛΕΓΧΟΣ: Υπάρχει ήδη βαθμός; 
-        // Προσοχή: Πρέπει να έχουμε 3 ερωτηματικά για τα 3 ορίσματα (i, i, s)
-        $checkSql = "SELECT gradeId FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+        // 1. ΕΛΕΓΧΟΣ: Υπάρχει ήδη βαθμός;
+        $checkSql = "SELECT gradeId, first_grade_value FROM meze_grades WHERE student_id = ? AND meze_id = ? AND user_year = ?";
         $stmtCheck = $conn->prepare($checkSql);
-
-        if (!$stmtCheck) {
-            die("Σφάλμα στην SQL (Check): " . $conn->error); // Αυτό θα μας πει τι ακριβώς φταίει
-        }
-
         $stmtCheck->bind_param("iis", $studentId, $mezeId, $userYear);
         $stmtCheck->execute();
-        $res = $stmtCheck->get_result();
+        $existing = $stmtCheck->get_result()->fetch_assoc();
 
-        if ($res->num_rows > 0) {
-            // 2. UPDATE: Αν υπάρχει, ενημέρωσε βαθμό ΚΑΙ σχόλια
-            $updateSql = "UPDATE meze_grades SET grade_value = ?, teacher_comments = ? WHERE student_id = ? AND meze_id = ? AND user_year = ?";
+        // 2. Υπολογισμός Συνέπειας (On Time)
+        $onTime = 1; // Default: Εμπρόθεσμο
+
+        $stmtD = $conn->prepare("SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmtD->bind_param("i", $mezeId);
+        $stmtD->execute();
+        $meze = $stmtD->get_result()->fetch_assoc();
+        $stmtD->close();
+
+        $stmtS = $conn->prepare("SELECT submission_date FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ? LIMIT 1");
+        $stmtS->bind_param("ii", $studentId, $mezeId);
+        $stmtS->execute();
+        $sub = $stmtS->get_result()->fetch_assoc();
+        $stmtS->close();
+
+        if ($meze && $sub) {
+            // Αν η ημερομηνία υποβολής είναι μεταγενέστερη της λύσης
+            if (strtotime($sub['submission_date']) > strtotime($meze['solutionDate'])) {
+                // Είναι εκπρόθεσμο ΜΟΝΟ αν δεν υπήρχε προηγούμενος έγκυρος βαθμός (> 0)
+                // Αυτό καλύπτει την περίπτωση που ο μαθητής πήρε 0 στην ώρα του και το ξαναστέλνει
+                $firstGrade = ($existing && isset($existing['first_grade_value'])) ? $existing['first_grade_value'] : 0;
+                if ($firstGrade <= 0) {
+                    $onTime = 0;
+                }
+            }
+        }
+
+        if ($existing) {
+            // UPDATE: Ενημέρωση τρέχοντος βαθμού, αλλά διατήρηση του αρχικού (first_grade_value)
+            $updateSql = "UPDATE meze_grades SET grade_value = ?, teacher_comments = ?, is_on_time = ? WHERE student_id = ? AND meze_id = ? AND user_year = ?";
             $stmtUpdate = $conn->prepare($updateSql);
-            $stmtUpdate->bind_param("dsiis", $grade, $comments, $studentId, $mezeId, $userYear);
+            $stmtUpdate->bind_param("dsiiis", $grade, $comments, $onTime, $studentId, $mezeId, $userYear);
             $stmtUpdate->execute();
             $stmtUpdate->close();
         } else {
-            // 3. INSERT: Αν δεν υπάρχει, φτιάξε νέα εγγραφή
-            $insertSql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, teacher_comments, user_year) VALUES (?, ?, ?, ?, ?)";
+            // INSERT: Πρώτη φορά βαθμολόγηση - ο τρέχων βαθμός γίνεται και "αρχικός"
+            $insertSql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, first_grade_value, is_on_time, teacher_comments, user_year) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmtInsert = $conn->prepare($insertSql);
-            $stmtInsert->bind_param("iidss", $studentId, $mezeId, $grade, $comments, $userYear);
+            $stmtInsert->bind_param("iiddiss", $studentId, $mezeId, $grade, $grade, $onTime, $comments, $userYear);
             $stmtInsert->execute();
             $stmtInsert->close();
         }
 
-        $stmtCheck->close();
         $conn->close();
     }
 
@@ -889,6 +913,35 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return round($avg, 2);
+    }
+
+    public function getStudentPerformanceTrend($studentId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT g.grade_value, m.mezeNumber, m.mezeDate, g.teacher_comments 
+                FROM meze_grades g 
+                JOIN aepp_mezedakia m ON g.meze_id = m.mezeId 
+                WHERE g.student_id = ? AND g.user_year = ? 
+                ORDER BY m.mezeDate DESC LIMIT 10";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $studentId, $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return array_reverse($data);
+    }
+
+    public function getNextMezeNumber()
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT MAX(mezeNumber) as maxNum FROM aepp_mezedakia";
+        $result = $conn->query($sql);
+        $row = $result->fetch_assoc();
+        $next = ($row['maxNum'] ?? 0) + 1;
+        $conn->close();
+        return $next;
     }
 
     public function getAllMezedakiaForAdmin()
@@ -1118,5 +1171,58 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return $tasks;
+    }
+
+    public function getPendingExtensionRequests($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT r.*, m.mezeNumber 
+                FROM aepp_meze_requests r
+                JOIN aepp_mezedakia m ON r.meze_id = m.mezeId
+                WHERE r.user_year = ? AND r.status = 0
+                ORDER BY r.created_at ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $conn->close();
+        return $res;
+    }
+
+    public function processExtensionRequest($requestId, $studentId, $mezeId, $hours, $userYear, $approve = true)
+    {
+        $conn = $this->connectToFamilyDB();
+        $status = $approve ? 1 : 2;
+        $stmt = $conn->prepare("UPDATE aepp_meze_requests SET status = ? WHERE id = ?");
+        $stmt->bind_param("ii", $status, $requestId);
+        $stmt->execute();
+        $conn->close();
+
+        if ($approve) {
+            return $this->allowLateSubmission($studentId, $mezeId, $userYear, $hours);
+        }
+        return true;
+    }
+
+    /**
+     * Επιστρέφει τον αριθμό των εκκρεμών αιτημάτων παράτασης για το τρέχον έτος.
+     * @param string $userYear Το έτος χρήστη (π.χ. "jhouv2026").
+     * @return int Ο αριθμός των εκκρεμών αιτημάτων.
+     */
+    public function getPendingExtensionRequestsCount($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT COUNT(*) FROM aepp_meze_requests WHERE user_year = ? AND status = 0";
+        $stmt = $conn->prepare($sql);
+        $count = 0;
+        if ($stmt) {
+            $stmt->bind_param("s", $userYear);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($row = $res->fetch_row()) $count = (int)$row[0];
+            $stmt->close();
+        }
+        $conn->close();
+        return $count;
     }
 }

@@ -3,190 +3,58 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <base href="../">
-    <title>Πρόχειρο Μεζεδακίου</title>
-    <!-- Bootstrap 5 CDN -->
+    <title>ΘΕΜΑ Β - Προεπισκόπηση</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        body {
-            padding: 0 !important;
-            margin: 0;
-            background-color: #f8f9fa;
-        }
-
-        .preview-box {
-            background: white;
-            padding: 20px;
-            border-left: 5px solid #17a2b8;
-            border-bottom: 1px solid #dee2e6;
-            width: 100%;
-            min-height: 100vh;
-            margin: 0;
-            border-radius: 0;
-        }
-
-        /* Επιπλέον στυλ για το κείμενο του θέματος */
-        .html-content-wrapper code {
-            color: #d63384;
-            font-weight: bold;
-            background-color: #f8f9fa;
-            padding: 0 4px;
-            border-radius: 3px;
-        }
-
-        .aepp-code {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre;
-            overflow-x: auto;
-        }
-
-        .aepp-blank {
-            display: inline-block;
-            min-width: auto;
-            height: auto;
-            padding: 0;
-            margin: 0 2px;
-            background-color: transparent;
-            color: #1a73e8;
-            font-weight: bold;
-            text-align: center;
-            line-height: inherit;
-            vertical-align: baseline;
-            position: relative;
-            z-index: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="../aepp.css">
 </head>
 
-<body>
+<body class="p-4 bg-light">
+    <div class="container bg-white p-4 shadow-sm rounded">
+        <h3 class="text-primary border-bottom pb-2 mb-4"><i class="fa fa-file-text-o"></i> ΕΚΦΩΝΗΣΗ: ΘΕΜΑ Β</h3>
 
-    <div class="container-fluid px-0">
-        <!-- Sticky Header με κουμπί Αντιγραφής -->
-        <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
-            <span class="text-white ms-3 fw-bold small"><i class="fa fa-eye text-info"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ</span>
-            <div>
-                <button onclick="clearMezeContent()" class="btn btn-outline-danger btn-sm me-2 fw-bold">
-                    <i class="fa fa-trash"></i> Καθαρισμός
-                </button>
-                <button onclick="copyMezeHTML()" class="btn btn-success btn-sm me-3 fw-bold">
-                    <i class="fa fa-copy"></i> Αντιγραφή HTML
-                </button>
-            </div>
-        </div>
+        <!-- Ενότητα Β1 -->
+        <div class="card mb-5 border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Β1. Τμήμα Προγράμματος</h5>
+                <pre class="aepp-code">ΔΙΑΒΑΣΕ Χ
+ΓΙΑ Κ ΑΠΟ -3 ΜΕΧΡΙ Χ ΜΕ_ΒΗΜΑ -1
+   ΓΡΑΨΕ Κ
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
 
-        <div class="preview-box" id="mezePreview">
-            <!-- Το contenteditable επιτρέπει την απευθείας επεξεργασία και επικόλληση στον browser -->
-            <div class="html-content-wrapper" contenteditable="true">
-                <h4 class="text-primary mb-3 border-bottom pb-2">ΘΕΜΑ Γ</h4>
-                <p>Ένα ηλεκτρονικό κατάστημα προσφέρει σε μαθητές δύο προϊόντα νέας τεχνολογίας σε ειδικές τιμές.</p>
-                <p>Να κατασκευάσετε πρόγραμμα σε ΓΛΩΣΣΑ, το οποίο:</p>
-                <div class="mb-4">
-                    <ul class="list-unstyled">
-                        <li class="mb-3"><strong>Γ1.</strong> Να περιλαμβάνει κατάλληλο τμήμα δηλώσεων. <strong>Μονάδες
-                                2</strong></li>
-                        <li class="mb-3">
-                            <strong>Γ2.</strong> Να διαβάζει για καθένα από τα 2 προϊόντα:<br>
-                            α) Τον αριθμό τεμαχίων (απόθεμα) που έχει προς πώληση, σε μεταβλητές <code>απ1</code>,
-                            <code>απ2</code>, ελέγχοντας ότι δίνεται αριθμός μεγαλύτερος του μηδενός. (μονάδες 2)<br>
-                            β) Την τιμή πώλησής του σε μεταβλητές <code>τ1</code>, <code>τ2</code>. (μονάδα 1)
-                            <br><strong>Μονάδες 3</strong>
-                        </li>
-                        <li class="mb-3">
-                            <strong>Γ3.</strong> Για κάθε μαθητή που εισέρχεται στο κατάστημα, να ζητάει τον αριθμό του
-                            προϊόντος (1 ή 2) που προτίθεται να αγοράσει (δεν απαιτείται έλεγχος εγκυρότητας τιμών).
-                            Εφόσον το προϊόν υπάρχει, να το αφαιρεί από το αντίστοιχο απόθεμα, διαφορετικά να εμφανίζει
-                            το μήνυμα «Δεν μπορείτε να εξυπηρετηθείτε». Ο έλεγχος του αποθέματος να γίνεται με κλήση του
-                            υποπρογράμματος που περιγράφεται στο ερώτημα Γ5.<br>
-                            Η παραπάνω διαδικασία να τερματίζεται σε οποιαδήποτε από τις εξής περιπτώσεις:<br>
-                            α) Αν εξαντληθούν και τα δύο αποθέματα.<br>
-                            β) Αν ο αριθμός των εισερχόμενων μαθητών που δεν εξυπηρετήθηκαν ξεπεράσει το 20% του
-                            συνολικού αριθμού των μαθητών που έχουν προσέλθει μέχρι εκείνη τη στιγμή στο κατάστημα.
-                            <br><strong>Μονάδες 8</strong>
-                        </li>
-                        <li class="mb-3"><strong>Γ4.</strong> Να υπολογίζει και να εμφανίζει τα συνολικά έσοδα του
-                            καταστήματος. <strong>Μονάδες 3</strong></li>
-                        <li class="mb-3">
-                            <strong>Γ5.</strong> Να κατασκευαστεί η συνάρτηση <code>ΥΠΑΡΧΕΙ</code>, η οποία:<br>
-                            α) Να δέχεται:
-                            <ul>
-                                <li>Τον αριθμό του προϊόντος.</li>
-                                <li>Το απόθεμα του πρώτου προϊόντος.</li>
-                                <li>Το απόθεμα του δεύτερου προϊόντος.</li>
-                            </ul>
-                            β) Να επιστρέφει την τιμή <code>ΑΛΗΘΗΣ</code> εφόσον το προϊόν με τον αριθμό που δόθηκε
-                            υπάρχει σε απόθεμα, διαφορετικά την τιμή <code>ΨΕΥΔΗΣ</code>.
-                            <br><strong>Μονάδες 4</strong>
-                        </li>
-                    </ul>
+                <div class="mt-4">
+                    <p><strong>α)</strong> Να το μετατρέψετε σε ισοδύναμο διάγραμμα ροής.</p>
+                    <p><strong>β)</strong> Να το μετατρέψετε σε ισοδύναμο τμήμα προγράμματος με χρήση της εντολής
+                        <code>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ…ΜΕΧΡΙΣ_ΟΤΟΥ</code>.
+                    </p>
                 </div>
             </div>
         </div>
+
+        <!-- Ενότητα Β2 -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Β2. Συμπλήρωση Κενών (Έλεγχος Πρώτου)</h5>
+                <p class="small">Να συμπληρωθούν τα κενά ώστε το τμήμα προγράμματος να λειτουργεί σωστά:</p>
+
+                <pre class="aepp-code">ΔΙΑΒΑΣΕ n
+ΠΡΩΤΟΣ &larr; <span class="aepp-blank">..(1)..</span>
+i &larr; <span class="aepp-blank">..(2)..</span>
+AΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
+    ΑΝ <span class="aepp-blank">..(3)..</span> = 0 ΤΟΤΕ
+        ΠΡΩΤΟΣ &larr; <span class="aepp-blank">..(4)..</span>
+    TEΛΟΣ_ΑΝ
+    i &larr; i + 1
+MEXΡΙΣ_ΟΤΟΥ i > n - 1 Ή <span class="aepp-blank">..(5)..</span>
+
+AN ΠΡΩΤΟΣ = ΑΛΗΘΗΣ ΤΟΤΕ
+    ΓΡΑΨΕ 'Είναι πρώτος αριθμός'
+ΑΛΛΙΩΣ
+    ΓΡΑΨΕ 'Δεν είναι πρώτος αριθμός'
+ΤΕΛΟΣ_ΑΝ</pre>
+            </div>
+        </div>
     </div>
-
-    <script>
-        function clearMezeContent() {
-            if (confirm('Προσοχή! Είσαι σίγουρος ότι θέλεις να καθαρίσεις όλο το περιεχόμενο;')) {
-                const wrapper = document.querySelector('.html-content-wrapper');
-                if (wrapper) {
-                    wrapper.innerHTML = '<br>';
-                    wrapper.focus();
-                }
-            }
-        }
-
-        function copyMezeHTML() {
-            const wrapper = document.querySelector('.html-content-wrapper');
-            if (!wrapper) return;
-            const finalHtml = "<html>\n" + wrapper.outerHTML + "\n</html>";
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(finalHtml).then(() => {
-                    showSuccess();
-                }).catch(() => {
-                    fallbackCopy(finalHtml);
-                });
-            } else {
-                fallbackCopy(finalHtml);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showSuccess();
-            } catch (err) {
-                alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
-            }
-            document.body.removeChild(textArea);
-        }
-
-        function showSuccess() {
-            const btn = document.querySelector('.btn-success');
-            const originalContent = btn.innerHTML;
-
-            btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-            btn.classList.replace('btn-success', 'btn-light');
-
-            setTimeout(() => {
-                btn.innerHTML = originalContent;
-                btn.classList.replace('btn-light', 'btn-success');
-            }, 2000);
-        }
-    </script>
-
 </body>
 
 </html>

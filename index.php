@@ -1,9 +1,11 @@
 <?php
+session_start();
 
-function __autoload($name)
-{
-    include_once $name . '.php';
-}
+spl_autoload_register(function ($name) {
+    if (file_exists($name . '.php')) {
+        include_once $name . '.php';
+    }
+});
 
 $page = new PageMaker();
 $theory = new TheoryMaker();
@@ -80,7 +82,21 @@ switch ($action) {
         }
         break;
 
+    case 'requestExtension':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $studentId = $_POST['student_id'];
+            $mezeId = $_POST['meze_id'];
+            $hours = (int)$_POST['requested_hours'];
+            $currentYear = $db->getCurrentTutorYear();
+            $db->submitExtensionRequest($studentId, $mezeId, $hours, $currentYear);
+            $page->displayRequestSuccess();
+            exit();
+        }
+        break;
+
     case 'myGrades':
+        unset($_SESSION['student_id']);
+        unset($_SESSION['student_pass']);
         $currentYear = $db->getCurrentTutorYear();
         $students = $db->getTutorStudents($currentYear);
 ?>
@@ -91,19 +107,26 @@ switch ($action) {
                 </div>
                 <div class="card-body p-4">
                     <p class="text-muted text-center mb-4">Επιλέξτε το όνομά σας και πληκτρολογήστε τον προσωπικό σας κωδικό.</p>
-                    <form action="index.php?action=showMyGrades" method="POST">
+                    <form action="index.php?action=showMyGrades" method="POST" autocomplete="off" onsubmit="return true;">
+                        <!-- Hidden fields to confuse browser autofill -->
+                        <input type="text" style="display:none"><input type="password" style="display:none">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Ονοματεπώνυμο</label>
-                            <select name="student_id" class="form-select form-select-lg shadow-sm" required>
+                            <select name="student_id" class="form-select form-select-lg shadow-sm" required style="display: block; width: 100%;">
                                 <option value="">--- Επιλέξτε από τη λίστα ---</option>
-                                <?php foreach ($students as $s): ?>
+                                <?php if (is_array($students)) foreach ($students as $s): ?>
                                     <option value="<?php echo $s['studentId']; ?>"><?php echo $s['lastName'] . " " . $s['name']; ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-bold">Προσωπικός Κωδικός</label>
-                            <input type="password" name="student_pass" class="form-control form-control-lg text-center" placeholder="••••••" maxlength="6" required>
+                            <input type="password" name="student_pass"
+                                class="form-control form-control-lg text-center"
+                                placeholder="••••••" maxlength="6" required
+                                autocomplete="new-password"
+                                readonly onfocus="this.removeAttribute('readonly');"
+                                style="background-color: white;">
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm"><i class="fa fa-search"></i> Εμφάνιση Αποτελεσμάτων</button>
                     </form>
@@ -114,19 +137,26 @@ switch ($action) {
         break;
 
     case 'showMyGrades':
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $studentId = $_POST['student_id'];
-            $pass = $_POST['student_pass'];
-            $currentYear = $db->getCurrentTutorYear();
+        $currentYear = $db->getCurrentTutorYear();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' || (isset($_SESSION['student_id']) && isset($_SESSION['student_pass']))) {
+            $studentId = $_POST['student_id'] ?? $_SESSION['student_id'];
+            $pass = $_POST['student_pass'] ?? $_SESSION['student_pass'];
 
             if ($db->checkStudentPassword($studentId, $pass)) {
+                $_SESSION['student_id'] = $studentId;
+                $_SESSION['student_pass'] = $pass;
+
                 $grades = $db->getStudentGradesForStudent($studentId, $currentYear);
                 $students = $db->getTutorStudents($currentYear);
                 $overallAverage = $db->getStudentOverallAverage($studentId, $currentYear); // Νέα κλήση για τον μέσο όρο
                 $groupTasks = $db->getStudentGroupTasks($studentId); // Ανάκτηση εργασιών ομάδας
                 $financials = $db->getStudentFinancials($studentId); // Ανάκτηση οικονομικών
+                $allMezedakia = $db->getAllMezedakia();
+                $pendingRequestIds = is_object($db) ? $db->getStudentPendingRequests($studentId) : [];
+
                 $fullName = "";
-                foreach ($students as $s) {
+                $gradedMezeIds = is_array($grades) ? array_column($grades, 'mezeNumber') : [];
+                if (is_array($students)) foreach ($students as $s) {
                     if ($s['studentId'] == $studentId) $fullName = $s['name'] . " " . $s['lastName'];
                 }
         ?>
@@ -137,18 +167,18 @@ switch ($action) {
                     </div>
 
                     <!-- Navigation tabs για τον μαθητή -->
-                    <ul class="nav nav-pills mb-4 justify-content-center" id="studentTabs" role="tablist">
+                    <ul class="nav nav-pills mb-4 justify-content-center border-0" id="studentTabs" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="grades-tab" data-toggle="pill" href="#grades" role="tab"><i class="fa fa-star"></i> Βαθμοί (Μεζεδάκια)</a>
+                            <a class="nav-link active" id="grades-tab" data-bs-toggle="pill" data-bs-target="#grades" href="#grades" role="tab"><i class="fa fa-star"></i> Βαθμοί (Μεζεδάκια)</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="task-grades-tab" data-toggle="pill" href="#task-grades" role="tab"><i class="fa fa-check-square-o"></i> Βαθμοί (Εργασίες)</a>
+                            <a class="nav-link" id="task-grades-tab" data-bs-toggle="pill" data-bs-target="#task-grades" href="#task-grades" role="tab"><i class="fa fa-check-square-o"></i> Βαθμοί (Εργασίες)</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="tasks-tab" data-toggle="pill" href="#tasks" role="tab"><i class="fa fa-tasks"></i> Οι Εργασίες μου</a>
+                            <a class="nav-link" id="tasks-tab" data-bs-toggle="pill" data-bs-target="#tasks" href="#tasks" role="tab"><i class="fa fa-tasks"></i> Οι Εργασίες μου</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="financials-tab" data-toggle="pill" href="#financials" role="tab"><i class="fa fa-calendar-check-o"></i> Τα Μαθήματά μου</a>
+                            <a class="nav-link" id="financials-tab" data-bs-toggle="pill" data-bs-target="#financials" href="#financials" role="tab"><i class="fa fa-calendar-check-o"></i> Τα Μαθήματά μου</a>
                         </li>
                     </ul>
 
@@ -160,21 +190,33 @@ switch ($action) {
                                     <thead class="table-dark">
                                         <tr>
                                             <th style="width: 150px;">Μεζεδάκι</th>
+                                            <th>Συνέπεια</th>
                                             <th>Βαθμός</th>
                                             <th>Σχόλια Καθηγητή</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php if (empty($grades)): ?>
+                                        <?php
+                                        $onTimeCount = 0;
+                                        $totalGrades = is_array($grades) ? count($grades) : 0;
+                                        if (empty($grades) || !is_array($grades)): ?>
                                             <tr>
-                                                <td colspan="3" class="text-center py-5 text-muted italic">Δεν έχουν βρεθεί ακόμα βαθμολογίες.</td>
+                                                <td colspan="4" class="text-center py-5 text-muted italic">Δεν έχουν βρεθεί ακόμα βαθμολογίες.</td>
                                             </tr>
                                         <?php else: ?>
-                                            <?php foreach ($grades as $g): ?>
+                                            <?php foreach ($grades as $g):
+                                                if ($g['is_on_time']) $onTimeCount++; ?>
                                                 <tr>
                                                     <td>
                                                         <div class="fw-bold">#<?php echo $g['mezeNumber']; ?></div>
                                                         <small class="text-muted"><?php echo date('d/m/Y', strtotime($g['mezeDate'])); ?></small>
+                                                    </td>
+                                                    <td>
+                                                        <?php if ($g['is_on_time']): ?>
+                                                            <span class="badge bg-success" title="Εμπρόθεσμη υποβολή"><i class="fa fa-check-circle"></i> Εντός</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-warning text-dark" title="Εκπρόθεσμη υποβολή (με παράταση)"><i class="fa fa-clock-o"></i> Εκτός</span>
+                                                        <?php endif; ?>
                                                     </td>
                                                     <td>
                                                         <div class="badge rounded-pill bg-<?php echo $g['grade_value'] >= 10 ? 'success' : 'danger'; ?> px-3 py-2 fs-6">
@@ -188,11 +230,85 @@ switch ($action) {
                                     </tbody>
                                     <tfoot class="table-light">
                                         <tr>
-                                            <th colspan="2" class="text-end py-3">Μ.Ο. ΜΕΖΕΔΑΚΙΩΝ:</th>
-                                            <th class="text-center py-3 fs-5 text-danger"><?php echo number_format($overallAverage, 2); ?></th>
+                                            <th colspan="2" class="text-end py-2">ΣΥΝΟΛΙΚΗ ΣΥΝΕΠΕΙΑ:</th>
+                                            <th class="text-center py-2 fs-5">
+                                                <?php
+                                                $perc = ($totalGrades > 0) ? ($onTimeCount / $totalGrades) * 100 : 0;
+                                                $color = ($perc >= 80) ? 'text-success' : (($perc >= 50) ? 'text-warning' : 'text-danger');
+                                                echo "<span class='$color'>" . number_format($perc, 0) . "%</span>";
+                                                ?>
+                                            </th>
+                                            <th></th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="2" class="text-end py-2">Μ.Ο. ΜΕΖΕΔΑΚΙΩΝ:</th>
+                                            <th class="text-center py-2 fs-5 text-danger"><?php echo number_format($overallAverage, 2); ?></th>
+                                            <th></th>
                                         </tr>
                                     </tfoot>
                                 </table>
+                            </div>
+
+                            <!-- Νέα Ενότητα: Αιτήματα Παράτασης -->
+                            <div class="mt-5">
+                                <h5 class="text-secondary border-bottom pb-2 mb-3"><i class="fa fa-clock-o"></i> Ζήτησε Παράταση για Υποβολή ή Βελτίωση</h5>
+                                <div class="list-group">
+                                    <?php
+                                    $foundExpired = false;
+                                    if ($allMezedakia && is_object($allMezedakia)) {
+                                        $allMezedakia->data_seek(0);
+                                        while ($m = $allMezedakia->fetch_assoc()):
+                                            $mId = $m['mezeId'];
+                                            $mNum = $m['mezeNumber'];
+
+                                            $currentMezeGrade = null;
+                                            $isGraded = false;
+                                            foreach ($grades as $g) {
+                                                if ($g['mezeNumber'] == $mNum) {
+                                                    $isGraded = true;
+                                                    $currentMezeGrade = $g['grade_value'];
+                                                    break;
+                                                }
+                                            }
+
+                                            $isExpired = (strtotime($m['solutionDate']) < time());
+                                            $hasActiveExt = $db->isSubmissionAllowed($studentId, $mId, $currentYear);
+
+                                            // Επιτρέπουμε αίτημα αν δεν έχει βαθμολογηθεί Ή αν ο βαθμός είναι < 15
+                                            $isEligibleForImprovement = ($isGraded && $currentMezeGrade < 15);
+
+                                            if ($isExpired && (!$isGraded || $isEligibleForImprovement) && !$hasActiveExt):
+                                                $foundExpired = true;
+                                                $isPending = in_array($mId, $pendingRequestIds);
+                                    ?>
+                                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>Μεζεδάκι #<?php echo $mNum; ?></strong>
+                                                        <?php if ($isGraded) echo "<span class='badge bg-info text-dark ms-1'>Για βελτίωση ($currentMezeGrade)</span>"; ?>
+                                                        <div class="small text-muted">Προθεσμία: <?php echo date('d/m/Y H:i', strtotime($m['solutionDate'])); ?></div>
+                                                    </div>
+                                                    <?php if ($isPending): ?>
+                                                        <span class="badge bg-warning text-dark pulse-pending"><i class="fa fa-hourglass-start"></i> Εκκρεμεί έγκριση</span>
+                                                    <?php else: ?>
+                                                        <form action="index.php?action=requestExtension" method="POST" class="d-flex align-items-center" autocomplete="off">
+                                                            <input type="hidden" name="student_id" value="<?php echo $studentId; ?>">
+                                                            <input type="hidden" name="meze_id" value="<?php echo $mId; ?>">
+                                                            <select name="requested_hours" class="form-select form-select-sm me-2" style="width: 100px;">
+                                                                <option value="12">12 ώρες</option>
+                                                                <option value="24" selected>24 ώρες</option>
+                                                                <option value="48">48 ώρες</option>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-danger btn-sm" onclick="this.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i>'; this.classList.add('disabled');">Αίτημα</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </div>
+                                    <?php endif;
+                                        endwhile;
+                                    } ?>
+                                    <?php if (!$foundExpired): ?>
+                                        <div class="text-muted small italic">Δεν υπάρχουν ληγμένα μεζεδάκια χωρίς βαθμολογία.</div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
 
@@ -245,12 +361,12 @@ switch ($action) {
                             <?php if (!empty($groupTasks)): ?>
                                 <div class="list-group shadow-sm">
                                     <div class="list-group-item bg-info text-white">
-                                        <h5 class="mb-0"><i class="fa fa-book"></i> Αναθέσεις για την ομάδα: <?php echo $groupTasks[0]['group_name']; ?></h5>
+                                        <h5 class="mb-0 text-white"><i class="fa fa-book text-white"></i> Αναθέσεις για την ομάδα: <?php echo $groupTasks[0]['group_name']; ?></h5>
                                     </div>
                                     <?php foreach ($groupTasks as $task): ?>
                                         <div class="list-group-item">
                                             <?php if (!empty($task['book_title'])): ?>
-                                                <span class="badge badge-dark mb-2"><?php echo $task['book_title']; ?></span>
+                                                <span class="badge bg-dark mb-2"><?php echo $task['book_title']; ?></span>
                                             <?php endif; ?>
 
                                             <p class="mb-1 h5 text-dark"><?php echo nl2br($task['task_text']); ?></p>
@@ -317,7 +433,7 @@ switch ($action) {
                                                     <td class="text-muted small"><?php echo $idx++; ?></td>
                                                     <td class="font-weight-bold"><?php echo date('d/m/Y', strtotime($item['date'])); ?></td>
                                                     <td>
-                                                        <span class="badge badge-primary px-3 py-2">Μάθημα</span>
+                                                        <span class="badge bg-primary px-3 py-2">Μάθημα</span>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -331,8 +447,13 @@ switch ($action) {
                 </div>
         <?php
             } else {
+                unset($_SESSION['student_id']);
+                unset($_SESSION['student_pass']);
                 echo "<div class='container mt-5 text-center'><div class='alert alert-danger d-inline-block px-5 shadow'><h4><i class='fa fa-exclamation-triangle'></i> Λάθος Κωδικός</h4><p>Παρακαλώ προσπαθήστε ξανά.</p><hr><a href='index.php?action=myGrades' class='btn btn-danger'>Επιστροφή</a></div></div>";
             }
+        } else {
+            header("Location: index.php?action=myGrades");
+            exit();
         }
         break;
 
@@ -1381,10 +1502,10 @@ i <- 1
         <div class="container-fluid">
             <h4 id="moreAlgorithms">Άλγόριθμοι Αναζήτησης - Ταξινόμησης - Συγχώνευσης</h4>
             <p><strong>Προσοχή:</strong> </p>
-            <div id="accordion">
+            <div id="accordionAlg">
                 <div class="card">
                     <div class="card-header">
-                        <a class="card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+                        <a class="card-link" data-bs-toggle="collapse" data-bs-target="#collapseOne">
                             Δυαδική Αναζήτηση
                         </a>
                     </div>
@@ -1422,7 +1543,7 @@ f <- ΨΕΥΔΗΣ
 
                 <div class="card">
                     <div class="card-header">
-                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                        <a class="collapsed card-link" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
                             Έξυπνη ταξινόμηση ευθείας ανταλλαγής
                         </a>
                     </div>
@@ -1454,7 +1575,7 @@ i <- 2
                 </div>
                 <div class="card">
                     <div class="card-header">
-                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                        <a class="collapsed card-link" data-bs-toggle="collapse" data-bs-target="#collapseThree">
                             Ταξινόμηση με επιλογή
                         </a>
                     </div>
@@ -1482,7 +1603,7 @@ i <- 2
 
                 <div class="card">
                     <div class="card-header">
-                        <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseFour">
+                        <a class="collapsed card-link" data-bs-toggle="collapse" data-bs-target="#collapseFour">
                             Συγχώνευση
                         </a>
                     </div>
@@ -1526,11 +1647,11 @@ J <- 1
                 </div>
                 <!--                    <div class="card">
                                 <div class="card-header">
-                                    <a class="collapsed card-link" data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
+                                    <a class="collapsed card-link" data-bs-toggle="collapse" data-bs-target="#collapseThree">
                                         Ταξινόμηση με επιλογή
                                     </a>
                                 </div>
-                                <div id="collapseThree" class="collapse">
+                                <div id="collapseThree" class="collapse" data-bs-parent="#accordionAlg">
                                     <div class="card-body">
                                         <pre>
                                             
@@ -1543,13 +1664,6 @@ J <- 1
 <?php
         break; // Εδώ τελειώνει το default case
 } // Εδώ κλείνει το switch
+
+$page->displayEndMatter();
 ?>
-<!--</div>-->
-<footer>
-    <div class="container">Αντώνης Χουβαρδάς 2021-26.
-
-    </div>
-</footer>
-</body>
-
-</html>

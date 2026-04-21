@@ -19,16 +19,16 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4 id="theoria">Κεφάλαιο 1</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#provlima">Τι είναι πρόβλημα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#provlima">Τι είναι πρόβλημα</a></li>
                         <div id="provlima" class="collapse">
                             <p>Με τον όρο Πρόβλημα εννοείται μια κατάσταση η οποία χρήζει αντιμετώπισης, απαιτεί λύση,
                                 η δε λύση της δεν είναι γνωστή, ούτε προφανής.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#katanoisi">Κατανόηση προβλήματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#katanoisi">Κατανόηση προβλήματος</a></li>
                         <div id="katanoisi" class="collapse">
                             <p>Η οποιαδήποτε προσπάθεια αντιμετώπισης ενός προβλήματος είναι καταδικασμένη σε αποτυχία
                                 αν προηγουμένως δεν έχει γίνει απόλυτα κατανοητό το πρόβλημα που τίθεται.</p>
@@ -53,23 +53,23 @@ class TheoryMaker
                                     τρόπο και αποδίδει πληροφορίες.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#domiprovlimatos">Δομή Προβλήματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#domiprovlimatos">Δομή Προβλήματος</a></li>
                         <div id="domiprovlimatos" class="collapse">
                             <p>Με τον όρο δομή ενός προβλήματος αναφερόμαστε στα συστατικά του μέρη, στα επιμέρους τμήματα
                                 που το αποτελούν καθώς επίσης και στον τρόπο που αυτά τα μέρη συνδέονται μεταξύ τους.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#kathorismos">Καθορισμός απαιτήσεων</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#kathorismos">Καθορισμός απαιτήσεων</a></li>
                         <div id="kathorismos" class="collapse">
                             <p>Η σωστή επίλυση ενός προβλήματος προϋποθέτει τον επακριβή προσδιορισμό των δεδομένων που
                                 παρέχει το πρόβλημα. Απαιτεί επίσης τη λεπτομερειακή καταγραφή των ζητούμενων που αναμένονται
                                 σαν αποτελέσματα της επίλυσης του προβλήματος.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#methothologia">Μεθοδολογία</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#methothologia">Μεθοδολογία</a></li>
                         <div id="methothologia" class="collapse">
                             <p>Μεθοδολογία προσδιορισμού των δεδομένων ενός προβλήματος δεν υπάρχει, ούτε και μεθοδολογία
                                 εντοπισμού και αποσαφήνισης των ζητούμενων ενός προβλήματος.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#stadia">Στάδια αντιμετώπισης προβλήματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#stadia">Στάδια αντιμετώπισης προβλήματος</a></li>
                         <div id="stadia" class="collapse">
                             <dl>
                                 <dt>Κατανόηση</dt>
@@ -101,13 +101,13 @@ class TheoryMaker
                     <h4 id="theoria">Κεφάλαιο 2</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#algorithmos">Τι είναι αλγόριθμος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#algorithmos">Τι είναι αλγόριθμος</a></li>
                         <div id="algorithmos" class="collapse">
                             <p>Αλγόριθμος είναι μια πεπερασμένη σειρά ενεργειών,
                                 αυστηρά καθορισμένων και εκτελέσιμων σε πεπερασμένο χρόνο,
                                 που στοχεύουν στην επίλυση ενός προβλήματος</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#kritiria">Αλγοριθμικά κριτήρια</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#kritiria">Αλγοριθμικά κριτήρια</a></li>
                         <div id="kritiria" class="collapse">
                             <dl>
                                 <dt>Είσοδος</dt>
@@ -138,7 +138,7 @@ class TheoryMaker
                                 </dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#anaparastasi">Τρόποι αναπαράστασης αλγορίθμων</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#anaparastasi">Τρόποι αναπαράστασης αλγορίθμων</a></li>
                         <div id="anaparastasi" class="collapse">
                             <dl>
                                 <dt>Ελεύθερο κείμενο</dt>
@@ -164,7 +164,7 @@ class TheoryMaker
                                     όταν εκτελεσθεί θα δώσει τα ίδια αποτελέσματα με τον αλγόριθμο.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#alarosika">Τι είναι ο πολλαπλασιασμός αλα ρωσικά, τι είναι ολίσθηση
+                        <li><a data-bs-toggle="collapse" data-bs-target="#alarosika">Τι είναι ο πολλαπλασιασμός αλα ρωσικά, τι είναι ολίσθηση
                                 και γιατί χρησιμοποιείται ο πολλαπασιασμός αλα ρωσικά</a></li>
                         <div id="alarosika" class="collapse">
                             <p>Ο πολλαπλασιασμός αλα ρωσικά είναι ο αλγόριθμος που χρησιμοποιείται για τον πολλαπλασιασμό
@@ -194,14 +194,14 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 3</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#domidedomenon">Τι είναι δομή δεδομένων (ορισμός και παράδειγμα)</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#domidedomenon">Τι είναι δομή δεδομένων (ορισμός και παράδειγμα)</a></li>
                         <div id="domidedomenon" class="collapse">Δομή Δεδομένων είναι ένα σύνολο αποθηκευμένων δεδομένων που
                             υφίστανται επεξεργασία από ένα σύνολο λειτουργιών</div>
-                        <li><a data-toggle="collapse" data-target="#leitourgies">Ποιές είναι οι βασικές λειτουργίες επί των δομών δεδομένων
+                        <li><a data-bs-toggle="collapse" data-bs-target="#leitourgies">Ποιές είναι οι βασικές λειτουργίες επί των δομών δεδομένων
                                 και ποιες από αυτές δεν μπορούν να εφαρμοστούν σε στατικές δομές.</a></li>
                         <div id="leitourgies" class="collapse">
                             <dl>
@@ -232,7 +232,7 @@ class TheoryMaker
                                     συγχώνευσης</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#statikesdynamikes">Τι είναι στατικές,
+                        <li><a data-bs-toggle="collapse" data-bs-target="#statikesdynamikes">Τι είναι στατικές,
                                 και δυναμικές δομές</a></li>
                         <div id='statikesdynamikes' class="collapse">
                             <dl>
@@ -255,7 +255,7 @@ class TheoryMaker
                             Στην πράξη, οι στατικές δομές υλοποιούνται με πίνακες που μας είναι
                             γνωστοί από άλλα μαθήματα και υποστηρίζονται από κάθε γλώσσα προγραμματισμού
                         </div>
-                        <li><a data-toggle="collapse" data-target="#seiriaki">Σειριακή αναζήτηση,
+                        <li><a data-bs-toggle="collapse" data-bs-target="#seiriaki">Σειριακή αναζήτηση,
                                 πότε δικαιολογείται η χρήση της;</a></li>
                         <div id="seiriaki" class="collapse">
                             Η σειριακή μέθοδος αναζήτησης είναι η πιο απλή, αλλά και η λιγότερη
@@ -267,12 +267,12 @@ class TheoryMaker
                                 <li>η αναζήτηση σε ένα συγκεκριμένο πίνακα γίνεται σπάνια</li>
                             </ul>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#taxinomisiorismos">Τι είναι ταξινόμηση</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#taxinomisiorismos">Τι είναι ταξινόμηση</a></li>
                         <div id="taxinomisiorismos" class="collapse">
                             Η τακτοποίηση των κόμβων μίας δομής με μία ιδιαίτερη σειρά είναι μία
                             πολύ σημαντική λειτουργία που ονομάζεται ταξινόμηση (sorting) ή διάταξη (ordering).
                         </div>
-                        <li><a data-toggle="collapse" data-target="#efthias">Ταξινόμη ευθείας
+                        <li><a data-bs-toggle="collapse" data-bs-target="#efthias">Ταξινόμη ευθείας
                                 ανταλλαγής (φυσαλίδα)</a></li>
                         <div id="efthias" class="collapse">
                             <p>Η μέθοδος της ταξινόμησης ευθείας ανταλλαγής (straight exchange sort)
@@ -281,7 +281,7 @@ class TheoryMaker
                             <p> Η ταξινόμηση φυσαλίδας είναι ο πιο απλός
                                 και ταυτόχροναο πιο αργός αλγόριθμος ταξινόμησης.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#alloialgorithmoitaxinomisis">Άλλοι αλγόριθμοι ταξινόμησης</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#alloialgorithmoitaxinomisis">Άλλοι αλγόριθμοι ταξινόμησης</a></li>
                         <div id="alloialgorithmoitaxinomisis" class="collapse">
                             Για την ταξινόμηση δεδομένων έχουν
                             εκπονηθεί πάρα πολλοί αλγόριθμοι. Άλλοι σχετικά
@@ -308,22 +308,22 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 6</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#glossaprosdiorizete">Απο τι προσδιορίζεται μια γλώσσα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#glossaprosdiorizete">Απο τι προσδιορίζεται μια γλώσσα</a></li>
                         <div id="glossaprosdiorizete" class="collapse">
                             Μία γλώσσα προσδιορίζεται από το <b>αλφάβητό</b> της, το <b>λεξιλόγιό</b> της, τη
                             <b>γραμματική</b> της και τέλος τη <b>σημασιολογία</b> της
                         </div>
                         <li>Τι είναι;</li>
                         <ul>
-                            <li><a data-toggle="collapse" data-target="#alfavito">Αλφάβητο</a></li>
+                            <li><a data-bs-toggle="collapse" data-bs-target="#alfavito">Αλφάβητο</a></li>
                             <div id="alfavito" class="collapse">
                                 Αλφάβητο μίας γλώσσας καλείται το σύνολο των στοιχείων που χρησιμοποιείται από τη γλώσσα
                             </div>
-                            <li><a data-toggle="collapse" data-target="#lexilogio">Λεξιλόγιο</a></li>
+                            <li><a data-bs-toggle="collapse" data-bs-target="#lexilogio">Λεξιλόγιο</a></li>
                             <div id="lexilogio" class="collapse">
                                 Το λεξιλόγιο αποτελείται από ένα υποσύνολο όλων των ακολουθιών που
                                 δημιουργούνται από τα στοιχεία του αλφαβήτου, τις λέξεις που είναι δεκτές
@@ -331,32 +331,32 @@ class TheoryMaker
                                 των γραμμάτων ΑΒΓΑ είναι δεκτή αφού αποτελεί λέξη, αλλά η ακολουθία
                                 ΑΒΓΔΑ δεν αποτελεί λέξη της ελληνικής γλώσσας, άρα δεν είναι δεκτή.
                             </div>
-                            <li><a data-toggle="collapse" data-target="#grammatiki">Γραμματική</a></li>
+                            <li><a data-bs-toggle="collapse" data-bs-target="#grammatiki">Γραμματική</a></li>
                             <div id="grammatiki" class="collapse">
                                 Η Γραμματική αποτελείται από το τυπικό ή τυπολογικό (accidence) και
                                 το συντακτικό (syntax).
                             </div>
                             <ul>
-                                <li><a data-toggle="collapse" data-target="#typiko">Τυπικό</a></li>
+                                <li><a data-bs-toggle="collapse" data-bs-target="#typiko">Τυπικό</a></li>
                                 <div id="typiko" class="collapse">
                                     Τυπικό είναι το σύνολο των κανόνων που ορίζει τις μορφές με τις οποίες
                                     μία λέξη είναι αποδεκτή. Για παράδειγμα, στην ελληνική γλώσσα οι λέξεις
                                     γλώσσα, γλώσσας, γλώσσες είναι δεκτές, ενώ η λέξη γλώσσατ δεν είναι
                                     αποδεκτή.
                                 </div>
-                                <li><a data-toggle="collapse" data-target="#syntaktiko">Συντακτικό</a></li>
+                                <li><a data-bs-toggle="collapse" data-bs-target="#syntaktiko">Συντακτικό</a></li>
                                 <div id="syntaktiko" class="collapse">
                                     Συντακτικό είναι το σύνολο των κανόνων που καθορίζει τη νομιμότητα
                                     της διάταξης και της σύνδεσης των λέξεων της γλώσσας για τη δημιουργία προτάσεων
                                 </div>
                             </ul>
-                            <li><a data-toggle="collapse" data-target="#simasiologia">Σημασιολογία</a></li>
+                            <li><a data-bs-toggle="collapse" data-bs-target="#simasiologia">Σημασιολογία</a></li>
                             <div id="simasiologia" class="collapse">
                                 Η σημασιολογία (Semantics) είναι το σύνολο των κανόνων που καθορίζει
                                 το νόημα των λέξεων και κατά επέκταση των εκφράσεων και προτάσεων
                             </div>
                         </ul>
-                        <li><a data-toggle="collapse" data-target="#diafores">Διαφορές φυσικών και τεχνητών γλωσσών</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#diafores">Διαφορές φυσικών και τεχνητών γλωσσών</a></li>
                         <div id="diafores" class="collapse">
                             Μία βασική διαφορά μεταξύ φυσικών και τεχνητών γλωσσών είναι η
                             δυνατότητα εξέλιξής τους.
@@ -374,7 +374,7 @@ class TheoryMaker
                             ή να καλύψουν μεγαλύτερο εύρος εφαρμογών ή τέλος να ακολουθήσουν
                             τις νέες εξελίξεις.
                         </div>
-                        <li><a data-toggle="collapse" data-target="#ierarxiki">Τι είναι ιεραρχική σχεδίαση προγράμματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#ierarxiki">Τι είναι ιεραρχική σχεδίαση προγράμματος</a></li>
                         <div id="ierarxiki" class="collapse">
                             Η τεχνική της ιεραρχικής σχεδίασης και επίλυσης ή η διαδικασία
                             σχεδίασης "από επάνω προς τα κάτω" όπως συχνά ονομάζεται (top-down
@@ -384,14 +384,14 @@ class TheoryMaker
                             τελευταίο επίπεδο που οι λειτουργίες είναι πολύ άπλες, ώστε να επιλυθούν
                             εύκολα.
                         </div>
-                        <li><a data-toggle="collapse" data-target="#tmimylopoi">Τι είναι τμηματικός προγραμματισμός και πως υλοποιείται</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#tmimylopoi">Τι είναι τμηματικός προγραμματισμός και πως υλοποιείται</a></li>
                         <div id="tmimylopoi" class="collapse">
                             Η ιεραρχική σχεδίαση προγράμματος υλοποιείται με τον τμηματικό
                             προγραμματισμό. Μετά την ανάλυση του προβλήματος σε αντίστοιχα
                             υποπροβλήματα, κάθε υποπρόβλημα αποτελεί ανεξάρτητη ενότητα
                             (module), που γράφεται ξεχωριστά από τα υπόλοιπα τμήματα προγράμματος
                         </div>
-                        <li><a data-toggle="collapse" data-target="#domimenos">Τι είναι δομημένος προγραμματισμος και σε ποιές δομές στηρίζεται</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#domimenos">Τι είναι δομημένος προγραμματισμος και σε ποιές δομές στηρίζεται</a></li>
                         <div id="domimenos" class="collapse">
                             <p>Ο δομημένος προγραμματισμός δεν είναι απλώς ένα είδος προγραμματισμού,
                                 είναι μία μεθοδολογία σύνταξης προγραμμάτων που έχει σκοπό
@@ -406,7 +406,7 @@ class TheoryMaker
                                 προγράμματος έχει μόνο μία είσοδο και μόνο μία έξοδο.</p>
                         </div>
 
-                        <li><a data-toggle="collapse" data-target="#metaglottisi">Συγγραφή, μεταγλώττιση, σύνδεση, φόρτωση, παραγωγή εκτελέσιμου προγράμματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#metaglottisi">Συγγραφή, μεταγλώττιση, σύνδεση, φόρτωση, παραγωγή εκτελέσιμου προγράμματος</a></li>
                         <div id="metaglottisi" class="collapse">
                             Κάθε πρόγραμμα που γράφτηκε σε οποιαδήποτε <b>γλώσσα προγραμματισμού</b>
                             πρέπει να μετατραπεί σε μορφή αναγνωρίσιμη και εκτελέσιμη από
@@ -437,7 +437,7 @@ class TheoryMaker
                             </ul>
                         </div>
                         <a href="resources/compile.pdf">Σχήμα</a>
-                        <li><a data-toggle="collapse" data-target="#metaglotdiermin">Διαφορές μεταγλωττιστή και διερμηνευτή</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#metaglotdiermin">Διαφορές μεταγλωττιστή και διερμηνευτή</a></li>
                         <div id="metaglotdiermin" class="collapse">
                             <dl>
                                 <dt>Ο μεταγλωττιστής</dt>
@@ -463,7 +463,7 @@ class TheoryMaker
                             </p>
 
                         </div>
-                        <li><a data-toggle="collapse" data-target="#ide">Τι είναι προγραμματιστικό περιβάλλον?</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#ide">Τι είναι προγραμματιστικό περιβάλλον?</a></li>
                         <div id="ide" class="collapse">
                             <p>Για τη δημιουργία, τη μετάφραση και την εκτέλεση ενός προγράμματος
                                 απαιτούνται τουλάχιστον τρία προγράμματα: ο συντάκτης, ο μεταγλωττιστής και ο συνδέτης - φορτωτής.</p>
@@ -484,11 +484,11 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 7</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#alfabet">Απο τι αποτελείται το αλφάβητο της ΓΛΩΣΣΑΣ</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#alfabet">Απο τι αποτελείται το αλφάβητο της ΓΛΩΣΣΑΣ</a></li>
                         <div id="alfabet" class="collapse">
                             Το αλφάβητο της ΓΛΩΣΣΑΣ αποτελείται από τα γράμματα του ελληνικού
                             και του λατινικού αλφαβήτου, τα ψηφία, καθώς και από ειδικά σύμβολα,
@@ -507,7 +507,7 @@ class TheoryMaker
                                 <dd>+ - * / = ˙ ( ) . , ’ ! & κενός χαρακτήρας ^</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#datatypes">Τύποι δεδομένων που υποστηρίζει η γλώσσα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#datatypes">Τύποι δεδομένων που υποστηρίζει η γλώσσα</a></li>
                         <div id="datatypes" class="collapse">
                             <dl>
                                 <dt>Ακέραιος τύπος</dt>
@@ -534,7 +534,7 @@ class TheoryMaker
                                     τιμές αντιπροσωπεύουν αληθείς ή ψευδείς συνθήκες.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#constants">Τι είναι σταθερές και τι συμβολικές σταθερές?</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#constants">Τι είναι σταθερές και τι συμβολικές σταθερές?</a></li>
                         <div id="constants" class="collapse">
                             <dl>
                                 <dt>Σταθερές</dt>
@@ -547,7 +547,7 @@ class TheoryMaker
                                     σταθερών).</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#names">Κανόνες που πρέπει να ακολουθούν τα ονόματα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#names">Κανόνες που πρέπει να ακολουθούν τα ονόματα</a></li>
                         <div id="names" class="collapse">
                             <dl>
                                 <dt>Ονόματα</dt>
@@ -563,7 +563,7 @@ class TheoryMaker
                                     Παραδείγματα ονομάτων που δεν είναι αποδεκτά είναι: 100Α, Μέση Τιμή, Κόστος$.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#variabletypes">Τύποι μεταβλητών</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#variabletypes">Τύποι μεταβλητών</a></li>
                         <p id="variabletypes" class="collapse">
                             Ενώ η τιμή της μεταβλητής μπορεί να αλλάζει κατά την εκτέλεση του
                             προγράμματος, αυτό που μένει υποχρεωτικά αναλλοίωτο είναι ο τύπος
@@ -573,11 +573,11 @@ class TheoryMaker
                             ενώ η δήλωση του τύπου κάθε μεταβλητής γίνεται υποχρεωτικά στο τμή-
                             μα δήλωσης μεταβλητών
                         </p>
-                        <li><a data-toggle="collapse" data-target="#numoperators">Aριθμητικοί τελεστές</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#numoperators">Aριθμητικοί τελεστές</a></li>
                         <p id="numoperators" class="collapse">
                             ^ * / mod div + -
                         </p>
-                        <li><a data-toggle="collapse" data-target="#functions">Συναρτήσεις</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#functions">Συναρτήσεις</a></li>
                         <div id="functions" class="collapse">
                             <ul>
                                 <li><b>ΗΜ(Χ)</b> Υπολογισμός ημιτόνου</li>
@@ -590,7 +590,7 @@ class TheoryMaker
                                 <li><b>Α_Τ(Χ)</b> Απόλυτη τιμή του Χ</li>
                             </ul>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#arithmexpression">Τι είναι αριθμητική έκφραση</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#arithmexpression">Τι είναι αριθμητική έκφραση</a></li>
                         <div id="arithmexpression" class="collapse">
                             Όταν μια τιμή προκύπτει από υπολογισμό, τότε αναφερόμαστε σε εκφράσεις
                             (expressions). Για τη σύνταξη μιας αριθμητικής έκφρασης χρησιμοποιούνται
@@ -598,7 +598,7 @@ class TheoryMaker
                             παρενθέσεις. Οι αριθμητικές εκφράσεις υλοποιούν απλές ή σύνθετες μαθηματικές πράξεις.
                             π.χ.<br> <b>(x + 5)* A_T(z)</b>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#ekxorisi">Σύνταξη και λειτουργία εντολής εκχώρησης</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#ekxorisi">Σύνταξη και λειτουργία εντολής εκχώρησης</a></li>
                         <div id="ekxorisi" class="collapse">
                             <dl>
                                 <dt>Σύνταξη</dt>
@@ -614,7 +614,7 @@ class TheoryMaker
                             Σε μια εντολή εκχώρησης η μεταβλητή και η έκφραση πρέπει να
                             είναι του ιδίου τύπου.
                         </div>
-                        <li><a data-toggle="collapse" data-target="#inputoutput">Σύνταξη και λειτουργία εντολών εισόδου εξόδου</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#inputoutput">Σύνταξη και λειτουργία εντολών εισόδου εξόδου</a></li>
                         <div id="inputoutput" class="collapse">
                             <dl>
                                 <dt>Σύνταξη</dt>
@@ -636,7 +636,7 @@ class TheoryMaker
                                     τιμών των μεταβλητών που αναφέρονται στη λίστα.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#domi">Δομή προγράμματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#domi">Δομή προγράμματος</a></li>
                         <div id="domi" class="collapse">
                             <p>Η πρώτη εντολή κάθε προγράμματος είναι υποχρεωτικά η επικεφαλίδα
                                 του προγράμματος, η οποία είναι η λέξη <b>ΠΡΟΓΡΑΜΜΑ</b> ακολουθούμενη
@@ -671,11 +671,11 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 8</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#logikiEkfrasi">Τι είναι λογική έκφραση?</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#logikiEkfrasi">Τι είναι λογική έκφραση?</a></li>
                         <div id="logikiEkfrasi" class="collapse">
                             <p>Για τη σύνταξη μιας λογικής έκφρασης ή συνθήκης χρησιμοποιούνται
                                 σταθερές, μεταβλητές, αριθμητικές παραστάσεις, συγκριτικοί και λογικοί
@@ -692,15 +692,15 @@ class TheoryMaker
                             </ol>
                             </p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#compoperators">Συγκριτικοί τελεστές</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#compoperators">Συγκριτικοί τελεστές</a></li>
                         <div id="compoperators" class="collapse">
                             >, <,>=, <=,=, <>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#boolean">Λογικές Σταθερές</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#boolean">Λογικές Σταθερές</a></li>
                         <div id="boolean" class="collapse">
                             <b>ΑΛΗΘΗΣ, ΨΕΥΔΗΣ</b>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#compare">Συγκρίσεις αλφαριθμητικών, λογικών σταθερών.</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#compare">Συγκρίσεις αλφαριθμητικών, λογικών σταθερών.</a></li>
                         <div id="compare" class="collapse">
                             <dl>
                                 <dt>Αριθμοί</dt>
@@ -722,7 +722,7 @@ class TheoryMaker
                                 </dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#logoperators">Λογικοί τελεστές</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#logoperators">Λογικοί τελεστές</a></li>
                         <div id="logoperators" class="collapse">
                             <b>ΚAI, H, OXI</b>
                         </div>
@@ -740,11 +740,11 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 9</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#arrays">Πότε πρέπει να χρησιμοποιούνται πίνακες, πλεονεκτήματα - μειονεκτήματα.</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#arrays">Πότε πρέπει να χρησιμοποιούνται πίνακες, πλεονεκτήματα - μειονεκτήματα.</a></li>
                         <div id="arrays" class="collapse">
                             Η χρήση πινάκων είναι ένας βολικός τρόπος για τη διαχείριση πολλών
                             δεδομένων ιδίου τύπου, αλλά συχνά η χρήση τους είναι <b>περιττή και
@@ -767,7 +767,7 @@ class TheoryMaker
                             πινάκων βοηθάει ή συχνά είναι απαραίτητη για την επίλυση του προβλήματος.
                             Σε άλλη περίπτωση μπορεί να αποφεύγεται η χρήση τους.
                         </div>
-                        <li><a data-toggle="collapse" data-target="#typikes">Τυπικές επεξεργασίες πινάκων</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#typikes">Τυπικές επεξεργασίες πινάκων</a></li>
                         <div id="typikes" class="collapse">
                             <dl>
                                 <dt>Υπολογισμός αθροισμάτων στοιχείων του πίνακα.</dt>
@@ -798,21 +798,21 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 10</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#tmimatikos">Τι είναι τμηματικός προγραμματισμός</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#tmimatikos">Τι είναι τμηματικός προγραμματισμός</a></li>
                         <div id="tmimatikos" class="collapse">
                             <p>Τμηματικός προγραμματισμός ονομάζεται η τεχνική σχεδίασης και
                                 ανάπτυξης των προγραμμάτων ως ένα σύνολο από απλούστερα τμήματα προγραμμάτων.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#ypoprogramma">Τι είναι Υποπρόγραμμα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#ypoprogramma">Τι είναι Υποπρόγραμμα</a></li>
                         <div id="ypoprogramma" class="collapse">
                             <p>Όταν ένα τμήμα προγράμματος επιτελεί ένα αυτόνομο έργο και έχει γραφεί χωριστά από το υπόλοιπο πρόγραμμα,
                                 τότε αναφερόμαστε σε <b>υποπρόγραμμα (subprogram)</b>.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#funcproperties">Ιδιότητες που πρέπει να διακρίνουν τα υποπρογράμματα.</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#funcproperties">Ιδιότητες που πρέπει να διακρίνουν τα υποπρογράμματα.</a></li>
                         <div id="funcproperties" class="collapse">
                             <dl>
                                 <dt>Κάθε υποπρόγραμμα έχει μόνο <b>μία είσοδο και μία έξοδο</b>.</dt>
@@ -834,7 +834,7 @@ class TheoryMaker
                             </dl>
 
                         </div>
-                        <li><a data-toggle="collapse" data-target="#pleonektimatatmimat">Πλεονεκτήματα τμηματικού προγραμματισμού</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#pleonektimatatmimat">Πλεονεκτήματα τμηματικού προγραμματισμού</a></li>
                         <div id="pleonektimatatmimat" class="collapse">
                             <dl>
                                 <dt>Διευκολύνει την ανάπτυξη του αλγορίθμου και του αντιστοίχου
@@ -874,12 +874,12 @@ class TheoryMaker
                                     επεκτείνουν την ίδια τη γλώσσα προγραμματισμού.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#parametros">Τι είναι παράμετρος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#parametros">Τι είναι παράμετρος</a></li>
                         <div id="parametros" class="collapse">
                             Μία παράμετρος είναι μία μεταβλητή που επιτρέπει το πέρασμα της
                             τιμής της από ένα τμήμα προγράμματος σε ένα άλλο.
                         </div>
-                        <li><a data-toggle="collapse" data-target="#diadiksynart">Τι είναι διαδικασία και συνάρτηση</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#diadiksynart">Τι είναι διαδικασία και συνάρτηση</a></li>
                         <div id="diadiksynart" class="collapse">
                             <dl>
                                 <dt>Συνάρτηση</dt>
@@ -891,7 +891,7 @@ class TheoryMaker
                                     εκτελεί όλες τις λειτουργίες ενός προγράμματος.</dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#typikespragmatikes">Πραγματικές και τυπικές παράμετροι</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#typikespragmatikes">Πραγματικές και τυπικές παράμετροι</a></li>
                         <div id="typikespragmatikes" class="collapse">
                             <dl>
                                 <dt>Τυπικές παράμετροι</dt>
@@ -905,7 +905,7 @@ class TheoryMaker
                             τμήμα προγράμματος στο οποίο έχουν δηλωθεί, ισχύουν δηλαδή τοπικά
                             για το συγκεκριμένο υποπρόγραμμα ή κυρίως πρόγραμμα
                         </div>
-                        <li><a data-toggle="collapse" data-target="#kanones">Κανόνες που πρέπει να ακολουθούν οι λίστες παραμέτρων</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#kanones">Κανόνες που πρέπει να ακολουθούν οι λίστες παραμέτρων</a></li>
                         <div id="kanones" class="collapse">
                             <ol>
                                 <li>Ο αριθμός των πραγματικών και των τυπικών παραμέτρων πρέπει να
@@ -918,7 +918,7 @@ class TheoryMaker
                                     του ιδίου τύπου.</li>
                             </ol>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#aperioristi">Απεριόριστη εμβέλεια</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#aperioristi">Απεριόριστη εμβέλεια</a></li>
                         <div id="aperioristi" class="collapse">
                             <p>Σύμφωνα με αυτή την αρχή όλες οι μεταβλητές και όλες οι σταθερές είναι
                                 γνωστές και μπορούν να χρησιμοποιούνται σε οποιοδήποτε τμήμα του
@@ -929,7 +929,7 @@ class TheoryMaker
                                 καθένας που γράφει κάποιο υποπρόγραμμα πρέπει να γνωρίζει τα ονόματα
                                 όλων των μεταβλητών που χρησιμοποιούνται στα υπόλοιπα υποπρογράμματα</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#periorismeni">Περιορισμένη εμβέλεια</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#periorismeni">Περιορισμένη εμβέλεια</a></li>
                         <div id="periorismeni" class="collapse">
                             <p>Η περιορισμένη εμβέλεια υποχρεώνει όλες τις μεταβλητές που
                                 χρησιμοποιούνται σε ένα τμήμα προγράμματος, να δηλώνονται σε αυτό το
@@ -941,7 +941,7 @@ class TheoryMaker
                                 οποιοδήποτε όνομα, χωρίς να ενδιαφέρει αν το ίδιο χρησιμοποιείται σε
                                 άλλο υποπρόγραμμα.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#merikos">Μερικώς περιορισμένη εμβέλεια</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#merikos">Μερικώς περιορισμένη εμβέλεια</a></li>
                         <div id="merikos" class="collapse">
                             <p>Σύμφωνα με αυτή την αρχή άλλες μεταβλητές είναι τοπικές και άλλες
                                 καθολικές. Κάθε γλώσσα προγραμματισμού έχει τους δικούς της κανόνες
@@ -965,11 +965,11 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4>Κεφάλαιο 13</h4>
                     <p>Να γνωρίζω</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#bugCategories">Κατηγορίες Λαθών</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#bugCategories">Κατηγορίες Λαθών</a></li>
                         <div id="bugCategories" class="collapse">
                             <dl>
                                 <dt>Λάθη κατά την υλοποίηση (Συντακτικά λάθη)</dt>
@@ -1001,7 +1001,7 @@ class TheoryMaker
                                 </dd>
                             </dl>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#debugging">Εκσφαλμάτωση</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#debugging">Εκσφαλμάτωση</a></li>
                         <div id="debugging" class="collapse">
                             <p>Η διαδικασία ελέγχου, εντοπισμού και διόρθωσης των σφαλμάτων ενός προγράμματος
                                 καλείται <b>εκσφαλμάτωση (debugging)</b>. Στόχος της διαδικασίας εκσφαλμάτωσης
@@ -1031,7 +1031,7 @@ class TheoryMaker
                 <div class="col-sm">
                     <h5>Ενότητα 1</h5>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#stack">Στοίβα</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#stack">Στοίβα</a></li>
                         <div id="stack" class="collapse">
                             <p><b>Στοίβα (stack)</b>, ονομάζεται μια δομή δεδομένων το σύνολο των στοιχείων της οποίας
                                 είναι διατεταγμένο με τέτοιο τρόπο, ώστε τα στοιχεία που βρίσκονται στην κορυφή της στοίβας
@@ -1056,7 +1056,7 @@ class TheoryMaker
                             </dl>
 
                         </div>
-                        <li><a data-toggle="collapse" data-target="#queue">Ουρά</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#queue">Ουρά</a></li>
                         <div id="queue" class="collapse">
                             <p><b>Ουρά (Queue)</b>, ονομάζεται μια δομή δεδομένων το σύνολο των στοιχείων της οποίας είναι
                                 διατεταγμένο με τέτοιο τρόπο, ώστε τα στοιχεία που τοποθετήθηκαν πρώτα στην ουρά να
@@ -1085,24 +1085,24 @@ class TheoryMaker
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
-                    <a href="#menu" class="btn bg-dark btn-block" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
                     <h4 id="theoria">"ΔΟΜΗ" αυτή η ταλαίπωρη λέξη </h4>
                     <p>Τη λέξη ΔΟΜΗ την συναντάμε 4 φορές στο βιβλίο, κάθε φορά με διαφορετικό νόημα</p>
                     <ol>
-                        <li><a data-toggle="collapse" data-target="#d1">Δομή Προβλήματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#d1">Δομή Προβλήματος</a></li>
                         <div id="d1" class="collapse">
                             <p>Στο Κεφάλαιο 1</p>
                             <p>Με τον όρο <b>δομή ενός προβλήματος</b> αναφερόμαστε στα συστατικά του μέρη,
                                 στα επιμέρους τμήματα που το αποτελούν καθώς επίσης και στον τρόπο
                                 που αυτά τα μέρη συνδέονται μεταξύ τους.</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#d2">Δομή Δεδομένων</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#d2">Δομή Δεδομένων</a></li>
                         <div id="d2" class="collapse">
                             <p>Στο Κεφάλαιο 3</p>
                             <p><b>Δομή Δεδομένων</b> είναι ένα σύνολο αποθηκευμένων δεδομένων πουυφίστανται επεξεργασία από
                                 ένα σύνολο λειτουργιών</p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#d3">Λογική Δομή</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#d3">Λογική Δομή</a></li>
                         <div id="d3" class="collapse">
                             <p>Στο Κεφάλαιο 6</p>
                             <p>Ο δομημένος προγραμματισμός στηρίζεται στη χρήση τριών και μόνο στοιχειωδών <b>λογικών δομών,
@@ -1112,7 +1112,7 @@ class TheoryMaker
                                 μόνο μία έξοδο.</p>
                             <p></p>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#d4">Δομή Προγράμματος</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#d4">Δομή Προγράμματος</a></li>
                         <div id="d4" class="collapse">
                             <p>Στο Κεφάλαιο 7</p>
                             <p>Όπως κάθε εντολή ακολουθεί αυστηρούς συντακτικούς κανόνες, έτσι και ολόκληρο
@@ -1154,7 +1154,7 @@ class TheoryMaker
         <div class="container-fluid mt-4">
             <div class="row">
                 <div class="col-sm">
-                    <a href="#menu" class="btn bg-dark btn-block text-white" role="button">Μενού</a>
+                    <a href="#menu" class="btn bg-dark w-100 text-white" role="button">Μενού</a>
 
                     <h4 class="text-dark mt-3"><?php echo $chapter_title; ?></h4>
                     <p class="text-secondary">Να γνωρίζω</p>
@@ -1169,7 +1169,7 @@ class TheoryMaker
                         ?>
                             <li class="mb-4">
                                 <div>
-                                    <a data-toggle="collapse" data-target="#<?php echo $collapseId; ?>"
+                                    <a data-bs-toggle="collapse" data-bs-target="#<?php echo $collapseId; ?>"
                                         class="text-dark w-100"
                                         style="cursor:pointer; text-decoration:none;">
 
@@ -1180,7 +1180,7 @@ class TheoryMaker
                                         <?php endif; ?>
 
                                         <?php if ($hasImage): ?>
-                                            <div class="mt-2 text-left">
+                                            <div class="mt-2 text-start">
                                                 <img src="uploads/<?php echo $row['question_image']; ?>"
                                                     class="img-fluid rounded border shadow-sm"
                                                     style="max-height: 400px;">
@@ -1208,7 +1208,7 @@ class TheoryMaker
                                             </div>
                                         <?php endif; ?>
 
-                                        <div class="text-right mt-3 border-top pt-2">
+                                        <div class="text-end mt-3 border-top pt-2">
                                             <small class="text-muted">
                                                 <i><?php echo $row['book_title']; ?> (σελ. <?php echo $row['page_number']; ?>)</i>
                                             </small>
