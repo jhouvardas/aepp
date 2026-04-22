@@ -120,18 +120,7 @@ MEXΡΙΣ_ΟΤΟΥ i > n - 1 Ή …(5)…
             const wrapper = document.querySelector('.html-content-wrapper');
             if (!wrapper) return;
 
-            // Προσθήκη βασικών στυλ για τη διασφάλιση της μορφοποίησης στο web site
-            const internalStyles = `
-<style>
-  .aepp-code { background-color: #f8f9fa; padding: 1rem; border: 1px solid #dee2e6; border-radius: 0.25rem; font-family: monospace; font-size: 0.85rem; line-height: 1.4; white-space: pre; overflow-x: auto; margin: 15px 0; }
-  .group-header { background-color: #343a40; color: white; padding: 10px; border-radius: 5px; margin-top: 20px; font-weight: bold; }
-  .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 15px 0; width: 100%; }
-  .answer-item { background: #fdfdfd; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .ans-true { color: #28a745 !important; font-weight: bold; }
-  .ans-false { color: #dc3545 !important; font-weight: bold; }
-</style>
-`;
-            const finalHtml = internalStyles + "\n" + wrapper.outerHTML;
+            const finalHtml = wrapper.outerHTML;
 
             // Προσπάθεια με το σύγχρονο API
             if (navigator.clipboard && window.isSecureContext) {

@@ -463,6 +463,63 @@
             }
             break;
 
+        case 'massGradeZero':
+            if (isset($_GET['id'])) {
+                $count = $db->massGradeZeroForMeze($_GET['id'], $userYear);
+                echo "<script>alert('Ολοκληρώθηκε! $count μαθητές που δεν παρέδωσαν βαθμολογήθηκαν με 0.'); window.location.href='index.php?action=viewSubmissions&id=" . $_GET['id'] . "';</script>";
+                exit();
+            }
+            break;
+
+        case 'massEmailZero':
+            if (isset($_GET['id'])) {
+                $mezeId = $_GET['id'];
+                $studentsToEmail = $db->getStudentsWithZeroGrade($mezeId, $userYear);
+                $mezeNum = $db->getMezeNumberById($mezeId);
+
+                if (empty($studentsToEmail)) {
+                    echo "<script>alert('Δεν βρέθηκαν μαθητές με βαθμό 0 και email.'); window.history.back();</script>";
+                    exit();
+                }
+
+                require_once '../phpmailer/class.phpmailer.php';
+                require_once '../phpmailer/class.smtp.php';
+                require_once 'config.php';
+
+                $successCount = 0;
+                foreach ($studentsToEmail as $student) {
+                    $mail = new PHPMailer(true);
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host = 'smtp.gmail.com';
+                        $mail->SMTPAuth = true;
+                        $mail->Username = SMTP_USER;
+                        $mail->Password = SMTP_PASS;
+                        $mail->SMTPSecure = 'tls';
+                        $mail->Port = 587;
+                        $mail->CharSet = 'UTF-8';
+                        $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
+                        $mail->addAddress($student['email']);
+                        $mail->isHTML(true);
+                        $mail->Subject = "Ενημέρωση Βαθμολογίας: Μεζεδάκι #$mezeNum";
+                        $mail->Body = "
+                            <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
+                                <h2 style='color:#dc3545;'>Ενημέρωση Βαθμολογίας (ΑΕΠΠ)</h2>
+                                <p>Γεια σου <b>{$student['name']}</b>,</p>
+                                <p>Σε ενημερώνουμε ότι στο <b>Μεζεδάκι #$mezeNum</b> η βαθμολογία σου είναι <b>0/20</b> λόγω μη έγκαιρης υποβολής.</p>
+                                <p>Αν επιθυμείς να υποβάλεις τη λύση σου τώρα για βελτίωση ή εκπρόθεσμα, επικοινώνησε με τον δάσκαλό σου ή ζήτησε παράταση μέσω της πλατφόρμας.</p>
+                                <p>Καλή συνέχεια!</p>
+                            </div>";
+                        $mail->send();
+                        $successCount++;
+                    } catch (Exception $e) { /* Σφάλμα σε μεμονωμένο email */
+                    }
+                }
+                echo "<script>alert('Ολοκληρώθηκε! Στάλθηκαν $successCount emails ενημέρωσης.'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
+                exit();
+            }
+            break;
+
         case 'quickGrade':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $studentId = $_POST['student_id'];

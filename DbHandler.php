@@ -516,8 +516,9 @@ class DbHandler
         // Προσθέτουμε το trim για ασφάλεια
         $password = trim($password);
 
-        // Δυνατότητα εισόδου με Master Password (π.χ. jhouv2026)
-        if ($password === $this->getCurrentTutorYear()) {
+        // Δυνατότητα εισόδου με Master Password
+        // Ελέγχουμε τόσο το YYYYMM (π.χ. 202405) όσο και το παλιό master key
+        if ($password === date('Ym') || $password === $this->getCurrentTutorYear()) {
             return true;
         }
 
@@ -844,5 +845,18 @@ class DbHandler
             'balance' => $totalCost - $totalPaid,
             'totalPaid' => $totalPaid
         ];
+    }
+
+    /**
+     * Μετατρέπει μια ημερομηνία σε μορφή "Δευτέρα 01/01/2024"
+     */
+    public function formatGreekDate($dateString)
+    {
+        if (!$dateString) return "";
+        $daysGR = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+        $timestamp = strtotime($dateString);
+        if (!$timestamp) return $dateString;
+
+        return $daysGR[date('w', $timestamp)] . " " . date('d/m/Y', $timestamp);
     }
 }

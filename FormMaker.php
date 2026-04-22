@@ -293,12 +293,17 @@ class FormMaker
                         </div>
                         <div class="col-md-6 mb-3">
                             <label>6-ψήφιος Κωδικός:</label>
-                            <input type="password" name="pass"
-                                class="form-control" maxlength="6"
-                                placeholder="******" required
-                                autocomplete="new-password"
-                                readonly onfocus="this.removeAttribute('readonly');"
-                                style="background-color: white;">
+                            <div class="position-relative">
+                                <input type="text" name="st_access" id="pass_<?php echo $mezeId; ?>"
+                                    class="form-control mask-input" maxlength="15"
+                                    placeholder="******" required
+                                    autocomplete="off"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    style="background-color: white; padding-right: 40px;">
+                                <i class="fa fa-eye position-absolute top-50 translate-middle-y end-0 me-3"
+                                    id="eye_<?php echo $mezeId; ?>" style="cursor: pointer; color: #6c757d; z-index: 10;"
+                                    onclick="toggleMask('pass_<?php echo $mezeId; ?>', 'eye_<?php echo $mezeId; ?>')"></i>
+                            </div>
                         </div>
                     </div>
 

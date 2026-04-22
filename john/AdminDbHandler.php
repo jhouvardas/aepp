@@ -965,7 +965,7 @@ class AdminDbHandler extends DbHandler
         $sql = "SELECT COUNT(s.student_id) 
                 FROM aepp_meze_submissions s
                 LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
-                WHERE s.meze_id = ? AND (g.grade_value IS NULL OR s.submission_date > g.updated_at)";
+                WHERE s.meze_id = ? AND (g.grade_value IS NULL OR g.grade_value = 0 OR s.submission_date > g.updated_at)";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $userYear, $mezeId);
         $stmt->execute();
@@ -1224,5 +1224,75 @@ class AdminDbHandler extends DbHandler
         }
         $conn->close();
         return $count;
+    }
+
+    /**
+     * Βαθμολογεί αυτόματα με 0 όσους μαθητές δεν έχουν υποβάλει εργασία και δεν έχουν ήδη βαθμό.
+     */
+    public function massGradeZeroForMeze($mezeId, $userYear)
+    {
+        $students = $this->getTutorStudents($userYear);
+        if (empty($students)) return 0;
+
+        $conn = $this->connectToFamilyDB();
+
+        // 1. Λήψη IDs όσων έχουν κάνει υποβολή
+        $subSql = "SELECT student_id FROM aepp_meze_submissions WHERE meze_id = ?";
+        $stmtS = $conn->prepare($subSql);
+        $stmtS->bind_param("i", $mezeId);
+        $stmtS->execute();
+        $subRes = $stmtS->get_result();
+        $submittedIds = [];
+        while ($r = $subRes->fetch_assoc()) $submittedIds[] = (int)$r['student_id'];
+        $stmtS->close();
+
+        // 2. Λήψη IDs όσων έχουν ήδη βαθμολογηθεί
+        $gradeSql = "SELECT student_id FROM meze_grades WHERE meze_id = ? AND user_year = ?";
+        $stmtG = $conn->prepare($gradeSql);
+        $stmtG->bind_param("is", $mezeId, $userYear);
+        $stmtG->execute();
+        $gradeRes = $stmtG->get_result();
+        $gradedIds = [];
+        while ($r = $gradeRes->fetch_assoc()) $gradedIds[] = (int)$r['student_id'];
+        $stmtG->close();
+
+        $count = 0;
+        $sql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, first_grade_value, is_on_time, teacher_comments, user_year) VALUES (?, ?, 0, 0, 1, 'Αυτόματη βαθμολόγηση λόγω μη υποβολής', ?)";
+        $stmt = $conn->prepare($sql);
+
+        foreach ($students as $s) {
+            $stId = (int)$s['studentId'];
+            if (!in_array($stId, $submittedIds) && !in_array($stId, $gradedIds)) {
+                $stmt->bind_param("iis", $stId, $mezeId, $userYear);
+                if ($stmt->execute()) $count++;
+            }
+        }
+        $stmt->close();
+        $conn->close();
+        return $count;
+    }
+
+    /**
+     * Επιστρέφει τους μαθητές που έχουν βαθμό 0 για ένα συγκεκριμένο μεζεδάκι.
+     */
+    public function getStudentsWithZeroGrade($mezeId, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT student_id FROM meze_grades WHERE meze_id = ? AND user_year = ? AND grade_value = 0";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $mezeId, $userYear);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $ids = [];
+        while ($row = $res->fetch_assoc()) $ids[] = (int)$row['student_id'];
+        $stmt->close();
+        $conn->close();
+
+        if (empty($ids)) return [];
+
+        $allStudents = $this->getTutorStudents($userYear);
+        return array_filter($allStudents, function ($s) use ($ids) {
+            return in_array((int)$s['studentId'], $ids) && !empty($s['email']);
+        });
     }
 }

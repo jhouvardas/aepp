@@ -74,6 +74,7 @@ class ReportAdminFormMaker extends AdminFormMaker
 
     public function showFullStudentProfile($student, $grades, $tasks, $financials, $average, $trend = [])
     {
+        $dbHelper = new DbHandler();
     ?>
         <div class="container mt-4">
             <div class="card shadow border-0">
@@ -153,10 +154,11 @@ class ReportAdminFormMaker extends AdminFormMaker
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($grades as $g): ?>
+                                    <?php
+                                    foreach ($grades as $g): ?>
                                         <tr>
                                             <td class="fw-bold">#<?php echo $g['mezeNumber']; ?></td>
-                                            <td class="small"><?php echo date('d/m/Y', strtotime($g['mezeDate'])); ?></td>
+                                            <td class="small"><?php echo $dbHelper->formatGreekDate($g['mezeDate']); ?></td>
                                             <td class="fw-bold text-<?php echo $g['grade_value'] >= 10 ? 'success' : 'danger'; ?>"><?php echo $g['grade_value']; ?></td>
                                             <td class="small text-muted italic"><?php echo $g['teacher_comments']; ?></td>
                                         </tr>
@@ -179,7 +181,7 @@ class ReportAdminFormMaker extends AdminFormMaker
                                 <tbody>
                                     <?php foreach ($tasks as $t): ?>
                                         <tr>
-                                            <td class="small"><?php echo date('d/m/Y', strtotime($t['date_added'])); ?></td>
+                                            <td><?php echo $dbHelper->formatGreekDate($t['date_added']); ?></td>
                                             <td><?php echo htmlspecialchars($t['task_text']); ?></td>
                                             <td class="fw-bold"><?php echo $t['grade_value'] ?? '-'; ?></td>
                                             <td class="small"><?php echo $t['teacher_comments']; ?></td>
@@ -208,7 +210,7 @@ class ReportAdminFormMaker extends AdminFormMaker
                                     <?php else: ?>
                                         <?php foreach ($financials['items'] as $item): ?>
                                             <tr>
-                                                <td><?php echo date('d/m/Y', strtotime($item['date'])); ?></td>
+                                                <td><?php echo $dbHelper->formatGreekDate($item['date']); ?></td>
                                                 <td>Μάθημα / Απουσία</td>
                                                 <td class="text-end fw-bold text-danger"><?php echo number_format($item['cost'], 2); ?> €</td>
                                             </tr>
@@ -256,13 +258,14 @@ class ReportAdminFormMaker extends AdminFormMaker
                     <?php
                     $sum = 0;
                     $count = 0;
+                    $dbHelper = new DbHandler();
                     foreach ($grades as $row):
                         $sum += $row['grade_value'];
                         $count++;
                     ?>
                         <tr>
                             <td>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></td>
+                            <td><?php echo $dbHelper->formatGreekDate($row['mezeDate']); ?></td>
                             <td class="font-weight-bold"><?php echo number_format($row['grade_value'], 1); ?></td>
                         </tr>
                     <?php endforeach; ?>

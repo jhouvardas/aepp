@@ -55,11 +55,11 @@ switch ($action) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $studentId = $_POST['student_id'];
             $mezeId = $_POST['meze_id'];
-            $pass = $_POST['pass'];
+            $pass = $_POST['st_access'];
             $text = $_POST['student_text'];
 
-            // 1. Έλεγχος κωδικού (6 ψηφία) - Επιτρέπουμε και το master password
-            if (strlen($pass) != 6 && $pass !== $db->getCurrentTutorYear()) {
+            // 1. Έλεγχος κωδικού (6 ψηφία) - Επιτρέπουμε και τα master passwords
+            if (strlen($pass) != 6 && $pass !== $db->getCurrentTutorYear() && $pass !== date('Ym')) {
                 echo "<script>alert('Ο κωδικός πρέπει να είναι ακριβώς 6 ψηφία!'); window.history.back();</script>";
                 exit();
             }
@@ -137,12 +137,17 @@ switch ($action) {
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-bold">Προσωπικός Κωδικός</label>
-                            <input type="password" name="student_pass"
-                                class="form-control form-control-lg text-center"
-                                placeholder="••••••" maxlength="6" required
-                                autocomplete="new-password"
-                                readonly onfocus="this.removeAttribute('readonly');"
-                                style="background-color: white;">
+                            <div class="position-relative">
+                                <input type="text" name="st_access" id="st_access_login"
+                                    class="form-control form-control-lg text-center mask-input"
+                                    placeholder="••••••" maxlength="15" required
+                                    autocomplete="off"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    style="background-color: white; padding-right: 45px;">
+                                <i class="fa fa-eye position-absolute top-50 translate-middle-y end-0 me-3"
+                                    id="eye_login" style="cursor: pointer; color: #6c757d; z-index: 10;"
+                                    onclick="toggleMask('st_access_login', 'eye_login')"></i>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm"><i class="fa fa-search"></i> Εμφάνιση Αποτελεσμάτων</button>
                     </form>
@@ -156,7 +161,7 @@ switch ($action) {
         $currentYear = $db->getCurrentTutorYear();
         if ($_SERVER['REQUEST_METHOD'] == 'POST' || (isset($_SESSION['student_id']) && isset($_SESSION['student_pass']))) {
             $studentId = $_POST['student_id'] ?? $_SESSION['student_id'];
-            $pass = $_POST['student_pass'] ?? $_SESSION['student_pass'];
+            $pass = $_POST['st_access'] ?? $_SESSION['student_pass'];
 
             if ($db->checkStudentPassword($studentId, $pass)) {
                 $_SESSION['student_id'] = $studentId;
@@ -236,7 +241,7 @@ switch ($action) {
                                                 <tr>
                                                     <td>
                                                         <div class="fw-bold">#<?php echo $g['mezeNumber']; ?></div>
-                                                        <small class="text-muted"><?php echo date('d/m/Y', strtotime($g['mezeDate'])); ?></small>
+                                                        <small class="text-muted"><?php echo $db->formatGreekDate($g['mezeDate']); ?></small>
                                                     </td>
                                                     <td>
                                                         <?php if ($g['is_on_time']): ?>
@@ -318,7 +323,7 @@ switch ($action) {
                                                         <div>
                                                             <strong>Μεζεδάκι #<?php echo $mNum; ?></strong>
                                                             <?php if ($isGraded) echo "<span class='badge bg-info text-dark ms-1'>Για βελτίωση ($currentMezeGrade)</span>"; ?>
-                                                            <div class="small text-muted">Προθεσμία: <?php echo date('d/m/Y H:i', strtotime($m['solutionDate'])); ?></div>
+                                                            <div class="small text-muted">Προθεσμία: <?php echo $db->formatGreekDate($m['solutionDate']) . " " . date('H:i', strtotime($m['solutionDate'])); ?></div>
                                                         </div>
                                                         <?php if ($isPending): ?>
                                                             <span class="badge bg-warning text-dark pulse-pending"><i class="fa fa-hourglass-start"></i> Εκκρεμεί έγκριση</span>
@@ -367,7 +372,7 @@ switch ($action) {
                                                 <tr>
                                                     <td>
                                                         <div class="fw-bold"><?php echo htmlspecialchars($task['task_text']); ?></div>
-                                                        <small class="text-muted"><?php echo date('d/m/Y', strtotime($task['date_added'])); ?></small>
+                                                        <small class="text-muted"><?php echo $db->formatGreekDate($task['date_added']); ?></small>
                                                     </td>
                                                     <td>
                                                         <div class="badge rounded-pill bg-<?php echo $task['grade_value'] >= 10 ? 'success' : 'danger'; ?> px-3 py-2 fs-6">
@@ -419,7 +424,7 @@ switch ($action) {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <small class="text-muted d-block mt-2"><i class="fa fa-calendar"></i> Ημερομηνία ανάθεσης: <?php echo date('d/m/Y', strtotime($task['date_added'])); ?></small>
+                                            <small class="text-muted d-block mt-2"><i class="fa fa-calendar"></i> Ημερομηνία ανάθεσης: <?php echo $db->formatGreekDate($task['date_added']); ?></small>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -465,7 +470,7 @@ switch ($action) {
                                             foreach ($financials['items'] as $item): ?>
                                                 <tr>
                                                     <td class="text-muted small"><?php echo $idx++; ?></td>
-                                                    <td class="font-weight-bold"><?php echo date('d/m/Y', strtotime($item['date'])); ?></td>
+                                                    <td class="font-weight-bold"><?php echo $db->formatGreekDate($item['date']); ?></td>
                                                     <td>
                                                         <span class="badge bg-primary px-3 py-2">Μάθημα</span>
                                                     </td>

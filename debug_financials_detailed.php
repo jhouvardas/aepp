@@ -62,7 +62,7 @@ foreach ($allEntries as $entry) {
     }
 
     echo "<tr>";
-    echo "<td>" . $entry['date'] . "</td>";
+    echo "<td>" . $db->formatGreekDate($entry['date']) . "</td>";
     echo "<td>" . $entry['type'] . "</td>";
     echo "<td>" . $entry['duration'] . "</td>";
     echo "<td style='color:red'>" . ($cost > 0 ? number_format($cost, 2) . " €" : "-") . "</td>";
@@ -111,7 +111,7 @@ echo "<tr style='background: #333; color: white;'><th>Ημερομηνία</th><
 foreach ($combined as $item) {
     $isAbsence = !isset($item['entryType']);
     echo "<tr>";
-    echo "<td>" . date('d/m/Y', strtotime($item['date'])) . "</td>";
+    echo "<td>" . $db->formatGreekDate($item['date']) . "</td>";
     echo "<td>" . ($isAbsence ? "Απουσία (" . $item['type'] . ")" : "Μάθημα") . "</td>";
     echo "<td style='text-align:right; font-weight:bold; color:red;'>" . ($isAbsence ? "-" : number_format($item['cost'], 2) . " €") . "</td>";
     echo "</tr>";

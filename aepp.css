@@ -60,6 +60,12 @@
     z-index: 1;
 }
 
+/* Κλάση για απόκρυψη χαρακτήρων χωρίς να αναγνωρίζεται ως password από browsers */
+.mask-input {
+    -webkit-text-security: disc !important;
+    text-security: disc !important;
+}
+
 /* 3. Ρυθμίσεις για μέγιστη αξιοποίηση πλάτους σε κινητά */
 @media (max-width: 576px) {
     .mobile-friendly-card {
@@ -424,7 +430,13 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: transform 0.15s ease-in-out;
+    transition: transform 0.15s ease-in-out, border-color 0.15s;
+}
+
+.answer-item:hover {
+    transform: translateY(-2px);
+    border-color: #28a745;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .ans-num {
@@ -476,4 +488,81 @@
 [data-bs-toggle="collapse"]:hover {
     color: #0d6efd !important;
     /* Μπλε μόνο στο πέρασμα του ποντικιού */
+}
+
+/* --- Styles μεταφερμένα από editor.html & solution.html --- */
+.html-content-wrapper ul {
+    margin-bottom: 1.2rem;
+    padding-left: 25px;
+}
+
+code {
+    color: #d63384;
+    font-weight: bold;
+    background-color: #f8f9fa;
+    padding: 0 4px;
+    border-radius: 3px;
+}
+
+.visual-table {
+    border-collapse: collapse;
+    margin: 15px auto;
+    font-family: monospace;
+    width: auto;
+}
+
+.visual-table td,
+.visual-table th {
+    border: 1px solid #dee2e6;
+    padding: 5px 10px;
+    text-align: center;
+}
+
+.visual-table th {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.index-row th {
+    border: none;
+    background: transparent;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.trace-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+.trace-table th,
+.trace-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+}
+
+.trace-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* Utility */
+.italic {
+    font-style: italic;
+}
+
+/* Specific Badge Sizing for Answer Items */
+.answer-item .badge {
+    font-size: 0.72rem;
+    letter-spacing: 0.3px;
+    padding: 6px 8px;
+    border-radius: 5px;
 }

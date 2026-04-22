@@ -229,6 +229,22 @@ class PageMaker
 
                 </div>
             </footer>
+            <!-- Script για την εμφάνιση/απόκρυψη κωδικού -->
+            <script>
+                function toggleMask(inputId, iconId) {
+                    var input = document.getElementById(inputId);
+                    var icon = document.getElementById(iconId);
+                    if (input.classList.contains('mask-input')) {
+                        input.classList.remove('mask-input');
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.classList.add('mask-input');
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            </script>
             <!-- Bootstrap 5 JS Bundle για συμβατότητα με τα νέα Accordions -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         </body>
@@ -536,7 +552,7 @@ class PageMaker
                             </div>
                             <div class="text-end">
                                 <span class="badge <?php echo $deadlineClass; ?> py-2 px-3 shadow-sm border border-white">
-                                    <i class="fa fa-clock-o"></i> <?php echo $solDate->format('d/m/Y H:i'); ?>
+                                    <i class="fa fa-clock-o"></i> <?php echo $db->formatGreekDate($row['solutionDate']) . " " . $solDate->format('H:i'); ?>
                                 </span>
                             </div>
                         </div>

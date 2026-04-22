@@ -54,7 +54,7 @@ if (empty($financials['items'])) {
     foreach ($financials['items'] as $item) {
         $style = ($item['entryType'] === 'absence') ? "style='color: #777;'" : "style='font-weight: bold; color: red;'";
         echo "<tr $style>";
-        echo "<td>" . $item['date'] . "</td>";
+        echo "<td>" . $db->formatGreekDate($item['date']) . "</td>";
         echo "<td>" . $item['entryType'] . "</td>";
         echo "<td>" . ($item['type'] ?: '-') . "</td>";
         echo "<td>" . (isset($item['cost']) ? $item['cost'] . " €" : "0.00 €") . "</td>";
@@ -71,7 +71,7 @@ echo "<table border='1' cellpadding='5' style='border-collapse: collapse;'>";
 echo "<tr style='background: #ddd;'><th>Date</th><th>Duration</th><th>Payment (€)</th><th>Type</th></tr>";
 while ($row = $res->fetch_assoc()) {
     echo "<tr>";
-    echo "<td>" . $row['date'] . "</td>";
+    echo "<td>" . $db->formatGreekDate($row['date']) . "</td>";
     echo "<td>" . $row['duration'] . "</td>";
     echo "<td>" . $row['payment'] . "</td>";
     echo "<td>" . $row['type'] . "</td>";

@@ -79,7 +79,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                         ?>
                                 <tr <?php echo $rowStyle; ?> class="align-middle">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
-                                    <td class="text-center small"><?php echo date('d/m/Y', $mTimestamp); ?></td>
+                                    <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
                                     <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?><?php echo $badgeHtml; ?></td>
                                     <td>
                                         <div class="d-flex flex-wrap justify-content-center">
@@ -461,11 +461,12 @@ class MezeAdminFormMaker extends AdminFormMaker
 
     public function showSubmissionsForGrading($submissions, $students, $mezeData, $allMezedakia, $existingGrades = [])
     {
-        $db = new DbHandler(); // Για έλεγχο αδειών υποβολής
+        $dbHandler = new AdminDbHandler(); // Για έλεγχο αδειών και μαζική βαθμολόγηση
         $mezeNumber = (int)$mezeData['mezeNumber'];
         $mezeId = $mezeData['mezeId'];
         $isSos = (isset($mezeData['isSos']) && $mezeData['isSos'] == 1);
         $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+        $isExpired = (strtotime($mezeData['solutionDate'] ?? '') < time());
 
         $pendingSubmissions = [];
         $gradedSubmissions = [];
@@ -494,7 +495,15 @@ class MezeAdminFormMaker extends AdminFormMaker
 
             $isGraded = false;
             if ($gradeData) {
-                $isGraded = true;
+                $gradeVal = (float)($gradeData['grade_value'] ?? 0);
+
+                // Ένας μαθητής θεωρείται "Βαθμολογημένος" μόνο αν:
+                // 1. Ο βαθμός είναι μεγαλύτερος του 0
+                // 2. Ή αν ο βαθμός είναι 0 αλλά ΔΕΝ έχει στείλει τίποτα (χειροκίνητο κλείσιμο από καθηγητή)
+                if ($gradeVal > 0 || $subData === null) {
+                    $isGraded = true;
+                }
+
                 // Αν υπάρχει υποβολή πιο πρόσφατη από τη βαθμολόγηση, επιστρέφει στα εκκρεμή
                 if ($subData && strtotime($subData['submission_date']) > strtotime($gradeData['updated_at'] ?? '2000-01-01')) {
                     $isGraded = false;
@@ -518,13 +527,29 @@ class MezeAdminFormMaker extends AdminFormMaker
 
             <!-- ΕΝΟΤΗΤΑ: ΠΡΟΣ ΒΑΘΜΟΛΟΓΗΣΗ -->
             <div class="mb-5">
-                <h5 class="text-danger fw-bold"><i class="fa fa-clock-o"></i> Προς Βαθμολόγηση (<?php echo count($pendingSubmissions); ?>)</h5>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="text-danger fw-bold mb-0"><i class="fa fa-clock-o"></i> Προς Βαθμολόγηση (<?php echo count($pendingSubmissions); ?>)</h5>
+                    <?php if ($isExpired):
+                        $zeroStudents = $dbHandler->getStudentsWithZeroGrade($mezeId, $userYear);
+                    ?>
+                        <div class="btn-group">
+                            <a href="index.php?action=massGradeZero&id=<?php echo $mezeId; ?>"
+                                class="btn btn-outline-danger btn-sm shadow-sm"
+                                onclick="return confirm('ΠΡΟΣΟΧΗ: Όλοι οι μαθητές που δεν έχουν υποβάλει εργασία ΚΑΙ δεν έχουν ήδη βαθμό, θα πάρουν 0. Συνέχεια;')">
+                                <i class="fa fa-battery-empty"></i> 1. Μαζικό 0
+                            </a>
+                            <a href="index.php?action=massEmailZero&id=<?php echo $mezeId; ?>" class="btn btn-danger btn-sm shadow-sm <?php echo empty($zeroStudents) ? 'disabled' : ''; ?>" onclick="return confirm('Θέλετε να στείλετε email ενημέρωσης σε όλους όσους έχουν βαθμό 0;')">
+                                <i class="fa fa-envelope"></i> 2. Emails σε όσους έχουν 0
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
                 <hr class="border-danger">
                 <?php foreach ($pendingSubmissions as $item):
                     $sub = $item['sub'];
                     $st = $item['student'];
                     $stId = $st['studentId'];
-                    $isAllowed = $db->isSubmissionAllowed($stId, $mezeId, $userYear);
+                    $isAllowed = $dbHandler->isSubmissionAllowed($stId, $mezeId, $userYear);
                 ?>
                     <div class="card mb-4 shadow-sm border-primary">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">

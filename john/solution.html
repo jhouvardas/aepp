@@ -5,11 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <base href="../">
-  <title>Λύση: Παραγωγή Πτηνοτροφικής Μονάδας</title>
+  <title>Λύση: ΘΕΜΑ Β</title>
   <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../aepp.css">
   <style>
     body {
       padding: 0 !important;
@@ -23,53 +25,14 @@
       border-left: 5px solid #28a745;
       min-height: 100vh;
     }
-
-    /* Answer Styling Improvements */
-    .answer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 12px;
-      padding: 5px 0;
-    }
-
-    .answer-item {
-      background: #fdfdfd;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 8px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      transition: transform 0.15s ease-in-out, border-color 0.15s;
-    }
-
-    .answer-item:hover {
-      transform: translateY(-2px);
-      border-color: #28a745;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .ans-num {
-      font-weight: 700;
-      color: #6c757d;
-      font-size: 0.9rem;
-    }
-
-    .badge {
-      font-size: 0.72rem;
-      letter-spacing: 0.3px;
-      padding: 6px 8px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 
 <body>
   <div class="container-fluid px-0">
     <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
-      <span class="text-white ms-3 fw-bold small"><i class="fa fa-check-square text-success"></i> ΛΥΣΕΙΣ: ΣΩΣΤΟ / ΛΑΘΟΣ
-        (Συγκεντρωτικά)</span>
+      <span class="text-white ms-3 fw-bold small"><i class="fa fa-check-square text-success"></i> ΛΥΣΗ: ΘΕΜΑ Β (Πίνακες
+        & Ιχνηλάτηση)</span>
       <div>
         <button onclick="copySolution()" class="btn btn-success btn-sm me-3 fw-bold"><i class="fa fa-copy"></i>
           Αντιγραφή Κώδικα</button>
@@ -77,328 +40,109 @@
     </div>
     <div class="preview-box">
       <div class="solution-container" id="solutionCode" contenteditable="true">
-        <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύσεις: ΘΕΜΑ Α (True/False)
+        <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύση Β1: Συμπλήρωση Κενών
         </h4>
-        <p class="text-muted small mb-4">Κάντε κλικ σε κάθε ομάδα για να δείτε τις απαντήσεις.</p>
-
-        <div class="accordion shadow-sm" id="accordionSolutions">
-
-          <!-- Ομάδα 1 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading1">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse1">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 1 (Θεωρία & Δομές)
-              </button>
-            </h2>
-            <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 2 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading2">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse2">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 2 (Έλεγχος & Λίστες)
-              </button>
-            </h2>
-            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 3 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading3">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse3">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 3 (Δομές & Συναρτήσεις)
-              </button>
-            </h2>
-            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 4 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading4">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse4">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 4 (Αντικείμενα & Δένδρα)
-              </button>
-            </h2>
-            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 5 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading5">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse5">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 5 (Σχεδίαση & Λογική)
-              </button>
-            </h2>
-            <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 6 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading6">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse6">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 6 (Συγκρίσεις & Σφάλματα)
-              </button>
-            </h2>
-            <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 7 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading7">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse7">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 7 (Λίστες & Αναζήτηση)
-              </button>
-            </h2>
-            <div id="collapse7" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 8 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading8">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse8">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 8 (Προγραμματισμός & Βρόχοι)
-              </button>
-            </h2>
-            <div id="collapse8" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 9 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading9">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse9">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 9 (Επιλογή & Ουρά)
-              </button>
-            </h2>
-            <div id="collapse9" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ομάδα 10 -->
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading10">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse10">
-                <i class="fa fa-list-ol me-2 text-primary"></i> Ομάδα 10 (Μεταγλωττιστής & Σφάλματα)
-              </button>
-            </h2>
-            <div id="collapse10" class="accordion-collapse collapse" data-bs-parent="#accordionSolutions">
-              <div class="accordion-body">
-                <div class="answer-grid">
-                  <div class="answer-item">
-                    <span class="ans-num">1.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">2.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">3.</span> <span class="badge bg-danger">ΛΑΘΟΣ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">4.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                  <div class="answer-item">
-                    <span class="ans-num">5.</span> <span class="badge bg-success">ΣΩΣΤΟ</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div class="answer-grid mb-4">
+          <div class="answer-item"><span class="ans-num">(1)</span> <span class="badge bg-success">j</span></div>
+          <div class="answer-item"><span class="ans-num">(2)</span> <span class="badge bg-success">i</span></div>
+          <div class="answer-item"><span class="ans-num">(3)</span> <span class="badge bg-success">3</span></div>
+          <div class="answer-item"><span class="ans-num">(4)</span> <span class="badge bg-success">1</span></div>
+          <div class="answer-item"><span class="ans-num">(5)</span> <span class="badge bg-success">2</span></div>
         </div>
-        <!-- End of Accordion -->
 
+        <h4 class="text-success mb-3"><i class="fa fa-table"></i> Λύση Β2: Ιχνηλάτηση & Αποτελέσματα
+        </h4>
+        <div class="table-responsive mb-4">
+          <table class="trace-table mx-auto shadow-sm" style="max-width: 500px;">
+            <thead>
+              <tr>
+                <th>a</th>
+                <th>b</th>
+                <th>a &lt; 35</th>
+                <th>Οθόνη</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>3</td>
+                <td>ΑΛΗΘΗΣ</td>
+                <td></td>
+              </tr>
+              <tr class="bg-light">
+                <td>9</td>
+                <td>4</td>
+                <td></td>
+                <td>9<br>4</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>ΑΛΗΘΗΣ</td>
+                <td></td>
+              </tr>
+              <tr class="bg-light">
+                <td>17</td>
+                <td>13</td>
+                <td></td>
+                <td>17<br>13</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>ΑΛΗΘΗΣ</td>
+                <td></td>
+              </tr>
+              <tr class="bg-light">
+                <td>25</td>
+                <td>30</td>
+                <td></td>
+                <td>25<br>30</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>ΑΛΗΘΗΣ</td>
+                <td></td>
+              </tr>
+              <tr class="bg-light">
+                <td>33</td>
+                <td>55</td>
+                <td></td>
+                <td>33<br>55</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>ΑΛΗΘΗΣ</td>
+                <td></td>
+              </tr>
+              <tr class="bg-light">
+                <td>41</td>
+                <td>88</td>
+                <td></td>
+                <td>41<br>88</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>ΨΕΥΔΗΣ</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h6 class="text-secondary fw-bold mb-2"><i class="fa fa-desktop"></i> Συνοπτικά η Έξοδος:</h6>
+        <div class="p-3 border rounded bg-light mb-3 text-center">
+          <p class="mb-0 fw-bold" style="letter-spacing: 2px; font-size: 1.1rem; line-height: 1.6;">
+            9<br>4<br>17<br>13<br>25<br>30<br>33<br>55<br>41<br>88
+          </p>
+        </div>
+        <small class="text-muted italic">Σημείωση: Στις Διαδικασίες, οι αλλαγές που γίνονται στις παραμέτρους μέσα στο
+          υποπρόγραμμα επηρεάζουν άμεσα τις αντίστοιχες μεταβλητές στο κύριο πρόγραμμα.</small>
       </div>
     </div>
-  </div>
   </div>
   <!-- Bootstrap 5 JS Bundle (Περιλαμβάνει Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -407,7 +151,6 @@
       const wrapper = document.querySelector('#solutionCode');
       if (!wrapper) return;
 
-      // Παίρνουμε μόνο το καθαρό HTML για επικόλληση
       const finalHtml = wrapper.innerHTML;
 
       if (navigator.clipboard && window.isSecureContext) {
