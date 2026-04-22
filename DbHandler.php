@@ -513,10 +513,16 @@ class DbHandler
     // Μέθοδος για έλεγχο password (στη βάση tutor)
     public function checkStudentPassword($studentId, $password)
     {
-        $conn = $this->connectToTutorDB();
-        if (!$conn) return false;
         // Προσθέτουμε το trim για ασφάλεια
         $password = trim($password);
+
+        // Δυνατότητα εισόδου με Master Password (π.χ. jhouv2026)
+        if ($password === $this->getCurrentTutorYear()) {
+            return true;
+        }
+
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
 
         // Χρησιμοποιούμε "s" για το password για να το δει ως κείμενο (VARCHAR)
         $stmt = $conn->prepare("SELECT studentId FROM student WHERE studentId = ? AND student_password = ?");

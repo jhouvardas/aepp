@@ -58,8 +58,8 @@ switch ($action) {
             $pass = $_POST['pass'];
             $text = $_POST['student_text'];
 
-            // 1. Έλεγχος κωδικού (6 ψηφία)
-            if (strlen($pass) != 6) {
+            // 1. Έλεγχος κωδικού (6 ψηφία) - Επιτρέπουμε και το master password
+            if (strlen($pass) != 6 && $pass !== $db->getCurrentTutorYear()) {
                 echo "<script>alert('Ο κωδικός πρέπει να είναι ακριβώς 6 ψηφία!'); window.history.back();</script>";
                 exit();
             }
@@ -88,8 +88,24 @@ switch ($action) {
             $mezeId = $_POST['meze_id'];
             $hours = (int)$_POST['requested_hours'];
             $currentYear = $db->getCurrentTutorYear();
-            $db->submitExtensionRequest($studentId, $mezeId, $hours, $currentYear);
-            $page->displayRequestSuccess();
+
+            // Server-side έλεγχος προϋποθέσεων πριν την αποδοχή του αιτήματος
+            $overallAverage = $db->getStudentOverallAverage($studentId, $currentYear);
+            $grades = $db->getStudentGradesForStudent($studentId, $currentYear);
+            $tempOnTime = 0;
+            if (is_array($grades)) {
+                foreach ($grades as $g) {
+                    if ($g['is_on_time']) $tempOnTime++;
+                }
+            }
+            $delaysCount = (is_array($grades) ? count($grades) : 0) - $tempOnTime;
+
+            if ($overallAverage > 15 && $delaysCount <= 5) {
+                $db->submitExtensionRequest($studentId, $mezeId, $hours, $currentYear);
+                $page->displayRequestSuccess();
+            } else {
+                echo "<div class='container mt-5'><div class='alert alert-danger'>Δεν πληροίτε τις προϋποθέσεις για αίτημα παράτασης (Μ.Ο. > 15 και έως 5 καθυστερήσεις).</div></div>";
+            }
             exit();
         }
         break;
@@ -151,6 +167,17 @@ switch ($action) {
                 $overallAverage = $db->getStudentOverallAverage($studentId, $currentYear); // Νέα κλήση για τον μέσο όρο
                 $groupTasks = $db->getStudentGroupTasks($studentId); // Ανάκτηση εργασιών ομάδας
                 $financials = $db->getStudentFinancials($studentId); // Ανάκτηση οικονομικών
+
+                // Υπολογισμός στατιστικών για τον έλεγχο δικαιώματος παράτασης (Strict Rules)
+                $tempOnTime = 0;
+                if (is_array($grades)) {
+                    foreach ($grades as $g) {
+                        if ($g['is_on_time']) $tempOnTime++;
+                    }
+                }
+                $delaysCount = (is_array($grades) ? count($grades) : 0) - $tempOnTime;
+                $canRequestExtension = ($overallAverage > 15 && $delaysCount <= 5);
+
                 $allMezedakia = $db->getAllMezedakia();
                 $pendingRequestIds = is_object($db) ? $db->getStudentPendingRequests($studentId) : [];
 
@@ -252,63 +279,70 @@ switch ($action) {
                             <!-- Νέα Ενότητα: Αιτήματα Παράτασης -->
                             <div class="mt-5">
                                 <h5 class="text-secondary border-bottom pb-2 mb-3"><i class="fa fa-clock-o"></i> Ζήτησε Παράταση για Υποβολή ή Βελτίωση</h5>
-                                <div class="list-group">
-                                    <?php
-                                    $foundExpired = false;
-                                    if ($allMezedakia && is_object($allMezedakia)) {
-                                        $allMezedakia->data_seek(0);
-                                        while ($m = $allMezedakia->fetch_assoc()):
-                                            $mId = $m['mezeId'];
-                                            $mNum = $m['mezeNumber'];
 
-                                            $currentMezeGrade = null;
-                                            $isGraded = false;
-                                            foreach ($grades as $g) {
-                                                if ($g['mezeNumber'] == $mNum) {
-                                                    $isGraded = true;
-                                                    $currentMezeGrade = $g['grade_value'];
-                                                    break;
+                                <?php if (!$canRequestExtension): ?>
+                                    <div class="alert alert-light border text-muted small shadow-sm">
+                                        <i class="fa fa-lock"></i> Η δυνατότητα αιτήματος παράτασης είναι διαθέσιμη μόνο για μαθητές με <b>Μ.Ο. > 15</b> και έως <b>5 καθυστερήσεις</b> στην υποβολή των μεζεδακίων. (Τρέχοντα: Μ.Ο. <?php echo number_format($overallAverage, 2); ?>, Καθυστερήσεις: <?php echo $delaysCount; ?>)
+                                    </div>
+                                <?php else: ?>
+                                    <div class="list-group">
+                                        <?php
+                                        $foundExpired = false;
+                                        if ($allMezedakia && is_object($allMezedakia)) {
+                                            $allMezedakia->data_seek(0);
+                                            while ($m = $allMezedakia->fetch_assoc()):
+                                                $mId = $m['mezeId'];
+                                                $mNum = $m['mezeNumber'];
+
+                                                $currentMezeGrade = null;
+                                                $isGraded = false;
+                                                foreach ($grades as $g) {
+                                                    if ($g['mezeNumber'] == $mNum) {
+                                                        $isGraded = true;
+                                                        $currentMezeGrade = $g['grade_value'];
+                                                        break;
+                                                    }
                                                 }
-                                            }
 
-                                            $isExpired = (strtotime($m['solutionDate']) < time());
-                                            $hasActiveExt = $db->isSubmissionAllowed($studentId, $mId, $currentYear);
+                                                $isExpired = (strtotime($m['solutionDate']) < time());
+                                                $hasActiveExt = $db->isSubmissionAllowed($studentId, $mId, $currentYear);
 
-                                            // Επιτρέπουμε αίτημα αν δεν έχει βαθμολογηθεί Ή αν ο βαθμός είναι < 15
-                                            $isEligibleForImprovement = ($isGraded && $currentMezeGrade < 15);
+                                                // Επιτρέπουμε αίτημα αν δεν έχει βαθμολογηθεί Ή αν ο βαθμός είναι < 15
+                                                $isEligibleForImprovement = ($isGraded && $currentMezeGrade < 15);
 
-                                            if ($isExpired && (!$isGraded || $isEligibleForImprovement) && !$hasActiveExt):
-                                                $foundExpired = true;
-                                                $isPending = in_array($mId, $pendingRequestIds);
-                                    ?>
-                                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <strong>Μεζεδάκι #<?php echo $mNum; ?></strong>
-                                                        <?php if ($isGraded) echo "<span class='badge bg-info text-dark ms-1'>Για βελτίωση ($currentMezeGrade)</span>"; ?>
-                                                        <div class="small text-muted">Προθεσμία: <?php echo date('d/m/Y H:i', strtotime($m['solutionDate'])); ?></div>
+                                                if ($isExpired && (!$isGraded || $isEligibleForImprovement) && !$hasActiveExt):
+                                                    $foundExpired = true;
+                                                    $isPending = in_array($mId, $pendingRequestIds);
+                                        ?>
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <strong>Μεζεδάκι #<?php echo $mNum; ?></strong>
+                                                            <?php if ($isGraded) echo "<span class='badge bg-info text-dark ms-1'>Για βελτίωση ($currentMezeGrade)</span>"; ?>
+                                                            <div class="small text-muted">Προθεσμία: <?php echo date('d/m/Y H:i', strtotime($m['solutionDate'])); ?></div>
+                                                        </div>
+                                                        <?php if ($isPending): ?>
+                                                            <span class="badge bg-warning text-dark pulse-pending"><i class="fa fa-hourglass-start"></i> Εκκρεμεί έγκριση</span>
+                                                        <?php else: ?>
+                                                            <form action="index.php?action=requestExtension" method="POST" class="d-flex align-items-center" autocomplete="off">
+                                                                <input type="hidden" name="student_id" value="<?php echo $studentId; ?>">
+                                                                <input type="hidden" name="meze_id" value="<?php echo $mId; ?>">
+                                                                <select name="requested_hours" class="form-select form-select-sm me-2" style="width: 100px;">
+                                                                    <option value="12">12 ώρες</option>
+                                                                    <option value="24" selected>24 ώρες</option>
+                                                                    <option value="48">48 ώρες</option>
+                                                                </select>
+                                                                <button type="submit" class="btn btn-danger btn-sm" onclick="this.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i>'; this.classList.add('disabled');">Αίτημα</button>
+                                                            </form>
+                                                        <?php endif; ?>
                                                     </div>
-                                                    <?php if ($isPending): ?>
-                                                        <span class="badge bg-warning text-dark pulse-pending"><i class="fa fa-hourglass-start"></i> Εκκρεμεί έγκριση</span>
-                                                    <?php else: ?>
-                                                        <form action="index.php?action=requestExtension" method="POST" class="d-flex align-items-center" autocomplete="off">
-                                                            <input type="hidden" name="student_id" value="<?php echo $studentId; ?>">
-                                                            <input type="hidden" name="meze_id" value="<?php echo $mId; ?>">
-                                                            <select name="requested_hours" class="form-select form-select-sm me-2" style="width: 100px;">
-                                                                <option value="12">12 ώρες</option>
-                                                                <option value="24" selected>24 ώρες</option>
-                                                                <option value="48">48 ώρες</option>
-                                                            </select>
-                                                            <button type="submit" class="btn btn-danger btn-sm" onclick="this.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i>'; this.classList.add('disabled');">Αίτημα</button>
-                                                        </form>
-                                                    <?php endif; ?>
-                                                </div>
-                                    <?php endif;
-                                        endwhile;
-                                    } ?>
-                                    <?php if (!$foundExpired): ?>
-                                        <div class="text-muted small italic">Δεν υπάρχουν ληγμένα μεζεδάκια χωρίς βαθμολογία.</div>
-                                    <?php endif; ?>
-                                </div>
+                                        <?php endif;
+                                            endwhile;
+                                        } ?>
+                                        <?php if (!$foundExpired): ?>
+                                            <div class="text-muted small italic">Δεν υπάρχουν ληγμένα μεζεδάκια χωρίς βαθμολογία.</div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 

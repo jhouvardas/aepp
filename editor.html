@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="aepp.css">
     <style>
         body {
             padding: 50px;
@@ -54,41 +55,63 @@
         </div>
 
         <div class="preview-box" id="mezePreview">
-            <html>
             <div class="html-content-wrapper">
-                <h4 class="text-primary mb-3 border-bottom pb-2">ΘΕΜΑ 4ο</h4>
-                <p>Μια σύγχρονη πτηνοτροφική μονάδα παρακολουθεί την ημερήσια παραγωγή αυγών και καταγράφει τα στοιχεία
-                    σε ηλεκτρονικό αρχείο. Να αναπτύξετε αλγόριθμο ο οποίος θα διαχειρίζεται τα στοιχεία της μονάδας στη
-                    διάρκεια ενός έτους. Για το σκοπό αυτό:</p>
+                <h4 class="text-primary mb-3 border-bottom pb-2">ΘΕΜΑ Β</h4>
 
                 <div class="mb-4">
-                    <h5>Α. Κύριο Πρόγραμμα:</h5>
-                    <ol>
-                        <li>Να ζητάει το έτος παρακολούθησης, ελέγχοντας ότι πρόκειται για έτος του 21ου αιώνα (από 2000
-                            μέχρι και 2099). Ο αλγόριθμος να δημιουργεί πίνακα με τον αριθμό των ημερών για καθέναν από
-                            τους δώδεκα μήνες του έτους που δόθηκε. Ο αριθμός των ημερών του μήνα θα υπολογίζεται από
-                            υποπρόγραμμα (Συνάρτηση) που θα κατασκευάσετε. <strong>(Μονάδες 3)</strong></li>
-                        <li>Να ζητάει την ημερήσια παραγωγή (αριθμό αυγών) για κάθε μέρα του έτους και να καταχωρίζει
-                            τις τιμές σε πίνακα δύο διαστάσεων, με μια γραμμή για κάθε μήνα. <strong>(Μονάδες
-                                3)</strong></li>
-                        <li>Να εμφανίζει την παραγωγή για κάθε μήνα και το σύνολο της παραγωγής για το έτος.
-                            <strong>(Μονάδες
-                                8)</strong></li>
-                    </ol>
+                    <h5>Β1.</h5>
+                    <p>Δίνεται το παρακάτω τμήμα προγράμματος:</p>
+                    <pre class="aepp-code">ΔΙΑΒΑΣΕ Χ
+ΓΙΑ Κ ΑΠΟ -3 ΜΕΧΡΙ Χ ΜΕ_ΒΗΜΑ -1
+ΓΡΑΨΕ Κ
+ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
+                    <p><strong>α)</strong> Να το μετατρέψετε σε ισοδύναμο διάγραμμα ροής (μονάδες 5).</p>
+                    <p><strong>β)</strong> Να το μετατρέψετε σε ισοδύναμο τμήμα προγράμματος με χρήση της
+                        εντολής <code>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ…ΜΕΧΡΙΣ_ΟΤΟΥ</code> (μονάδες 5).</p>
+                    <div class="text-end small text-muted">Μονάδες 10</div>
+                </div>
 
-                    <h5>Β. Υποπρόγραμμα (Συνάρτηση):</h5>
-                    <p>Να κατασκευάσετε υποπρόγραμμα το οποίο να δέχεται ως παραμέτρους κάποιο έτος και τον αριθμό
-                        κάποιου μήνα (1 έως 12), και να επιστρέφει τον αριθμό των ημερών του συγκεκριμένου μήνα.</p>
-                    <ul>
-                        <li>Αν το έτος είναι δίσεκτο (διαιρείται με το 4 αλλά όχι με το 100, ή διαιρείται με το 400), ο
-                            Φεβρουάριος έχει 29 ημέρες, αλλιώς 28.</li>
-                        <li>Μέχρι και τον Ιούλιο (7ος μήνας) οι μονοί μήνες έχουν 31 ημέρες και οι ζυγοί 30.</li>
-                        <li>Μετά τον Ιούλιο, ισχύει το αντίστροφο. <strong>(Μονάδες 6)</strong></li>
-                    </ul>
+                <div class="mb-4">
+                    <h5>Β2.</h5>
+                    <p>Ένας θετικός ακέραιος αριθμός μεγαλύτερος από το ένα (1) είναι πρώτος
+                        αν διαιρείται ακριβώς, μόνο με τον εαυτό του και τη μονάδα. Το
+                        παρακάτω τμήμα προγράμματος διαβάζει έναν θετικό ακέραιο αριθμό,
+                        ελέγχει αν είναι πρώτος ή όχι και εμφανίζει αντίστοιχο μήνυμα. Για τον
+                        σκοπό αυτό διαβάζει έναν θετικό ακέραιο n (n>1), τον διαιρεί διαδοχικά
+                        με τους αριθμούς 2, 3, 4, …, n-1 ελέγχοντας μετά από κάθε διαίρεση αν ο
+                        αριθμός n διαιρείται ακριβώς.</p>
+
+                    <p>Στην περίπτωση που διαιρείται ακριβώς, σταματάει η επαναληπτική
+                        διαδικασία και εμφανίζεται το μήνυμα ‘Δεν είναι πρώτος αριθμός’. Αν η
+                        επαναληπτική διαδικασία των διαιρέσεων τερματιστεί χωρίς ο αριθμός n
+                        να έχει διαιρεθεί ακριβώς από κανέναν αριθμό εμφανίζεται το μήνυμα
+                        ‘Είναι πρώτος αριθμός’. Να γράψετε στο τετράδιό σας τους αριθμούς των
+                        κενών και δίπλα ό,τι χρειάζεται να συμπληρωθεί, ώστε το τμήμα
+                        προγράμματος να λειτουργεί σωστά.</p>
+
+                    <pre class="aepp-code">ΔΙΑΒΑΣΕ n
+ΠΡΩΤΟΣ &larr; …(1)…
+i &larr; …(2)…
+AΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
+    ΑΝ …(3)… = 0 ΤΟΤΕ
+        ΠΡΩΤΟΣ &larr; …(4)…
+    TEΛΟΣ_ΑΝ
+    i &larr; i + 1
+MEXΡΙΣ_ΟΤΟΥ i > n - 1 Ή …(5)…
+
+ΑΡΧΗ 3ΗΣ ΣΕΛΙΔΑΣ
+ΠΑΛΑΙΟ ΣΥΣΤΗΜΑ – ΗΜΕΡΗΣΙΩΝ
+ΤΕΛΟΣ 3ΗΣ ΑΠΟ 5 ΣΕΛΙΔΕΣ
+ΠΑΛΑΙΟ
+
+ΑΝ ΠΡΩΤΟΣ = ΑΛΗΘΗΣ ΤΟΤΕ
+    ΓΡΑΨΕ ‘Είναι πρώτος αριθμός’
+ΑΛΛΙΩΣ
+    ΓΡΑΨΕ ‘Δεν είναι πρώτος αριθμός’
+ΤΕΛΟΣ_ΑΝ</pre>
+                    <div class="text-end small text-muted">Μονάδες 10</div>
                 </div>
             </div>
-
-            </html>
         </div>
     </div>
 
@@ -96,7 +119,19 @@
         function copyMezeHTML() {
             const wrapper = document.querySelector('.html-content-wrapper');
             if (!wrapper) return;
-            const finalHtml = "<html>\n" + wrapper.outerHTML + "\n</html>";
+
+            // Προσθήκη βασικών στυλ για τη διασφάλιση της μορφοποίησης στο web site
+            const internalStyles = `
+<style>
+  .aepp-code { background-color: #f8f9fa; padding: 1rem; border: 1px solid #dee2e6; border-radius: 0.25rem; font-family: monospace; font-size: 0.85rem; line-height: 1.4; white-space: pre; overflow-x: auto; margin: 15px 0; }
+  .group-header { background-color: #343a40; color: white; padding: 10px; border-radius: 5px; margin-top: 20px; font-weight: bold; }
+  .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 15px 0; width: 100%; }
+  .answer-item { background: #fdfdfd; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .ans-true { color: #28a745 !important; font-weight: bold; }
+  .ans-false { color: #dc3545 !important; font-weight: bold; }
+</style>
+`;
+            const finalHtml = internalStyles + "\n" + wrapper.outerHTML;
 
             // Προσπάθεια με το σύγχρονο API
             if (navigator.clipboard && window.isSecureContext) {

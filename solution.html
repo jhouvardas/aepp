@@ -3,183 +3,137 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Λύση Θεμάτων Α5, Β1, Β2</title>
-  <!-- Bootstrap 5 CDN -->
+  <title>Λύσεις Θεμάτων Σωστό/Λάθος</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="aepp.css">
   <style>
     body {
-      background-color: #f8f9fa;
-      padding: 0 !important;
-      margin: 0;
-    }
-
-    .solution-container {
-      background: white;
-      padding: 30px;
-      border-left: 5px solid #007bff;
-      /* Μπλε γραμμή για λύση */
-      border-bottom: 1px solid #dee2e6;
-      border-radius: 0.25rem;
-      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-
-    /* Styles for aepp-code and list-group-item strong */
-    .aepp-code {
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-      border-radius: 0.25rem;
-      font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      white-space: pre;
-      overflow-x: auto;
-    }
-
-    .list-group-item strong {
-      color: #d63384;
-      margin-right: 5px;
-    }
-
-    .solution-title {
-      color: #28a745;
-      /* Changed to green for solution */
-    }
-
-    pre {
-      background-color: #e9ecef;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    /* Interactive Flowchart Styles */
-    .interactive-flowchart {
-      position: relative;
-      display: inline-block;
-      cursor: crosshair;
-    }
-
-    .interactive-flowchart img {
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-
-    .interactive-flowchart:hover img {
-      transform: scale(1.03);
-      filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1));
-    }
-
-    .flowchart-hotspot {
-      position: absolute;
-      border: 2px solid transparent;
-      transition: all 0.3s ease;
-      border-radius: 4px;
-    }
-
-    .flowchart-hotspot:hover {
-      border-color: #28a745;
-      background-color: rgba(40, 167, 69, 0.1);
-      padding-bottom: 10px;
-      margin-bottom: 20px;
+      padding-top: 60px !important;
     }
   </style>
 </head>
 
-<body>
-  <div class="container-fluid px-0">
-    <!-- Sticky Header με κουμπιά Αντιγραφής & Καθαρισμού -->
-    <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
-      <span class="text-white ms-3 fw-bold small"><i class="fa fa-code text-primary"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ
-        ΛΥΣΗΣ</span>
-      <div>
-        <button onclick="clearSolutionContent()" class="btn btn-outline-danger btn-sm me-2 fw-bold">
-          <i class="fa fa-trash"></i> Καθαρισμός
-        </button>
-        <button onclick="copySolutionHTML()" class="btn btn-success btn-sm me-3 fw-bold">
-          <i class="fa fa-copy"></i> Αντιγραφή HTML
-        </button>
+<body class="p-0">
+  <!-- Sticky Header με κουμπί Αντιγραφής -->
+  <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
+    <span class="text-white ms-3 fw-bold small"><i class="fa fa-code text-info"></i> HTML ΛΥΣΕΩΝ</span>
+    <button onclick="copySolutionHTML()" class="btn btn-success btn-sm me-3 fw-bold">
+      <i class="fa fa-copy"></i> Αντιγραφή HTML
+    </button>
+  </div>
+
+  <div class="container py-4">
+    <div class="html-content-wrapper">
+      <h2 class="text-center mb-4">Απαντήσεις Ερωτήσεων Σωστό - Λάθος</h2>
+
+      <!-- Ομάδα 1 -->
+      <div class="group-header">Ομάδα 1: Γλώσσες Προγραμματισμού & Μεταφραστές</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">1.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">1.2</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">1.3</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">1.4</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">1.5</span> <span class="ans-false">Λάθος</span></div>
       </div>
-    </div>
 
-    <div class="container mt-4">
-      <!-- Προσθήκη contenteditable για επεξεργασία της λύσης στον browser -->
-      <div class="solution-container" contenteditable="true">
-        <h4 class="solution-title"><i class="fa fa-check-circle"></i> Λύση ΘΕΜΑΤΟΣ Β</h4>
+      <!-- Ομάδα 2 -->
+      <div class="group-header">Ομάδα 2: Συνάρτηση & Δομές Επιλογής/Επανάληψης</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">2.1</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">2.2</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">2.3</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">2.4</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">2.5</span> <span class="ans-true">Σωστό</span></div>
+      </div>
 
-        <div class="mb-4">
-          <h5>Β1. β) Μετατροπή σε ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ...ΜΕΧΡΙΣ_ΟΤΟΥ</h5>
-          <p class="small text-muted">Επειδή η <code>ΓΙΑ</code> ενδέχεται να μην εκτελεστεί καθόλου (αν Χ > -3),
-            απαιτείται η χρήση της <code>ΑΝ</code>:</p>
-          <pre class="aepp-code">ΔΙΑΒΑΣΕ Χ
-Κ &larr; -3
-ΑΝ Κ >= Χ ΤΟΤΕ
-    ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
-        ΓΡΑΨΕ Κ
-        Κ &larr; Κ - 1
-    ΜΕΧΡΙΣ_ΟΤΟΥ Κ < Χ
-ΤΕΛΟΣ_ΑΝ</pre>
-        </div>
+      <!-- Ομάδα 3 -->
+      <div class="group-header">Ομάδα 3: Δομές Δεδομένων & Υποπρογράμματα</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">3.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">3.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">3.3</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">3.4</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">3.5</span> <span class="ans-false">Λάθος</span></div>
+      </div>
 
-        <div class="mb-4">
-          <h5>Β2. Συμπλήρωση Κενών</h5>
-          <table class="table table-sm table-bordered" style="max-width: 500px;">
-            <thead class="table-light">
-              <tr>
-                <th class="text-center">Αρ. Κενού</th>
-                <th>Συμπλήρωση</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="text-center"><strong>(1)</strong></td>
-                <td><code>ΑΛΗΘΗΣ</code></td>
-              </tr>
-              <tr>
-                <td class="text-center"><strong>(2)</strong></td>
-                <td><code>2</code></td>
-              </tr>
-              <tr>
-                <td class="text-center"><strong>(3)</strong></td>
-                <td><code>n MOD i</code></td>
-              </tr>
-              <tr>
-                <td class="text-center"><strong>(4)</strong></td>
-                <td><code>ΨΕΥΔΗΣ</code></td>
-              </tr>
-              <tr>
-                <td class="text-center"><strong>(5)</strong></td>
-                <td><code>ΠΡΩΤΟΣ = ΨΕΥΔΗΣ</code></td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="small text-muted"><em>Σημείωση: Στο κενό (5) μπορεί να γραφτεί και απλά η μεταβλητή
-              <code>ΟΧΙ ΠΡΩΤΟΣ</code>.</em></p>
-        </div>
+      <!-- Ομάδα 4 -->
+      <div class="group-header">Ομάδα 4: Ταξινόμηση & Μεταβλητές</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">4.1</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">4.2</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">4.3</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">4.4</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">4.5</span> <span class="ans-true">Σωστό</span></div>
+      </div>
+
+      <!-- Ομάδα 5 -->
+      <div class="group-header">Ομάδα 5: Αναζήτηση & Δυναμικές Δομές</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">5.1</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">5.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">5.3</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">5.4</span> <span class="ans-false">Λάθος</span></div>
+      </div>
+
+      <!-- Ομάδα 6 -->
+      <div class="group-header">Ομάδα 6: Βρόχοι & Τύποι Μεταβλητών</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">6.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">6.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">6.3</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">6.4</span> <span class="ans-false">Λάθος</span></div>
+      </div>
+
+      <!-- Ομάδα 7 -->
+      <div class="group-header">Ομάδα 7: Τελεστές & Έννοια Αλγορίθμου</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">7.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">7.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">7.3</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">7.4</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">7.5</span> <span class="ans-false">Λάθος</span></div>
+      </div>
+
+      <!-- Ομάδα 8 -->
+      <div class="group-header">Ομάδα 8: Ανάλυση & Παράμετροι</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">8.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">8.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">8.3</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">8.4</span> <span class="ans-true">Σωστό</span></div>
+      </div>
+
+      <!-- Ομάδα 9 -->
+      <div class="group-header">Ομάδα 9: Διαδικασίες & Ιεραρχία Τελεστών</div>
+      <div class="answer-grid">
+        <div class="answer-item"><span class="ans-num">9.1</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">9.2</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">9.3</span> <span class="ans-false">Λάθος</span></div>
+        <div class="answer-item"><span class="ans-num">9.4</span> <span class="ans-true">Σωστό</span></div>
+        <div class="answer-item"><span class="ans-num">9.5</span> <span class="ans-true">Σωστό</span></div>
       </div>
     </div>
   </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    function clearSolutionContent() {
-      if (confirm('Προσοχή! Είσαι σίγουρος ότι θέλεις να καθαρίσεις τη λύση;')) {
-        const wrapper = document.querySelector('.solution-container');
-        if (wrapper) {
-          wrapper.innerHTML = '<br>';
-          wrapper.focus();
-        }
-      }
-    }
-
     function copySolutionHTML() {
-      const wrapper = document.querySelector('.solution-container');
+      const wrapper = document.querySelector('.html-content-wrapper');
       if (!wrapper) return;
-      const finalHtml = "<html>\n" + wrapper.outerHTML + "\n</html>";
+
+      // Ενσωμάτωση των απαραίτητων στυλ για να μεταφέρεται η μορφοποίηση παντού
+      const internalStyles = `
+<style>
+  .group-header { background-color: #343a40; color: white; padding: 10px; border-radius: 5px; margin-top: 20px; font-weight: bold; }
+  .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; padding: 15px 0; width: 100%; }
+  .answer-item { background: #fdfdfd; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .ans-num { font-weight: 700; color: #6c757d; font-size: 0.9rem; }
+  .ans-true { color: #28a745 !important; font-weight: bold; }
+  .ans-false { color: #dc3545 !important; font-weight: bold; }
+</style>
+`;
+      const finalHtml = internalStyles + "\n" + wrapper.outerHTML;
 
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(finalHtml).then(() => {
@@ -201,13 +155,13 @@
         document.execCommand('copy');
         showSuccess();
       } catch (err) {
-        alert('Η αντιγραφή απέτυχε.');
+        alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
       }
       document.body.removeChild(textArea);
     }
 
     function showSuccess() {
-      const btn = document.querySelector('.btn-success');
+      const btn = document.querySelector('.sticky-top button');
       const originalContent = btn.innerHTML;
       btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
       btn.classList.replace('btn-success', 'btn-light');
