@@ -588,15 +588,12 @@
                     $mail->AltBody = strip_tags($htmlContent);
 
                     $mail->send();
-                    echo "<div class='container mt-3'><div class='alert alert-success shadow'>✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!</div></div>";
+                    echo "<script>alert('✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
                 } catch (Exception $e) {
-                    echo "<div class='container mt-3'><div class='alert alert-danger shadow'>❌ Η αποστολή απέτυχε. Σφάλμα: {$mail->ErrorInfo}</div></div>";
+                    $errorMsg = addslashes($mail->ErrorInfo);
+                    echo "<script>alert('❌ Η αποστολή απέτυχε. Σφάλμα: $errorMsg'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
                 }
-
-                // Επιστροφή στις λύσεις
-                $mezeRes = $db->getMezedakiById($mezeId);
-                $meze = $mezeRes->fetch_assoc();
-                $mezeFm->showSubmissionsForGrading($db->getSubmissionsByMeze($mezeId), $db->getTutorStudents($_SESSION['tutor_user']), $meze, [], $db->getGradesForMeze($mezeId));
+                exit();
             }
             break;
 

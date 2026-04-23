@@ -495,25 +495,22 @@ class MezeAdminFormMaker extends AdminFormMaker
 
             $isGraded = false;
             if ($gradeData) {
-                $gradeVal = (float)($gradeData['grade_value'] ?? 0);
-
-                // Ένας μαθητής θεωρείται "Βαθμολογημένος" μόνο αν:
-                // 1. Ο βαθμός είναι μεγαλύτερος του 0
-                // 2. Ή αν ο βαθμός είναι 0 αλλά ΔΕΝ έχει στείλει τίποτα (χειροκίνητο κλείσιμο από καθηγητή)
-                if ($gradeVal > 0 || $subData === null) {
-                    $isGraded = true;
-                }
+                $isGraded = true; // Θεωρούμε τον μαθητή βαθμολογημένο εφόσον υπάρχει εγγραφή βαθμού
 
                 // Αν υπάρχει υποβολή πιο πρόσφατη από τη βαθμολόγηση, επιστρέφει στα εκκρεμή
-                if ($subData && strtotime($subData['submission_date']) > strtotime($gradeData['updated_at'] ?? '2000-01-01')) {
-                    $isGraded = false;
+                // Προστέθηκε μικρή ανοχή 2 ωρών (7200 δευτ.) για αποφυγή Timezone Bugs μεταξύ PHP και MySQL
+                if ($subData && isset($gradeData['updated_at'])) {
+                    if (strtotime($subData['submission_date']) > (strtotime($gradeData['updated_at']) + 7200)) {
+                        $isGraded = false;
+                    }
                 }
             }
 
             if ($isGraded) {
                 $gradedSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student];
             } else {
-                $pendingSubmissions[] = ['sub' => $subData, 'student' => $student];
+                // Περνάμε και το grade (αν υπάρχει) για να το προφορτώσουμε στο UI των εκκρεμών
+                $pendingSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student];
             }
         }
     ?>
@@ -549,6 +546,8 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $sub = $item['sub'];
                     $st = $item['student'];
                     $stId = $st['studentId'];
+                    $currGrade = isset($item['grade']['grade_value']) ? $item['grade']['grade_value'] : '';
+                    $currComm = isset($item['grade']['teacher_comments']) ? htmlspecialchars($item['grade']['teacher_comments']) : '';
                     $isAllowed = $dbHandler->isSubmissionAllowed($stId, $mezeId, $userYear);
                 ?>
                     <div class="card mb-4 shadow-sm border-primary">
@@ -587,9 +586,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
                                 <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
                                 <div class="d-flex align-items-start">
-                                    <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:80px" placeholder="Βαθμός" required>
+                                    <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:80px" placeholder="Βαθμός" value="<?php echo $currGrade; ?>" required>
                                     <div style="flex:1;">
-                                        <textarea name="teacher_comments" id="comm_<?php echo $stId; ?>" class="form-control form-control-sm mb-1" rows="2" placeholder="Σχόλια..."></textarea>
+                                        <textarea name="teacher_comments" id="comm_<?php echo $stId; ?>" class="form-control form-control-sm mb-1" rows="2" placeholder="Σχόλια..."><?php echo $currComm; ?></textarea>
                                         <div class="d-flex flex-wrap">
                                             <button type="button" class="btn btn-outline-secondary btn-mini me-1 mb-1" onclick="document.getElementById('comm_<?php echo $stId; ?>').value='Εξαιρετική δουλειά! Μπράβο.';">👏 Μπράβο</button>
                                             <button type="button" class="btn btn-outline-secondary btn-mini me-1 mb-1" onclick="document.getElementById('comm_<?php echo $stId; ?>').value='Πολύ καλή προσπάθεια, πρόσεξε λίγο περισσότερο τη σύνταξη.';">✍️ Σύνταξη</button>
