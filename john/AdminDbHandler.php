@@ -1,5 +1,5 @@
 <?php
-include_once '../DbHandler.php';
+include_once __DIR__ . '/../DbHandler.php';
 
 class AdminDbHandler extends DbHandler
 {
@@ -141,8 +141,12 @@ class AdminDbHandler extends DbHandler
         $conn = $this->connectToFamilyDB();
         $sql = "SELECT q.*, b.title as book_title 
                 FROM theory_questions q 
-                JOIN theory_books b ON q.book_id = b.id 
-                ORDER BY q.chapter_num ASC, q.id ASC";
+                LEFT JOIN theory_books b ON q.book_id = b.id 
+                ORDER BY 
+                    CASE WHEN b.title = 'Βιβλίο Μαθητή' THEN 1 ELSE 2 END ASC, 
+                    CAST(q.chapter_num AS UNSIGNED) ASC, 
+                    q.chapter_num ASC, 
+                    b.id ASC, q.id ASC";
         $result = $conn->query($sql);
         $conn->close();
         return $result;
@@ -212,7 +216,14 @@ class AdminDbHandler extends DbHandler
         $types .= "i";
 
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
+
+        // Επιδιόρθωση για PHP 7.4 (Απαιτεί οι μεταβλητές να περνούν by reference)
+        $refs = [];
+        foreach ($params as $key => $value) {
+            $refs[$key] = &$params[$key];
+        }
+        $stmt->bind_param($types, ...$refs);
+
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();
@@ -965,7 +976,10 @@ class AdminDbHandler extends DbHandler
         $sql = "SELECT COUNT(s.student_id) 
                 FROM aepp_meze_submissions s
                 LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
-                WHERE s.meze_id = ? AND (g.grade_value IS NULL OR g.grade_value = 0 OR s.submission_date > g.updated_at)";
+                WHERE s.meze_id = ? AND (
+                    g.grade_value IS NULL 
+                    OR (g.updated_at IS NOT NULL AND s.submission_date > DATE_ADD(g.updated_at, INTERVAL 2 HOUR))
+                )";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $userYear, $mezeId);
         $stmt->execute();

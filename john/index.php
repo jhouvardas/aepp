@@ -39,9 +39,9 @@
                     $_POST['chapter_num'],
                     $_POST['question_text'],
                     $_POST['answer_text'],
-                    $_POST['page_number'],
-                    $_FILES['q_image'], // Προσθήκη αρχείου ερώτησης
-                    $_FILES['a_image']  // Προσθήκη αρχείου απάντησης
+                    $_POST['page_number'] ?? 0,
+                    $_FILES['q_file'] ?? null, // Προσθήκη αρχείου ερώτησης
+                    $_FILES['a_file'] ?? null  // Προσθήκη αρχείου απάντησης
                 );
                 if ($success) {
                     echo "<div class='container mt-2'><div class='alert alert-success'>Η ερώτηση προστέθηκε επιτυχώς!</div></div>";
@@ -95,9 +95,9 @@
                     $_POST['chapter_num'],
                     $_POST['question_text'],
                     $_POST['answer_text'],
-                    $_POST['page_number'],
-                    $_FILES['q_image'], // Προσθήκη αρχείου ερώτησης
-                    $_FILES['a_image']  // Προσθήκη αρχείου απάντησης
+                    $_POST['page_number'] ?? 0,
+                    $_FILES['q_file'] ?? null, // Προσθήκη αρχείου ερώτησης
+                    $_FILES['a_file'] ?? null  // Προσθήκη αρχείου απάντησης
                 );
                 echo "<script>window.location.href='index.php?action=list_theory';</script>";
                 exit();
@@ -131,6 +131,32 @@
                 $theoryFm->previewExam($examQuestions);
             } else {
                 echo "<div class='container mt-5'><div class='alert alert-warning'>Δεν επιλέξατε ερωτήσεις!</div></div>";
+            }
+            break;
+
+        case 'export_word_exam':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['selected_questions'])) {
+                $selectedIds = $_POST['selected_questions'];
+                $examQuestions = $db->getMultipleQuestionsByIds($selectedIds);
+
+                // Ρυθμίσεις Header για να αναγνωριστεί ως έγγραφο Word
+                header("Content-Type: application/vnd.ms-word; charset=UTF-8");
+                header("Content-Disposition: attachment;Filename=Diagonisma_AEPP.doc");
+                header("Pragma: no-cache");
+                header("Expires: 0");
+
+                echo "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>";
+                echo "<head><meta charset='utf-8'><title>Διαγώνισμα ΑΕΠΠ</title></head><body style='font-family: Arial, sans-serif;'>";
+                echo "<h2 style='text-align: center; text-decoration: underline;'>ΔΙΑΓΩΝΙΣΜΑ ΑΕΠΠ</h2><br><br>";
+                $i = 1;
+                while ($row = $examQuestions->fetch_assoc()) {
+                    echo "<div style='margin-bottom: 24px;'>";
+                    echo "<strong style='font-size: 1.1em;'>Θέμα " . $i++ . ":</strong><br>";
+                    echo "<div style='margin-top: 10px;'>" . $row['question_text'] . "</div>";
+                    echo "</div><br>";
+                }
+                echo "</body></html>";
+                exit();
             }
             break;
 
@@ -465,9 +491,21 @@
 
         case 'massGradeZero':
             if (isset($_GET['id'])) {
-                $count = $db->massGradeZeroForMeze($_GET['id'], $userYear);
-                echo "<script>alert('Ολοκληρώθηκε! $count μαθητές που δεν παρέδωσαν βαθμολογήθηκαν με 0.'); window.location.href='index.php?action=viewSubmissions&id=" . $_GET['id'] . "';</script>";
-                exit();
+                $mezeId = $_GET['id'];
+                $count = $db->massGradeZeroForMeze($mezeId, $userYear);
+                echo "<div class='container mt-3'><div class='alert alert-success shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>Ολοκληρώθηκε! <b>$count</b> μαθητές που δεν παρέδωσαν βαθμολογήθηκαν με 0.</div></div>";
+
+                $mezeRes = $db->getMezedakiById($mezeId);
+                $meze = $mezeRes->fetch_assoc();
+                $studentsList = $db->getTutorStudents($userYear);
+                $submissions = $db->getSubmissionsByMeze($mezeId);
+                $existingGrades = $db->getGradesForMeze($mezeId);
+                $allMezeRes = $db->getAllMezedakia();
+                $allMezedakia = [];
+                while ($m = $allMezeRes->fetch_assoc()) {
+                    $allMezedakia[] = $m;
+                }
+                $mezeFm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
             }
             break;
 
@@ -478,45 +516,55 @@
                 $mezeNum = $db->getMezeNumberById($mezeId);
 
                 if (empty($studentsToEmail)) {
-                    echo "<script>alert('Δεν βρέθηκαν μαθητές με βαθμό 0 και email.'); window.history.back();</script>";
-                    exit();
-                }
+                    echo "<div class='container mt-3'><div class='alert alert-warning shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>Δεν βρέθηκαν μαθητές με βαθμό 0 και email.</div></div>";
+                } else {
+                    require_once '../phpmailer/class.phpmailer.php';
+                    require_once '../phpmailer/class.smtp.php';
+                    require_once 'config.php';
 
-                require_once '../phpmailer/class.phpmailer.php';
-                require_once '../phpmailer/class.smtp.php';
-                require_once 'config.php';
-
-                $successCount = 0;
-                foreach ($studentsToEmail as $student) {
-                    $mail = new PHPMailer(true);
-                    try {
-                        $mail->isSMTP();
-                        $mail->Host = 'smtp.gmail.com';
-                        $mail->SMTPAuth = true;
-                        $mail->Username = SMTP_USER;
-                        $mail->Password = SMTP_PASS;
-                        $mail->SMTPSecure = 'tls';
-                        $mail->Port = 587;
-                        $mail->CharSet = 'UTF-8';
-                        $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                        $mail->addAddress($student['email']);
-                        $mail->isHTML(true);
-                        $mail->Subject = "Ενημέρωση Βαθμολογίας: Μεζεδάκι #$mezeNum";
-                        $mail->Body = "
-                            <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
-                                <h2 style='color:#dc3545;'>Ενημέρωση Βαθμολογίας (ΑΕΠΠ)</h2>
-                                <p>Γεια σου <b>{$student['name']}</b>,</p>
-                                <p>Σε ενημερώνουμε ότι στο <b>Μεζεδάκι #$mezeNum</b> η βαθμολογία σου είναι <b>0/20</b> λόγω μη έγκαιρης υποβολής.</p>
-                                <p>Αν επιθυμείς να υποβάλεις τη λύση σου τώρα για βελτίωση ή εκπρόθεσμα, επικοινώνησε με τον δάσκαλό σου ή ζήτησε παράταση μέσω της πλατφόρμας.</p>
-                                <p>Καλή συνέχεια!</p>
-                            </div>";
-                        $mail->send();
-                        $successCount++;
-                    } catch (Exception $e) { /* Σφάλμα σε μεμονωμένο email */
+                    $successCount = 0;
+                    foreach ($studentsToEmail as $student) {
+                        $mail = new PHPMailer(true);
+                        try {
+                            $mail->isSMTP();
+                            $mail->Host = 'smtp.gmail.com';
+                            $mail->SMTPAuth = true;
+                            $mail->Username = SMTP_USER;
+                            $mail->Password = SMTP_PASS;
+                            $mail->SMTPSecure = 'tls';
+                            $mail->Port = 587;
+                            $mail->CharSet = 'UTF-8';
+                            $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
+                            $mail->addAddress($student['email']);
+                            $mail->isHTML(true);
+                            $mail->Subject = "Ενημέρωση Βαθμολογίας: Μεζεδάκι #$mezeNum";
+                            $mail->Body = "
+                                <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
+                                    <h2 style='color:#dc3545;'>Ενημέρωση Βαθμολογίας (ΑΕΠΠ)</h2>
+                                    <p>Γεια σου <b>{$student['name']}</b>,</p>
+                                    <p>Σε ενημερώνουμε ότι στο <b>Μεζεδάκι #$mezeNum</b> η βαθμολογία σου είναι <b>0/20</b> λόγω μη έγκαιρης υποβολής.</p>
+                                    <p>Αν επιθυμείς να υποβάλεις τη λύση σου τώρα για βελτίωση ή εκπρόθεσμα, επικοινώνησε με τον δάσκαλό σου ή ζήτησε παράταση μέσω της πλατφόρμας.</p>
+                                    <p>Καλή συνέχεια!</p>
+                                </div>";
+                            $mail->send();
+                            $successCount++;
+                        } catch (Exception $e) { /* Σφάλμα σε μεμονωμένο email */
+                        }
                     }
+                    echo "<div class='container mt-3'><div class='alert alert-success shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>Ολοκληρώθηκε! Στάλθηκαν $successCount emails ενημέρωσης.</div></div>";
                 }
-                echo "<script>alert('Ολοκληρώθηκε! Στάλθηκαν $successCount emails ενημέρωσης.'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
-                exit();
+
+                $mezeRes = $db->getMezedakiById($mezeId);
+                $meze = $mezeRes->fetch_assoc();
+                $studentsList = $db->getTutorStudents($userYear);
+                $submissions = $db->getSubmissionsByMeze($mezeId);
+                $existingGrades = $db->getGradesForMeze($mezeId);
+                $allMezeRes = $db->getAllMezedakia();
+                $allMezedakia = [];
+                while ($m = $allMezeRes->fetch_assoc()) {
+                    $allMezedakia[] = $m;
+                }
+                $mezeFm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
             }
             break;
 
@@ -588,12 +636,23 @@
                     $mail->AltBody = strip_tags($htmlContent);
 
                     $mail->send();
-                    echo "<script>alert('✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
+                    echo "<div class='container mt-3'><div class='alert alert-success shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!</div></div>";
                 } catch (Exception $e) {
                     $errorMsg = addslashes($mail->ErrorInfo);
-                    echo "<script>alert('❌ Η αποστολή απέτυχε. Σφάλμα: $errorMsg'); window.location.href='index.php?action=viewSubmissions&id=$mezeId';</script>";
+                    echo "<div class='container mt-3'><div class='alert alert-danger shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>❌ Η αποστολή απέτυχε. Σφάλμα: $errorMsg</div></div>";
                 }
-                exit();
+
+                $mezeRes = $db->getMezedakiById($mezeId);
+                $meze = $mezeRes->fetch_assoc();
+                $studentsList = $db->getTutorStudents($userYear);
+                $submissions = $db->getSubmissionsByMeze($mezeId);
+                $existingGrades = $db->getGradesForMeze($mezeId);
+                $allMezeRes = $db->getAllMezedakia();
+                $allMezedakia = [];
+                while ($m = $allMezeRes->fetch_assoc()) {
+                    $allMezedakia[] = $m;
+                }
+                $mezeFm->showSubmissionsForGrading($submissions, $studentsList, $meze, $allMezedakia, $existingGrades);
             }
             break;
 

@@ -328,7 +328,7 @@ class DbHandler
     public function getDistinctChapters()
     {
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT DISTINCT chapter_num FROM theory_questions ORDER BY chapter_num ASC";
+        $sql = "SELECT DISTINCT chapter_num FROM theory_questions ORDER BY CAST(chapter_num AS UNSIGNED) ASC, chapter_num ASC";
         $result = $conn->query($sql);
         $conn->close();
         return $result;
@@ -340,7 +340,7 @@ class DbHandler
         $sql = "SELECT q.*, b.title as book_title 
             FROM theory_questions q 
             JOIN theory_books b ON q.book_id = b.id 
-            ORDER BY b.id ASC, q.chapter_num ASC, q.id ASC";
+            ORDER BY b.id ASC, CAST(q.chapter_num AS UNSIGNED) ASC, q.chapter_num ASC, q.id ASC";
         $result = $conn->query($sql);
         $conn->close();
         return $result;

@@ -17,9 +17,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <thead class="table-dark text-center">
                         <tr>
                             <th style="width: 5%">#</th>
-                            <th style="width: 12%">Ημερομηνία</th>
+                            <th style="width: 10%">Ημερομηνία</th>
+                            <th style="width: 12%">Λήξη</th>
                             <th style="width: 35%">Εκφώνηση (Preview)</th>
-                            <th style="width: 48%">Ενέργειες</th>
+                            <th style="width: 38%">Ενέργειες</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,6 +81,17 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <tr <?php echo $rowStyle; ?> class="align-middle">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
                                     <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
+                                    <td class="text-center small">
+                                        <?php
+                                        if (!empty($row['solutionDate'])) {
+                                            $dateColor = $isExpired ? 'text-danger fw-bold' : '';
+                                            $timeColor = $isExpired ? 'text-danger' : 'text-muted';
+                                            echo "<span class='$dateColor'>" . $dbHandler->formatGreekDate($row['solutionDate']) . "</span><br><span class='$timeColor'>" . date('H:i', strtotime($row['solutionDate'])) . "</span>";
+                                        } else {
+                                            echo "-";
+                                        }
+                                        ?>
+                                    </td>
                                     <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?><?php echo $badgeHtml; ?></td>
                                     <td>
                                         <div class="d-flex flex-wrap justify-content-center">
@@ -109,7 +121,12 @@ class MezeAdminFormMaker extends AdminFormMaker
         }
     ?>
         <div class="container mt-4 border p-4 bg-light shadow">
-            <h3><i class="fa fa-coffee"></i> Νέο Μεζεδάκι</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0"><i class="fa fa-coffee"></i> Νέο Μεζεδάκι</h3>
+                <a href="index.php?action=listMezedakia" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-arrow-left"></i> Επιστροφή στη Λίστα
+                </a>
+            </div>
             <form action="index.php?action=saveMezedaki" method="post" enctype="multipart/form-data">
                 <div class="form-row">
                     <div class="form-group col-md-6">
@@ -252,8 +269,13 @@ class MezeAdminFormMaker extends AdminFormMaker
 
     ?>
         <div class="container mt-4 border p-4 bg-light shadow">
-            <h3><i class="fa fa-edit"></i> Επεξεργασία Μεζεδακίου #<?php echo $row['mezeNumber']; ?></h3>
-            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0"><i class="fa fa-edit"></i> Επεξεργασία Μεζεδακίου #<?php echo $row['mezeNumber']; ?></h3>
+                <a href="index.php?action=listMezedakia" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-arrow-left"></i> Επιστροφή στη Λίστα
+                </a>
+            </div>
+            <hr class="mt-0">
             <form action="index.php?action=updateMezedaki" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="mezeId" value="<?php echo $row['mezeId']; ?>">
 
@@ -431,7 +453,12 @@ class MezeAdminFormMaker extends AdminFormMaker
     {
     ?>
         <div class="container mt-4 border p-4 bg-white shadow-sm">
-            <h3><i class="fa fa-pencil"></i> Βαθμολόγιο #<?php echo $displayNumber; ?></h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0"><i class="fa fa-pencil"></i> Βαθμολόγιο #<?php echo $displayNumber; ?></h3>
+                <a href="index.php?action=listMezedakia" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-arrow-left"></i> Επιστροφή στη Λίστα
+                </a>
+            </div>
             <form action="index.php?action=saveGrades" method="post">
                 <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
                 <table class="table table-bordered">
@@ -515,12 +542,17 @@ class MezeAdminFormMaker extends AdminFormMaker
         }
     ?>
         <div class="container mt-4">
-            <h3 class="text-primary mb-4">
-                <i class="fa fa-mortar-board"></i> Απαντήσεις #<?php echo $mezeNumber; ?>
-                <?php if ($isSos): ?>
-                    <span class="badge bg-danger ms-2 shadow-sm pulse-sos"><i class="fa fa-fire"></i> SOS</span>
-                <?php endif; ?>
-            </h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="text-primary mb-0">
+                    <i class="fa fa-mortar-board"></i> Απαντήσεις #<?php echo $mezeNumber; ?>
+                    <?php if ($isSos): ?>
+                        <span class="badge bg-danger ms-2 shadow-sm pulse-sos"><i class="fa fa-fire"></i> SOS</span>
+                    <?php endif; ?>
+                </h3>
+                <a href="index.php?action=listMezedakia" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-arrow-left"></i> Επιστροφή στη Λίστα
+                </a>
+            </div>
 
             <!-- ΕΝΟΤΗΤΑ: ΠΡΟΣ ΒΑΘΜΟΛΟΓΗΣΗ -->
             <div class="mb-5">

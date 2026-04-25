@@ -38,7 +38,7 @@ class TheoryMaker
                                 <li>της αντίστοιχα σωστής ερμηνείας από τη μεριά εκείνου που καλείται να το αντιμετωπίσει</li>
                             </ul>
                         </div>
-                        <li><a data-toggle="collapse" data-target="#dedomeno">Δεδομένα-Πληροφορίες</a></li>
+                        <li><a data-bs-toggle="collapse" data-bs-target="#dedomeno">Δεδομένα-Πληροφορίες</a></li>
                         <div id="dedomeno" class="collapse">
                             <dl>
                                 <dt>Δεδομένο</dt>
