@@ -213,11 +213,21 @@ class TheoryAdminFormMaker extends AdminFormMaker
             <div id="examContent">
                 <h2 class="text-center underline">ΔΙΑΓΩΝΙΣΜΑ ΑΕΠΠ</h2>
                 <div class="mt-5">
-                    <?php $i = 1;
+                    <?php
+                    $i = 1;
+                    // Δημιουργία δυναμικού απόλυτου URL (βοηθάει και στην αντιγραφή στο Google Docs)
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                    $baseUploadUrl = $protocol . $_SERVER['HTTP_HOST'] . rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\') . '/uploads/';
+
                     while ($row = $questions->fetch_assoc()): ?>
                         <div class="mb-4">
                             <strong>Θέμα <?php echo $i++; ?>:</strong>
                             <div class="mt-2"><?php echo $row['question_text']; ?></div>
+                            <?php if (!empty($row['question_image'])): ?>
+                                <div class="mt-3 text-center" style="text-align: center;">
+                                    <img src="<?php echo $baseUploadUrl . $row['question_image']; ?>" style="max-width: 100%; height: auto;" alt="Εικόνα Θέματος">
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endwhile; ?>
                 </div>

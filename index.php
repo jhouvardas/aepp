@@ -58,6 +58,11 @@ switch ($action) {
             $pass = $_POST['st_access'];
             $text = $_POST['student_text'];
 
+            // Ενσωμάτωση των αυτόματων απαντήσεων από τα κενά (αν υπάρχουν)
+            if (!empty($_POST['blanks_answers'])) {
+                $text .= "<br><br><div style='background:#f8f9fa; padding:10px; border-left:3px solid #17a2b8; border-radius:4px;'><b>Απαντήσεις στα κενά:</b><br>" . nl2br(htmlspecialchars($_POST['blanks_answers'])) . "</div>";
+            }
+
             // 1. Έλεγχος κωδικού (6 ψηφία) - Επιτρέπουμε και τα master passwords
             if (strlen($pass) != 6 && $pass !== $db->getCurrentTutorYear() && $pass !== date('Ym')) {
                 echo "<script>alert('Ο κωδικός πρέπει να είναι ακριβώς 6 ψηφία!'); window.history.back();</script>";

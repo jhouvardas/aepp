@@ -24,12 +24,17 @@
 
     $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
 
-    $page->displayHeadMatter(); // Καλείται πρώτα το head
-    $page->displayMenu($userYear, $db); // Περιλαμβάνουμε το userYear και το $db object
-    if (isset($_GET['status'])) $page->showToast($_GET['status']);
-
     // Sanitization της παραμέτρου action
     $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['action']) : 'dashboard';
+
+    // Λίστα ενεργειών που δεν πρέπει να εκτυπώνουν το κοινό μενού/header (π.χ. εξαγωγή αρχείων)
+    $noLayoutActions = ['export_word_exam', 'previewMeze'];
+
+    if (!in_array($action, $noLayoutActions)) {
+        $page->displayHeadMatter(); // Καλείται πρώτα το head
+        $page->displayMenu($userYear, $db); // Περιλαμβάνουμε το userYear και το $db object
+        if (isset($_GET['status'])) $page->showToast($_GET['status']);
+    }
 
     switch ($action) {
         case 'save_theory':
@@ -149,10 +154,18 @@
                 echo "<head><meta charset='utf-8'><title>Διαγώνισμα ΑΕΠΠ</title></head><body style='font-family: Arial, sans-serif;'>";
                 echo "<h2 style='text-align: center; text-decoration: underline;'>ΔΙΑΓΩΝΙΣΜΑ ΑΕΠΠ</h2><br><br>";
                 $i = 1;
+
+                // Δημιουργία δυναμικού απόλυτου URL για τις εικόνες (απαραίτητο για το Word)
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                $baseUploadUrl = $protocol . $_SERVER['HTTP_HOST'] . rtrim(dirname(dirname($_SERVER['SCRIPT_NAME'])), '/\\') . '/uploads/';
+
                 while ($row = $examQuestions->fetch_assoc()) {
                     echo "<div style='margin-bottom: 24px;'>";
                     echo "<strong style='font-size: 1.1em;'>Θέμα " . $i++ . ":</strong><br>";
                     echo "<div style='margin-top: 10px;'>" . $row['question_text'] . "</div>";
+                    if (!empty($row['question_image'])) {
+                        echo "<div style='margin-top: 15px; text-align: center;'><img src='" . $baseUploadUrl . $row['question_image'] . "' alt='Εικόνα Θέματος' style='max-width: 100%; height: auto;' /></div>";
+                    }
                     echo "</div><br>";
                 }
                 echo "</body></html>";
@@ -850,4 +863,6 @@
             break;
     }
 
-    $page->displayEndMatter();
+    if (!in_array($action, $noLayoutActions)) {
+        $page->displayEndMatter();
+    }

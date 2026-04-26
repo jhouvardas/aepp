@@ -725,6 +725,9 @@ class AdminDbHandler extends DbHandler
         $stmt->bind_param("iids", $studentId, $mezeId, $grade, $userYear);
         $success = $stmt->execute();
 
+        // Ασφαλής ενημέρωση του updated_at (αγνοεί σφάλμα αν η στήλη δεν υπάρχει)
+        $conn->query("UPDATE meze_grades SET updated_at = NOW() WHERE student_id = " . (int)$studentId . " AND meze_id = " . (int)$mezeId . " AND user_year = '" . $conn->real_escape_string($userYear) . "'");
+
         $stmt->close();
         $conn->close();
         return $success;
@@ -907,6 +910,9 @@ class AdminDbHandler extends DbHandler
             $stmtInsert->execute();
             $stmtInsert->close();
         }
+
+        // Ασφαλής ενημέρωση του updated_at (αγνοεί σφάλμα αν η στήλη δεν υπάρχει)
+        $conn->query("UPDATE meze_grades SET updated_at = NOW() WHERE student_id = " . (int)$studentId . " AND meze_id = " . (int)$mezeId . " AND user_year = '" . $conn->real_escape_string($userYear) . "'");
 
         $conn->close();
     }

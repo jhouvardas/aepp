@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AEPP Builder - Δημιουργία Κενών</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="aepp.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            padding-top: 30px;
+            padding-bottom: 50px;
+        }
+
+        .output-box {
+            position: relative;
+            background: #272822;
+            /* Dark theme for code */
+            color: #f8f8f2;
+            padding: 40px 15px 15px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+
+        .action-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2" id="main-header">
+            <h2 class="text-primary"><i class="fa fa-magic"></i> AEPP Builder (Συμπλήρωση Κενών)</h2>
+            <button onclick="window.history.back();" class="btn btn-outline-secondary btn-sm"><i
+                    class="fa fa-arrow-left"></i> Επιστροφή</button>
+        </div>
+
+        <div class="row">
+            <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ: Είσοδος -->
+            <div class="col-lg-7 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white fw-bold">
+                        1. Εισαγωγή Κειμένου/Αλγορίθμου
+                    </div>
+                    <div class="card-body bg-white">
+                        <p class="small text-muted mb-2">
+                            Πληκτρολόγησε τον αλγόριθμο. Όποια λέξη θέλεις να γίνει "κενό", βάλτην μέσα σε διπλές
+                            αγκύλες <code>[[ ]]</code>. <br>
+                            Για Σωστό/Λάθος, βάλε το <b>Σ</b> ή το <b>Λ</b> σε διπλές παρενθέσεις
+                            <code>(( ))</code>.<br>
+                            Π.χ. <code>Σ &lt;- Σ + [[x]]</code> ή <code>Η δομή ΟΣΟ... ((Λ))</code>
+                        </p>
+                        <div class="row mb-3 align-items-end">
+                            <div class="col-md-2 mb-2 mb-md-0">
+                                <label class="form-label fw-bold text-primary">Αρ. Άσκησης:</label>
+                                <input type="number" id="exNum" class="form-control fw-bold text-center" value="1"
+                                    min="1" oninput="generateHTML()">
+                            </div>
+                            <div class="col-md-4 mb-2 mb-md-0">
+                                <label class="form-label fw-bold text-primary">Μορφοποίηση:</label>
+                                <select id="wrapType" class="form-select" onchange="generateHTML()">
+                                    <option value="code">Κώδικας (&lt;pre&gt;)</option>
+                                    <option value="text">Απλό Κείμενο / Σ-Λ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex gap-2">
+                                <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="generateHTML()">
+                                    <i class="fa fa-cogs"></i> Δημιουργία HTML
+                                </button>
+                                <button class="btn btn-outline-secondary w-100 fw-bold shadow-sm"
+                                    onclick="recoverFromHTML()"
+                                    title="Επικόλλησε τον HTML κώδικα της εκφώνησης στο πλαίσιο και πάτα εδώ">
+                                    <i class="fa fa-undo"></i> Επαναφορά
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-1">
+                            <!-- Μπάρα Εργαλείων HTML -->
+                            <div class="d-flex gap-1 bg-light p-2 border border-info border-bottom-0 rounded-top">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertTag('<b>', '</b>')"
+                                    title="Έντονο"><i class="fa fa-bold"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertTag('<i>', '</i>')"
+                                    title="Πλάγιο"><i class="fa fa-italic"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertTag('<u>', '</u>')"
+                                    title="Υπογράμμιση"><i class="fa fa-underline"></i></button>
+                                <span class="border-end mx-1"></span>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="insertTag('<ol>\n  <li>', '</li>\n</ol>')" title="Αριθμημένη Λίστα"><i
+                                        class="fa fa-list-ol"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="insertTag('<ul>\n  <li>', '</li>\n</ul>')" title="Λίστα με κουκκίδες"><i
+                                        class="fa fa-list-ul"></i></button>
+                                <span class="border-end mx-1"></span>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="insertTag('<code>', '</code>')" title="Κώδικας (Inline)"><i
+                                        class="fa fa-code"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="insertTag('<br>', '')"
+                                    title="Αλλαγή Γραμμής (Enter)"><i
+                                        class="fa fa-level-down fa-rotate-90"></i></button>
+                            </div>
+                            <!-- Textarea -->
+                            <textarea id="rawInput" class="form-control border-info rounded-0 rounded-bottom" rows="22"
+                                style="font-family: monospace; font-size: 1.05rem;"
+                                placeholder="ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ [[100]]..." oninput="generateHTML()"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ΔΕΞΙΑ ΣΤΗΛΗ: Αποτελέσματα -->
+            <div class="col-lg-5">
+                <ul class="nav nav-tabs mb-3" id="builderTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="preview-tab" data-bs-toggle="tab"
+                            data-bs-target="#preview" type="button" role="tab"><i class="fa fa-eye"></i> Προεπισκόπηση
+                            Μαθητή</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold text-primary" id="student-tab" data-bs-toggle="tab"
+                            data-bs-target="#student" type="button" role="tab"><i class="fa fa-user"></i> HTML
+                            Μαθητή</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold text-success" id="teacher-tab" data-bs-toggle="tab"
+                            data-bs-target="#teacher" type="button" role="tab"><i class="fa fa-check-circle"></i> HTML
+                            Λύσης (Καθηγητή)</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="builderTabsContent">
+                    <!-- Προεπισκόπηση -->
+                    <div class="tab-pane fade show active" id="preview" role="tabpanel">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body bg-white" id="previewArea">
+                                <p class="text-muted text-center py-5"><i>Εδώ θα εμφανιστεί η μορφή της άσκησης όπως θα
+                                        τη βλέπει ο μαθητής.</i></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HTML Μαθητή -->
+                    <div class="tab-pane fade" id="student" role="tabpanel">
+                        <div class="output-box shadow-sm">
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-primary insert-btn d-none shadow-sm"
+                                    onclick="insertToParent(0, 'studentOutput', this)"><i class="fa fa-level-down"></i>
+                                    Εισαγωγή στην Εκφώνηση</button>
+                                <button class="btn btn-sm btn-light shadow-sm"
+                                    onclick="copyText('studentOutput', this)"><i class="fa fa-copy"></i>
+                                    Αντιγραφή</button>
+                            </div>
+                            <div id="studentOutput">Αποτέλεσμα HTML...</div>
+                        </div>
+                        <p class="small text-muted mt-2"><i class="fa fa-info-circle"></i> Επικόλλησε αυτόν τον κώδικα
+                            στον Editor του μεζεδακίου.</p>
+                    </div>
+
+                    <!-- HTML Λύσης -->
+                    <div class="tab-pane fade" id="teacher" role="tabpanel">
+                        <div class="output-box shadow-sm">
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-success insert-btn d-none shadow-sm"
+                                    onclick="insertToParent(1, 'teacherOutput', this)"><i class="fa fa-level-down"></i>
+                                    Εισαγωγή στη Λύση</button>
+                                <button class="btn btn-sm btn-light shadow-sm"
+                                    onclick="copyText('teacherOutput', this)"><i class="fa fa-copy"></i>
+                                    Αντιγραφή</button>
+                            </div>
+                            <div id="teacherOutput">Αποτέλεσμα HTML Λύσεων...</div>
+                        </div>
+                        <p class="small text-muted mt-2"><i class="fa fa-info-circle"></i> Επικόλλησε αυτόν τον κώδικα
+                            στο αρχείο solution.html (στο grid των απαντήσεων).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Απόκρυψη της κεφαλίδας αν το αρχείο φορτώνεται μέσα σε iframe (Modal)
+        if (window !== window.top) {
+            document.getElementById('main-header').style.display = 'none';
+            document.body.style.paddingTop = '10px';
+            document.querySelectorAll('.insert-btn').forEach(btn => btn.classList.remove('d-none'));
+        }
+
+        // Συνάρτηση για προσθήκη HTML Tags γύρω από το επιλεγμένο κείμενο
+        function insertTag(startTag, endTag) {
+            const textarea = document.getElementById('rawInput');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+
+            textarea.value = text.substring(0, start) + startTag + selectedText + endTag + text.substring(end);
+
+            textarea.focus();
+            if (selectedText.length === 0) {
+                textarea.selectionStart = start + startTag.length;
+                textarea.selectionEnd = start + startTag.length;
+            } else {
+                textarea.selectionStart = start + startTag.length + selectedText.length + endTag.length;
+                textarea.selectionEnd = start + startTag.length + selectedText.length + endTag.length;
+            }
+
+            generateHTML(); // Ανανέωση προεπισκόπησης και μετά την προσθήκη ετικέτας HTML
+        }
+
+        function generateHTML() {
+            const rawText = document.getElementById('rawInput').value;
+            if (!rawText.trim()) {
+                document.getElementById('previewArea').innerHTML = '<p class="text-muted text-center py-5"><i>Εδώ θα εμφανιστεί η μορφή της άσκησης όπως θα τη βλέπει ο μαθητής.</i></p>';
+                document.getElementById('studentOutput').textContent = 'Αποτέλεσμα HTML...';
+                document.getElementById('teacherOutput').textContent = 'Αποτέλεσμα HTML Λύσεων...';
+                return;
+            }
+
+            const exNum = document.getElementById('exNum').value || "1";
+
+            let studentHtml = rawText;
+            let teacherHtml = '<div class="answer-grid">\n';
+            let blankCounter = 1;
+
+            // Regex που πιάνει ΚΑΙ τα [[κενά]] ΚΑΙ τα ((Σ)) / ((Λ))
+            const regex = /\[\[(.*?)\]\]|\(\(([ΣΛσλSlsL])\)\)/g;
+
+            studentHtml = studentHtml.replace(regex, (match, blankAnswer, tfAnswer) => {
+                let inputHtml = '';
+
+                if (match.startsWith('[[')) {
+                    // Περίπτωση: Συμπλήρωση Κενού
+                    const answer = (blankAnswer || '').trim();
+                    teacherHtml += `  <div class="answer-item"><span class="ans-num">(${blankCounter})</span> <code>${answer}</code></div>\n`;
+                    inputHtml = `<input type="text" class="aepp-interactive-blank" data-ex="${exNum}" data-blank="${blankCounter}">`;
+                } else if (match.startsWith('((')) {
+                    // Περίπτωση: Σωστό / Λάθος
+                    let answer = (tfAnswer || '').trim().toUpperCase();
+                    if (answer === 'S') answer = 'Σ'; // Αγγλικό S -> Ελληνικό Σ
+                    if (answer === 'L') answer = 'Λ'; // Αγγλικό L -> Ελληνικό Λ
+
+                    let colorClass = answer === 'Σ' ? 'text-success' : 'text-danger';
+                    teacherHtml += `  <div class="answer-item"><span class="ans-num">(${blankCounter})</span> <code class="${colorClass} fw-bold">${answer}</code></div>\n`;
+                    inputHtml = `<input type="text" class="aepp-interactive-blank text-center fw-bold" placeholder="Σ/Λ" maxlength="1" data-ex="${exNum}" data-blank="${blankCounter}">`;
+                }
+                blankCounter++;
+                return inputHtml;
+            });
+            teacherHtml += '</div>';
+
+            const wrapType = document.getElementById('wrapType').value;
+            let finalStudentHtml = wrapType === 'code'
+                ? `<pre class="aepp-code shadow-sm">${studentHtml}</pre>`
+                : `<div class="fw-normal mb-0 aepp-text-wrap">${studentHtml}</div>`;
+
+            // Κρυφή αποθήκευση του αρχικού κειμένου (για μελλοντική επεξεργασία)
+            const safeRawText = rawText.split('-->').join('--&gt;');
+            finalStudentHtml = `<!-- AEPP_RAW_START\n${safeRawText}\nAEPP_RAW_END -->\n` + finalStudentHtml;
+
+            document.getElementById('previewArea').innerHTML = finalStudentHtml;
+            document.getElementById('studentOutput').textContent = finalStudentHtml;
+            document.getElementById('teacherOutput').textContent = teacherHtml;
+        }
+
+        // Συνάρτηση που στέλνει την HTML απευθείας στον γονικό CKEditor
+        function insertToParent(editorIndex, outputId, btn) {
+            const htmlToInsert = document.getElementById(outputId).textContent;
+            let success = false;
+
+            try {
+                const parentDoc = window.parent.document;
+
+                // Προσπάθεια 1: Έλεγχος αν οι editors έχουν αποθηκευτεί σε global array (CKEditor 5)
+                if (window.parent.editors && window.parent.editors.length > editorIndex) {
+                    insertToCKEditor5(window.parent.editors[editorIndex], htmlToInsert);
+                    success = true;
+                }
+
+                // Προσπάθεια 2: Fallback για παλαιότερο CKEditor 4
+                if (!success && window.parent.CKEDITOR) {
+                    const instances = Object.values(window.parent.CKEDITOR.instances);
+                    if (instances.length > editorIndex) {
+                        instances[editorIndex].insertHtml(htmlToInsert);
+                        success = true;
+                    }
+                }
+
+                // Προσπάθεια 3: Εύρεση μέσω κρυφών DOM στοιχείων (.ck-editor__editable)
+                if (!success) {
+                    const editables = parentDoc.querySelectorAll('.ck-editor__editable');
+                    if (editables.length > editorIndex) {
+                        const el = editables[editorIndex];
+                        el.focus(); // Βάζουμε βίαια τον κέρσορα μέσα στον Editor
+
+                        if (el.ckeditorInstance) {
+                            insertToCKEditor5(el.ckeditorInstance, htmlToInsert);
+                            success = true;
+                        } else {
+                            // Η μαγική εναλλακτική: Κάνει paste κατευθείαν στη σελίδα!
+                            parentDoc.execCommand('insertHTML', false, htmlToInsert);
+                            success = true;
+                        }
+                    }
+                }
+
+                // Προσπάθεια 4: Τελευταία λύση, εισαγωγή κατευθείαν στο "γυμνό" Textarea!
+                if (!success) {
+                    const names = ['mezeText', 'mezeSolution'];
+                    if (names[editorIndex]) {
+                        const txt = parentDoc.querySelector(`textarea[name="${names[editorIndex]}"]`);
+                        if (txt) {
+                            txt.value = txt.value + '\n' + htmlToInsert;
+                            success = true;
+                        }
+                    }
+                }
+
+                // Οπτική επιβεβαίωση στο κουμπί
+                if (success) {
+                    const originalHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa fa-check text-white"></i> Εισήχθη!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHtml;
+                        // Κλείνει αυτόματα το Modal του Admin Panel (αν είμαστε μέσα σε iframe)
+                        const closeBtn = parentDoc.querySelector('.modal.show .btn-close');
+                        if (closeBtn) closeBtn.click();
+                    }, 800);
+                } else {
+                    alert("Δεν βρέθηκε αυτόματα ο Editor.\n\nΜπορείς απλά να πατήσεις 'Αντιγραφή' και να κάνεις Επικόλληση (Paste) με το χέρι!");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Σφάλμα κατά την εισαγωγή.\n\nΜπορείς απλά να πατήσεις 'Αντιγραφή' και να κάνεις Επικόλληση (Paste) με το χέρι!");
+            }
+        }
+
+        function recoverFromHTML() {
+            const input = document.getElementById('rawInput').value;
+            if (!input.trim()) return alert("Επικόλλησε πρώτα τον HTML κώδικα (από τον Editor) στο πλαίσιο!");
+
+            // 1. Έλεγχος αν υπάρχει το "κρυφό" σχόλιο της νέας έκδοσης
+            const rawMatch = input.match(/<!-- AEPP_RAW_START\n([\s\S]*?)\nAEPP_RAW_END -->/);
+            if (rawMatch && rawMatch[1]) {
+                document.getElementById('rawInput').value = rawMatch[1].split('--&gt;').join('-->');
+                alert("Το αρχικό κείμενο ανακτήθηκε τέλεια!");
+            } else {
+                // 2. Έξυπνη μετατροπή για παλαιότερες ασκήσεις (χωρίς το σχόλιο)
+                let recovered = input;
+                recovered = recovered.replace(/<input[^>]*placeholder="Σ\/Λ"[^>]*>/g, "((?))");
+                recovered = recovered.replace(/<input[^>]*class="[^"]*aepp-interactive-blank[^"]*"[^>]*>/g, "[[???]]");
+                recovered = recovered.replace(/<br\s*\/?>/gi, "\n");
+                recovered = recovered.replace(/<\/p>|<\/div>|<\/li>/gi, "\n");
+                recovered = recovered.replace(/<[^>]+>/g, ""); // Αφαίρεση υπολοίπων HTML tags
+
+                const txt = document.createElement("textarea");
+                txt.innerHTML = recovered; // Αποκωδικοποίηση HTML Entities (π.χ. &lt; σε <)
+                document.getElementById('rawInput').value = txt.value.trim();
+
+                alert("Ανακτήθηκε! Επειδή ήταν παλιά έκδοση (χωρίς κρυφή μνήμη), θα πρέπει να συμπληρώσεις ξανά τις σωστές απαντήσεις στα [[???]] και ((?)).");
+            }
+        }
+
+        // Βοηθητική συνάρτηση για εισαγωγή στον CKEditor 5
+        function insertToCKEditor5(editor, html) {
+            const viewFragment = editor.data.processor.toView(html);
+            const modelFragment = editor.data.toModel(viewFragment);
+            editor.model.insertContent(modelFragment);
+        }
+
+        function copyText(elementId, btn) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-check text-success"></i> OK!';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>

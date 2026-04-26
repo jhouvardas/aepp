@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -27,8 +29,8 @@
                     <li>16.15</li>
                     <li>16.22</li>
                     <li>17.10</li>
-                    <li>17.25</li>                
-                </ul>                   
+                    <li>17.25</li>
+                </ul>
             </div>
             <div class="col-lg-6">
                 <h4>Τεύχος 2</h4>
@@ -50,10 +52,11 @@
                     <li>17.24</li>
                 </ul>
             </div>
-        </div>  
+        </div>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

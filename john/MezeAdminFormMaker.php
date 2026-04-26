@@ -76,7 +76,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $badgeHtml .= '<br><span class="badge bg-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-fire"></i> SOS</span>';
                                 }
 
-                                if ($isFuture) $rowStyle = 'style="background-color: #f8f9fa; color: #9c9c9c; font-style: italic;"';
+                                if ($isFuture) {
+                                    $badgeHtml .= '<br><span class="badge bg-primary text-white mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-calendar-check-o"></i> Προγραμματισμένο</span>';
+                                    $rowStyle = 'style="background-color: #e9f2fd; color: #495057;"';
+                                }
                         ?>
                                 <tr <?php echo $rowStyle; ?> class="align-middle">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
@@ -219,8 +222,29 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <input type="datetime-local" name="solutionDate" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Κείμενο / Κώδικας (HTML/Bootstrap)</label>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Κείμενο / Κώδικας (HTML/Bootstrap)</label>
+                        <!-- Κουμπί που ανοίγει το Modal του Builder -->
+                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModal">
+                            <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
+                        </button>
+                    </div>
                     <textarea name="mezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
+
+                    <!-- Το Bootstrap Modal για τον AEPP Builder -->
+                    <div class="modal fade" id="builderModal" tabindex="-1" aria-labelledby="builderModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header bg-dark text-white">
+                                    <h5 class="modal-title" id="builderModalLabel"><i class="fa fa-magic text-warning"></i> AEPP Builder</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <iframe src="../builder.html" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Φωτογραφία (Προαιρετικά)</label>
@@ -378,8 +402,29 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </div>
 
                 <div class="form-group">
-                    <label>Εκφώνηση (Κείμενο ή HTML)</label>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Εκφώνηση (Κείμενο ή HTML)</label>
+                        <!-- Κουμπί που ανοίγει το Modal του Builder (Edit) -->
+                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModalEdit">
+                            <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
+                        </button>
+                    </div>
                     <textarea name="mezeText" class="form-control" rows="5"><?php echo $row['mezeText']; ?></textarea>
+
+                    <!-- Το Bootstrap Modal για τον AEPP Builder (Edit) -->
+                    <div class="modal fade" id="builderModalEdit" tabindex="-1" aria-labelledby="builderModalEditLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header bg-dark text-white">
+                                    <h5 class="modal-title" id="builderModalEditLabel"><i class="fa fa-magic text-warning"></i> AEPP Builder</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <iframe src="../builder.html" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group card p-3 bg-white border-info shadow-sm">
@@ -526,8 +571,10 @@ class MezeAdminFormMaker extends AdminFormMaker
 
                 // Αν υπάρχει υποβολή πιο πρόσφατη από τη βαθμολόγηση, επιστρέφει στα εκκρεμή
                 // Προστέθηκε μικρή ανοχή 2 ωρών (7200 δευτ.) για αποφυγή Timezone Bugs μεταξύ PHP και MySQL
-                if ($subData && isset($gradeData['updated_at'])) {
-                    if (strtotime($subData['submission_date']) > (strtotime($gradeData['updated_at']) + 7200)) {
+                if ($subData && !empty($gradeData['updated_at'])) {
+                    $updTime = strtotime($gradeData['updated_at']);
+                    $subTime = strtotime($subData['submission_date']);
+                    if ($updTime > 0 && $subTime > 0 && $subTime > ($updTime + 7200)) {
                         $isGraded = false;
                     }
                 }
@@ -589,16 +636,32 @@ class MezeAdminFormMaker extends AdminFormMaker
                         </div>
                         <div class="card-body">
                             <?php if ($sub): ?>
-                                <p class="small bg-light p-2 border rounded"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
-                                <div class="row mb-3">
-                                    <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
-                                            <div class="col-md-4 mb-2">
-                                                <a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-block btn-outline-primary text-truncate w-100">
-                                                    <i class="fa fa-file-image-o"></i> <?php echo $sub[$f]; ?>
-                                                </a>
+                                <div class="row">
+                                    <div class="col-md-<?php echo (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])) ? '6' : '12'; ?>">
+                                        <h6 class="text-muted small fw-bold">Απάντηση Μαθητή:</h6>
+                                        <p class="small bg-light p-2 border rounded" style="max-height: 250px; overflow-y: auto;"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
+                                        <div class="row mb-3">
+                                            <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
+                                                    <div class="col-md-4 mb-2">
+                                                        <a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-block btn-outline-primary text-truncate w-100">
+                                                            <i class="fa fa-file-image-o"></i> <?php echo $sub[$f]; ?>
+                                                        </a>
+                                                    </div>
+                                            <?php endif;
+                                            endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])): ?>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success small fw-bold">Σωστή Λύση:</h6>
+                                            <div class="small bg-white p-2 border border-success rounded" style="max-height: 250px; overflow-y: auto;">
+                                                <?php echo $mezeData['mezeSolution']; ?>
+                                                <?php if (!empty($mezeData['mezeSolutionImage'])): ?>
+                                                    <div class="mt-2"><a href="../images/mezedakia/<?php echo $mezeData['mezeSolutionImage']; ?>" target="_blank" class="btn btn-sm btn-outline-success w-100"><i class="fa fa-image"></i> Προβολή Εικόνας Λύσης</a></div>
+                                                <?php endif; ?>
                                             </div>
-                                    <?php endif;
-                                    endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
                                 <div class="alert alert-warning py-2 small d-flex justify-content-between align-items-center">
@@ -654,13 +717,28 @@ class MezeAdminFormMaker extends AdminFormMaker
                         </div>
                         <div id="editRow<?php echo $stId; ?>" class="collapse p-3 border border-top-0 mb-2 bg-light shadow-sm">
                             <?php if ($sub): ?>
-                                <h6 class="fw-bold text-muted small text-uppercase">Απάντηση:</h6>
-                                <p class="small bg-white p-2 border rounded"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
-                                <div class="row mb-2">
-                                    <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
-                                            <div class="col-md-4"><a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-outline-secondary w-100 text-truncate"><i class="fa fa-image"></i> <?php echo $sub[$f]; ?></a></div>
-                                    <?php endif;
-                                    endforeach; ?>
+                                <div class="row">
+                                    <div class="col-md-<?php echo (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])) ? '6' : '12'; ?>">
+                                        <h6 class="fw-bold text-muted small text-uppercase">Απάντηση:</h6>
+                                        <p class="small bg-white p-2 border rounded" style="max-height: 200px; overflow-y: auto;"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
+                                        <div class="row mb-2">
+                                            <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
+                                                    <div class="col-md-4"><a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-outline-secondary w-100 text-truncate"><i class="fa fa-image"></i> <?php echo $sub[$f]; ?></a></div>
+                                            <?php endif;
+                                            endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])): ?>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-success small text-uppercase">Σωστή Λύση:</h6>
+                                            <div class="small bg-white p-2 border border-success rounded" style="max-height: 200px; overflow-y: auto;">
+                                                <?php echo $mezeData['mezeSolution']; ?>
+                                                <?php if (!empty($mezeData['mezeSolutionImage'])): ?>
+                                                    <div class="mt-2"><a href="../images/mezedakia/<?php echo $mezeData['mezeSolutionImage']; ?>" target="_blank" class="btn btn-sm btn-outline-success w-100"><i class="fa fa-image"></i> Προβολή Εικόνας Λύσης</a></div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                             <form action="index.php?action=quickGrade" method="post" class="mt-2">

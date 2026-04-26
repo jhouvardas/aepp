@@ -213,6 +213,60 @@
         btn.classList.replace('btn-light', 'btn-success');
       }, 2000);
     }
+
+    // Αυτόματη φόρτωση των απαντήσεων του μαθητή από το LocalStorage 
+    // και δυναμική μορφοποίηση δίπλα στα σωστά!
+    document.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('studentMezeAnswers');
+      let studentAnswers = saved ? JSON.parse(saved) : null;
+
+      if (!studentAnswers) return;
+
+      let exNum = 1;
+      document.querySelectorAll('.mb-4').forEach((block) => {
+        const grid = block.querySelector('.answer-grid');
+        if (!grid) return;
+
+        const answerItems = grid.querySelectorAll('.answer-item');
+
+        answerItems.forEach((item, index) => {
+          const blankNum = index + 1;
+
+          const correctCodeEl = item.querySelector('code');
+          const correctText = correctCodeEl ? correctCodeEl.textContent.trim() : '';
+
+          let studentText = '-';
+          if (studentAnswers[exNum] && studentAnswers[exNum][blankNum]) {
+            studentText = studentAnswers[exNum][blankNum];
+          }
+
+          let isCorrect = false;
+          if (studentText !== '-') {
+            // Σύγκριση αγνοώντας τα κενά και κεφαλαία/μικρά
+            const normalize = (str) => str.replace(/\s+/g, '').toLowerCase();
+            isCorrect = normalize(studentText) === normalize(correctText);
+          }
+
+          const studentColorClass = studentText === '-' ? 'text-secondary' : (isCorrect ? 'text-success' : 'text-danger');
+          const studentIcon = isCorrect ? '<i class="fa fa-check text-success"></i>' : (studentText !== '-' ? '<i class="fa fa-times text-danger"></i>' : '');
+
+          item.className = "answer-item flex-column align-items-stretch";
+          item.innerHTML = `
+            <div class="d-flex justify-content-between mb-1">
+              <span class="ans-num">(${blankNum})</span>
+              <span class="small text-muted">Σωστό: <code class="text-success fw-bold">${correctText}</code></span>
+            </div>
+            <div class="d-flex justify-content-between border-top pt-1 bg-light rounded px-1 align-items-center">
+              <span class="small text-primary">Μαθητής:</span>
+              <div>
+                 ${studentIcon} <code class="${studentColorClass} fw-bold" style="font-size:0.9rem;">${studentText}</code>
+              </div>
+            </div>
+          `;
+        });
+        exNum++;
+      });
+    });
   </script>
 </body>
 

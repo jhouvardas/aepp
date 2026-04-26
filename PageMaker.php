@@ -244,6 +244,36 @@ class PageMaker
                         icon.classList.add('fa-eye');
                     }
                 }
+
+                // Αυτόματη συλλογή των απαντήσεων από τα κενά (interactive blanks)
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.querySelectorAll('form').forEach(function(form) {
+                        form.addEventListener('submit', function(e) {
+                            var card = form.closest('.meze-card');
+                            if (card) {
+                                var blanks = card.querySelectorAll('.aepp-interactive-blank');
+                                if (blanks.length > 0) {
+                                    var answersTxt = "";
+                                    blanks.forEach(function(input) {
+                                        var nameMatch = input.name.match(/ans\[(\d+)\]/);
+                                        var num = nameMatch ? nameMatch[1] : '*';
+                                        var val = input.value.trim();
+                                        if (val !== '') {
+                                            answersTxt += "(" + num + ") ➔ " + val + "\n";
+                                        }
+                                    });
+                                    if (answersTxt !== "") {
+                                        var hiddenInput = document.createElement('input');
+                                        hiddenInput.type = 'hidden';
+                                        hiddenInput.name = 'blanks_answers';
+                                        hiddenInput.value = answersTxt;
+                                        form.appendChild(hiddenInput);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
             </script>
             <!-- Bootstrap 5 JS Bundle για συμβατότητα με τα νέα Accordions -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

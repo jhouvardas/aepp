@@ -60,6 +60,34 @@
     z-index: 1;
 }
 
+/* Διαδραστικό κενό για αυτόματη βαθμολόγηση */
+.aepp-interactive-blank {
+    display: inline-block;
+    width: 45px;
+    height: 24px;
+    padding: 0 4px;
+    margin: -3px 2px -3px 2px;
+    background-color: #f8f9fa;
+    color: #dc3545;
+    font-weight: bold;
+    text-align: center;
+    font-family: inherit;
+    font-size: 0.85rem;
+    border: 1px dashed #17a2b8;
+    border-radius: 4px;
+    outline: none;
+    vertical-align: top;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease-in-out;
+}
+
+.aepp-interactive-blank:focus {
+    border: 1px solid #17a2b8;
+    background-color: #ffffff;
+    box-shadow: 0 0 5px rgba(23, 162, 184, 0.4);
+}
+
 /* Κλάση για απόκρυψη χαρακτήρων χωρίς να αναγνωρίζεται ως password από browsers */
 .mask-input {
     -webkit-text-security: disc !important;
@@ -206,6 +234,12 @@
 
 .pulse-pending {
     animation: pulse-pending 2s infinite;
+}
+
+/* Προβολή απλού κειμένου / Σ-Λ από τον AEPP Builder */
+.aepp-text-wrap {
+    line-height: 1.8;
+    white-space: pre-wrap;
 }
 
 /* Custom Toggle Switch for Admin */
