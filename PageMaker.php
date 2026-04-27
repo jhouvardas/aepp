@@ -247,31 +247,117 @@ class PageMaker
 
                 // Αυτόματη συλλογή των απαντήσεων από τα κενά (interactive blanks)
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Φόρτωση αποθηκευμένης προόδου από το LocalStorage
+                    var savedProgress = JSON.parse(localStorage.getItem('aepp_student_progress') || '{}');
+
                     document.querySelectorAll('form').forEach(function(form) {
                         form.addEventListener('submit', function(e) {
                             var card = form.closest('.meze-card');
                             if (card) {
                                 var blanks = card.querySelectorAll('.aepp-interactive-blank');
                                 if (blanks.length > 0) {
-                                    var answersTxt = "";
+                                    var groupedAnswers = {};
                                     blanks.forEach(function(input) {
-                                        var nameMatch = input.name.match(/ans\[(\d+)\]/);
-                                        var num = nameMatch ? nameMatch[1] : '*';
+                                        var ex = input.getAttribute('data-ex') || '1';
+                                        var num = input.getAttribute('data-blank') || '*';
                                         var val = input.value.trim();
+
+                                        // 1. Κανονικοποίηση Unicode (NFC) για διόρθωση τόνων από iPhone/Samsung
+                                        if (val.normalize) {
+                                            val = val.normalize('NFC');
+                                        }
+                                        // 2. Μετατροπή Αγγλικών γραμμάτων που μοιάζουν οπτικά στα αντίστοιχα Ελληνικά
+                                        var engToGr = {
+                                            'A': 'Α',
+                                            'B': 'Β',
+                                            'E': 'Ε',
+                                            'Z': 'Ζ',
+                                            'H': 'Η',
+                                            'I': 'Ι',
+                                            'K': 'Κ',
+                                            'M': 'Μ',
+                                            'N': 'Ν',
+                                            'O': 'Ο',
+                                            'P': 'Ρ',
+                                            'T': 'Τ',
+                                            'X': 'Χ',
+                                            'Y': 'Υ',
+                                            'a': 'α',
+                                            'e': 'ε',
+                                            'i': 'ι',
+                                            'o': 'ο',
+                                            'p': 'ρ',
+                                            'v': 'ν',
+                                            'x': 'χ',
+                                            'y': 'υ',
+                                            'u': 'υ',
+                                            'k': 'κ',
+                                            't': 'τ',
+                                            'n': 'ν'
+                                        };
+                                        val = val.replace(/[A-Za-z]/g, function(match) {
+                                            return engToGr[match] || match;
+                                        });
+                                        // 3. Μετατροπή πολλαπλών κενών σε ένα
+                                        val = val.replace(/\s+/g, ' ');
+
                                         if (val !== '') {
-                                            answersTxt += "(" + num + ") ➔ " + val + "\n";
+                                            if (!groupedAnswers[ex]) {
+                                                groupedAnswers[ex] = [];
+                                            }
+                                            groupedAnswers[ex].push(num + ". " + val);
                                         }
                                     });
+                                    var answersTxt = "";
+                                    for (var ex in groupedAnswers) {
+                                        answersTxt += "--- Αλγόριθμος " + ex + " ---\n";
+                                        answersTxt += groupedAnswers[ex].join("\n") + "\n\n";
+                                    }
                                     if (answersTxt !== "") {
                                         var hiddenInput = document.createElement('input');
                                         hiddenInput.type = 'hidden';
                                         hiddenInput.name = 'blanks_answers';
-                                        hiddenInput.value = answersTxt;
+                                        hiddenInput.value = answersTxt.trim();
                                         form.appendChild(hiddenInput);
                                     }
+
+                                    // Καθαρισμός προόδου από το LocalStorage μετά την υποβολή
+                                    var currentProgress = JSON.parse(localStorage.getItem('aepp_student_progress') || '{}');
+                                    blanks.forEach(function(input, index) {
+                                        var formContext = form.id || form.getAttribute('action') || 'form';
+                                        var key = 'blank_' + formContext + '_' + (input.getAttribute('data-ex') || '1') + '_' + (input.getAttribute('data-blank') || '*') + '_' + (input.name || 'noname') + '_' + index;
+                                        delete currentProgress[key];
+                                    });
+                                    localStorage.setItem('aepp_student_progress', JSON.stringify(currentProgress));
                                 }
                             }
                         });
+                    });
+
+                    // Ανάκτηση προόδου & δυναμική προσαρμογή του πλάτους των κενών
+                    document.querySelectorAll('.aepp-interactive-blank').forEach(function(input, index) {
+                        var form = input.closest('form');
+                        var formContext = form ? (form.id || form.getAttribute('action') || 'form') : 'noform';
+                        var key = 'blank_' + formContext + '_' + (input.getAttribute('data-ex') || '1') + '_' + (input.getAttribute('data-blank') || '*') + '_' + (input.name || 'noname') + '_' + index;
+
+                        // 1. Επαναφορά αποθηκευμένης τιμής αν υπάρχει
+                        if (savedProgress[key] !== undefined) {
+                            input.value = savedProgress[key];
+                        }
+
+                        function adjustWidth() {
+                            // Ελάχιστο πλάτος 45px. ~9px ανά χαρακτήρα + 2 χαρακτήρες "αέρα"
+                            var calculatedWidth = (input.value.length + 2) * 9;
+                            input.style.width = Math.max(45, calculatedWidth) + 'px';
+                        }
+                        input.addEventListener('input', function() {
+                            adjustWidth();
+                            // 2. Αποθήκευση κατά την πληκτρολόγηση
+                            var currentProgress = JSON.parse(localStorage.getItem('aepp_student_progress') || '{}');
+                            currentProgress[key] = this.value;
+                            localStorage.setItem('aepp_student_progress', JSON.stringify(currentProgress));
+                        });
+                        adjustWidth(); // Αρχική προσαρμογή για τυχόν προσυμπληρωμένα
                     });
                 });
             </script>

@@ -72,14 +72,17 @@
                                     <option value="text">Απλό Κείμενο / Σ-Λ</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 d-flex gap-2">
+                            <div class="col-md-6 d-flex gap-1">
                                 <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="generateHTML()">
                                     <i class="fa fa-cogs"></i> Δημιουργία HTML
                                 </button>
                                 <button class="btn btn-outline-secondary w-100 fw-bold shadow-sm"
-                                    onclick="recoverFromHTML()"
-                                    title="Επικόλλησε τον HTML κώδικα της εκφώνησης στο πλαίσιο και πάτα εδώ">
+                                    onclick="recoverFromHTML()" title="Επαναφορά">
                                     <i class="fa fa-undo"></i> Επαναφορά
+                                </button>
+                                <button class="btn btn-outline-danger fw-bold shadow-sm" onclick="clearBuilder()"
+                                    title="Αδειασμα του Builder">
+                                    <i class="fa fa-trash"></i>
                                 </button>
                             </div>
                         </div>
@@ -228,7 +231,9 @@
             const exNum = document.getElementById('exNum').value || "1";
 
             let studentHtml = rawText;
-            let teacherHtml = '<div class="answer-grid">\n';
+            let teacherHtml = `<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">\n`;
+            teacherHtml += `<h5 style="color: #0d6efd; margin-top: 0; border-bottom: 2px solid #b6d4fe; padding-bottom: 8px; font-weight: bold; font-family: sans-serif;">Αλγόριθμος ${exNum}</h5>\n`;
+            teacherHtml += `<ol style="margin-bottom: 0; padding-left: 25px; font-family: monospace; font-size: 1.1rem; line-height: 1.8;">\n`;
             let blankCounter = 1;
 
             // Regex που πιάνει ΚΑΙ τα [[κενά]] ΚΑΙ τα ((Σ)) / ((Λ))
@@ -240,7 +245,7 @@
                 if (match.startsWith('[[')) {
                     // Περίπτωση: Συμπλήρωση Κενού
                     const answer = (blankAnswer || '').trim();
-                    teacherHtml += `  <div class="answer-item"><span class="ans-num">(${blankCounter})</span> <code>${answer}</code></div>\n`;
+                    teacherHtml += `  <li style="margin-bottom: 5px; padding-left: 5px;"><strong style="color: #d63384; background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px;">${answer}</strong></li>\n`;
                     inputHtml = `<input type="text" class="aepp-interactive-blank" data-ex="${exNum}" data-blank="${blankCounter}">`;
                 } else if (match.startsWith('((')) {
                     // Περίπτωση: Σωστό / Λάθος
@@ -248,14 +253,14 @@
                     if (answer === 'S') answer = 'Σ'; // Αγγλικό S -> Ελληνικό Σ
                     if (answer === 'L') answer = 'Λ'; // Αγγλικό L -> Ελληνικό Λ
 
-                    let colorClass = answer === 'Σ' ? 'text-success' : 'text-danger';
-                    teacherHtml += `  <div class="answer-item"><span class="ans-num">(${blankCounter})</span> <code class="${colorClass} fw-bold">${answer}</code></div>\n`;
+                    let color = answer === 'Σ' ? '#198754' : '#dc3545';
+                    teacherHtml += `  <li style="margin-bottom: 5px; padding-left: 5px;"><strong style="color: ${color}; background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px;">${answer}</strong></li>\n`;
                     inputHtml = `<input type="text" class="aepp-interactive-blank text-center fw-bold" placeholder="Σ/Λ" maxlength="1" data-ex="${exNum}" data-blank="${blankCounter}">`;
                 }
                 blankCounter++;
                 return inputHtml;
             });
-            teacherHtml += '</div>';
+            teacherHtml += '</ol>\n</div>';
 
             const wrapType = document.getElementById('wrapType').value;
             let finalStudentHtml = wrapType === 'code'
@@ -269,6 +274,16 @@
             document.getElementById('previewArea').innerHTML = finalStudentHtml;
             document.getElementById('studentOutput').textContent = finalStudentHtml;
             document.getElementById('teacherOutput').textContent = teacherHtml;
+
+            // Δυναμική προσαρμογή του πλάτους των κενών στην προεπισκόπηση
+            document.getElementById('previewArea').querySelectorAll('.aepp-interactive-blank').forEach(function (input) {
+                function adjustWidth() {
+                    var calculatedWidth = (input.value.length + 2) * 9;
+                    input.style.width = Math.max(45, calculatedWidth) + 'px';
+                }
+                input.addEventListener('input', adjustWidth);
+                adjustWidth();
+            });
         }
 
         // Συνάρτηση που στέλνει την HTML απευθείας στον γονικό CKEditor
@@ -318,7 +333,14 @@
                     if (names[editorIndex]) {
                         const txt = parentDoc.querySelector(`textarea[name="${names[editorIndex]}"]`);
                         if (txt) {
-                            txt.value = txt.value + '\n' + htmlToInsert;
+                            // Ασφαλής εισαγωγή: Αν ο κέρσορας είναι κάπου, το βάζουμε εκεί. Αλλιώς στο τέλος!
+                            const startPos = txt.selectionStart;
+                            const endPos = txt.selectionEnd;
+                            if (startPos !== undefined && startPos === endPos && txt.value.trim() !== '') {
+                                txt.value = txt.value.substring(0, startPos) + '\n' + htmlToInsert + '\n' + txt.value.substring(endPos);
+                            } else {
+                                txt.value = txt.value + (txt.value.trim() !== '' ? '\n\n' : '') + htmlToInsert;
+                            }
                             success = true;
                         }
                     }
@@ -343,18 +365,27 @@
             }
         }
 
-        function recoverFromHTML() {
+        function recoverFromHTML(silent = false) {
             const input = document.getElementById('rawInput').value;
-            if (!input.trim()) return alert("Επικόλλησε πρώτα τον HTML κώδικα (από τον Editor) στο πλαίσιο!");
+            if (!input.trim()) {
+                if (silent !== true) alert("Επικόλλησε πρώτα τον HTML κώδικα (από τον Editor) στο πλαίσιο!");
+                return;
+            }
 
             // 1. Έλεγχος αν υπάρχει το "κρυφό" σχόλιο της νέας έκδοσης
             const rawMatch = input.match(/<!-- AEPP_RAW_START\n([\s\S]*?)\nAEPP_RAW_END -->/);
             if (rawMatch && rawMatch[1]) {
                 document.getElementById('rawInput').value = rawMatch[1].split('--&gt;').join('-->');
-                alert("Το αρχικό κείμενο ανακτήθηκε τέλεια!");
+                if (silent !== true) alert("Το αρχικό κείμενο ανακτήθηκε τέλεια!");
             } else {
-                // 2. Έξυπνη μετατροπή για παλαιότερες ασκήσεις (χωρίς το σχόλιο)
+                // 2. Έξυπνη μετατροπή για παλαιότερες ασκήσεις.
+                // Ψάχνουμε να βρούμε αν υπάρχει <pre> block (ώστε να μην διαλύσουμε κείμενα τύπου <p>Εκφώνηση</p>)
                 let recovered = input;
+                const preMatch = input.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+                if (preMatch && preMatch[1]) {
+                    recovered = preMatch[1]; // Κρατάμε μόνο τον κώδικα!
+                }
+
                 recovered = recovered.replace(/<input[^>]*placeholder="Σ\/Λ"[^>]*>/g, "((?))");
                 recovered = recovered.replace(/<input[^>]*class="[^"]*aepp-interactive-blank[^"]*"[^>]*>/g, "[[???]]");
                 recovered = recovered.replace(/<br\s*\/?>/gi, "\n");
@@ -365,7 +396,17 @@
                 txt.innerHTML = recovered; // Αποκωδικοποίηση HTML Entities (π.χ. &lt; σε <)
                 document.getElementById('rawInput').value = txt.value.trim();
 
-                alert("Ανακτήθηκε! Επειδή ήταν παλιά έκδοση (χωρίς κρυφή μνήμη), θα πρέπει να συμπληρώσεις ξανά τις σωστές απαντήσεις στα [[???]] και ((?)).");
+                if (silent !== true) alert("Ανακτήθηκε! (Επειδή ήταν παλιά έκδοση, απομονώθηκε μόνο ο κώδικας. Ίσως χρειαστεί να βάλεις ξανά τα [[???]]).");
+            }
+
+            // Ανανέωση των Previews αυτόματα!
+            generateHTML();
+        }
+
+        function clearBuilder() {
+            if (confirm('Σίγουρα θέλεις να αδειάσεις τον Builder;')) {
+                document.getElementById('rawInput').value = '';
+                generateHTML();
             }
         }
 

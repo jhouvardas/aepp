@@ -992,7 +992,7 @@ class AdminDbHandler extends DbHandler
                 LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
                 WHERE s.meze_id = ? AND (
                     g.grade_value IS NULL 
-                    OR (g.updated_at IS NOT NULL AND s.submission_date > DATE_ADD(g.updated_at, INTERVAL 2 HOUR))
+                    OR (g.updated_at IS NOT NULL AND s.submission_date > g.updated_at)
                 )";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $userYear, $mezeId);
@@ -1010,26 +1010,46 @@ class AdminDbHandler extends DbHandler
     public function getNotSubmittedCount($mezeId, $userYear)
     {
         $students = $this->getTutorStudents($userYear);
-        if (empty($students)) return 0;
+        if (empty($students)) return ['total' => 0, 'ungraded' => 0];
 
         $studentIds = array_column($students, 'studentId');
-        $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
 
         $conn = $this->connectToFamilyDB();
-        $sql = "SELECT COUNT(DISTINCT student_id) as subCount 
-                FROM aepp_meze_submissions 
-                WHERE meze_id = ? AND student_id IN ($placeholders)";
 
-        $stmt = $conn->prepare($sql);
-        $types = 'i' . str_repeat('i', count($studentIds));
-        $params = array_merge([$mezeId], $studentIds);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+        // 1. Βρίσκουμε ποιοι έχουν υποβάλει
+        $stmtSub = $conn->prepare("SELECT DISTINCT student_id FROM aepp_meze_submissions WHERE meze_id = ?");
+        $stmtSub->bind_param("i", $mezeId);
+        $stmtSub->execute();
+        $resSub = $stmtSub->get_result();
+        $submittedIds = [];
+        while ($row = $resSub->fetch_assoc()) $submittedIds[] = (int)$row['student_id'];
+        $stmtSub->close();
+
+        // 2. Βρίσκουμε ποιοι έχουν βαθμολογηθεί
+        $stmtGrade = $conn->prepare("SELECT DISTINCT student_id FROM meze_grades WHERE meze_id = ? AND user_year = ?");
+        $stmtGrade->bind_param("is", $mezeId, $userYear);
+        $stmtGrade->execute();
+        $resGrade = $stmtGrade->get_result();
+        $gradedIds = [];
+        while ($row = $resGrade->fetch_assoc()) $gradedIds[] = (int)$row['student_id'];
+        $stmtGrade->close();
+
         $conn->close();
 
-        return count($studentIds) - ($row['subCount'] ?? 0);
+        $notSubmitted = 0;
+        $ungradedNotSubmitted = 0;
+
+        foreach ($studentIds as $sid) {
+            $sid = (int)$sid;
+            if (!in_array($sid, $submittedIds)) {
+                $notSubmitted++;
+                if (!in_array($sid, $gradedIds)) {
+                    $ungradedNotSubmitted++;
+                }
+            }
+        }
+
+        return ['total' => $notSubmitted, 'ungraded' => $ungradedNotSubmitted];
     }
 
     public function hasAnyExtension($mezeId, $userYear)

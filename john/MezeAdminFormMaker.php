@@ -3,6 +3,294 @@ include_once 'AdminFormMaker.php';
 
 class MezeAdminFormMaker extends AdminFormMaker
 {
+    private function normalizeString($str)
+    {
+        $str = strip_tags((string)$str);
+        $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $str = preg_replace('/^\d+[\.\)]\s*/u', '', trim($str));
+
+        // Αντικατάσταση κόμματος με τελεία (για δεκαδικούς αριθμούς π.χ. 2,5 -> 2.5)
+        $str = str_replace(',', '.', $str);
+
+        // ΑΠΟΛΥΤΟΣ ΚΑΘΑΡΙΣΜΟΣ: Κρατάμε ΜΟΝΟ γράμματα, αριθμούς, σημεία στίξης και σύμβολα.
+        // Αφαιρεί ΑΥΤΟΜΑΤΑ όλα τα κενά (spaces) και όλους τους κρυφούς χαρακτήρες.
+        $clean = preg_replace('/[^\p{L}\p{N}\p{P}\p{S}]/u', '', $str);
+        if ($clean !== null) {
+            $str = $clean;
+        } else {
+            // Εναλλακτική σε περίπτωση που η έκδοση PHP δεν υποστηρίζει τα παραπάνω flag
+            $str = preg_replace('/[\s]+/u', '', $str);
+            $str = preg_replace('/[\x00-\x1F\x7F\x{200B}-\x{200F}\x{FEFF}]/u', '', $str);
+        }
+
+        $str = mb_strtolower(trim($str), 'UTF-8');
+
+        $homoglyphs = [
+            'ά' => 'α',
+            'έ' => 'ε',
+            'ή' => 'η',
+            'ί' => 'ι',
+            'ό' => 'ο',
+            'ύ' => 'υ',
+            'ώ' => 'ω',
+            'ϊ' => 'ι',
+            'ϋ' => 'υ',
+            'ΰ' => 'υ',
+            'ς' => 'σ',
+            'a' => 'α',
+            'b' => 'β',
+            'e' => 'ε',
+            'z' => 'ζ',
+            'h' => 'η',
+            'i' => 'ι',
+            'k' => 'κ',
+            'm' => 'μ',
+            'n' => 'ν',
+            'o' => 'ο',
+            'p' => 'ρ',
+            't' => 'τ',
+            'x' => 'χ',
+            'y' => 'υ',
+            'u' => 'υ',
+            'v' => 'ν'
+        ];
+
+        return strtr($str, $homoglyphs);
+    }
+
+    private function getHighlightedStudentAnswer($studentText, $solutionHtml)
+    {
+        // 1. Extract correct answers from solution HTML
+        $correctAnswers = [];
+        $totalExpected = 0;
+        if (!empty($solutionHtml)) {
+            $dom = new DOMDocument();
+            // Use error suppression and mb_convert_encoding for robustness with HTML fragments
+            @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $solutionHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            $xpath = new DOMXPath($dom);
+
+            $grids = $xpath->query("//div[contains(@class, 'answer-grid')]");
+
+            if ($grids->length > 0) {
+                $algoCounter = 1;
+                foreach ($grids as $grid) {
+                    $algoNum = (string)$algoCounter;
+
+                    // Βρίσκουμε το αμέσως προηγούμενο group-header για να πάρουμε το νούμερο του Αλγορίθμου
+                    $header = $xpath->query("preceding::div[contains(@class, 'group-header')][1]", $grid)->item(0);
+                    if ($header && preg_match('/(\d+)/', $header->nodeValue, $matches)) {
+                        $algoNum = $matches[1];
+                    }
+
+                    $items = $xpath->query(".//div[contains(@class, 'answer-item')]", $grid);
+                    $ansCounter = 1;
+                    foreach ($items as $item) {
+                        $strong = $xpath->query(".//strong | .//*[contains(@class, 'ans-true')]", $item)->item(0);
+                        $textVal = $strong ? $strong->nodeValue : $item->nodeValue;
+                        $textVal = preg_replace('/^\d+\.\s*/', '', trim($textVal));
+                        $correctAnswers[$algoNum][$ansCounter] = trim($textVal);
+                        $ansCounter++;
+                        $totalExpected++;
+                    }
+                    $algoCounter++;
+                }
+            } else {
+                // Fallback για παλιά μορφή HTML
+                $headers = $xpath->query("//h5[contains(text(), 'Αλγόριθμος')] | //div[contains(@style, 'background-color')]//h5");
+                if ($headers->length > 0) {
+                    foreach ($headers as $header) {
+                        preg_match('/(\d+)/u', $header->nodeValue, $matches);
+                        $algoNum = $matches[1] ?? '1';
+
+                        $ansCounter = 1;
+                        $parent = $header->parentNode;
+
+                        $ol = $xpath->query(".//ol", $parent)->item(0);
+                        if (!$ol) {
+                            $ol = $xpath->query("following-sibling::ol[1]", $header)->item(0);
+                        }
+
+                        if ($ol) {
+                            $lis = $xpath->query(".//li", $ol);
+                            foreach ($lis as $li) {
+                                $strong = $xpath->query(".//strong", $li)->item(0);
+                                $textVal = $strong ? $strong->nodeValue : $li->nodeValue;
+                                $textVal = preg_replace('/^\d+[\.\)]\s*/u', '', trim($textVal));
+                                $correctAnswers[$algoNum][$ansCounter] = trim($textVal);
+                                $ansCounter++;
+                                $totalExpected++;
+                            }
+                        }
+                    }
+                } else {
+                    $ol = $xpath->query("//ol")->item(0);
+                    if ($ol) {
+                        $lis = $xpath->query(".//li", $ol);
+                        $ansCounter = 1;
+                        foreach ($lis as $li) {
+                            $strong = $xpath->query(".//strong", $li)->item(0);
+                            $textVal = $strong ? $strong->nodeValue : $li->nodeValue;
+                            $correctAnswers['1'][$ansCounter] = trim($textVal);
+                            $ansCounter++;
+                            $totalExpected++;
+                        }
+                    }
+                }
+            }
+        }
+
+        $isOldFormat = (strpos($studentText, '(*) ➔') !== false);
+        $isAutoGradable = ($totalExpected > 0 && !$isOldFormat);
+        $totalCorrect = 0;
+        $highlightedStudentText = '';
+
+        // 2. Parse student's answers and compare
+        $studentAnswers = [];
+        $mainComment = '';
+        $answersHtml = '';
+
+        $answersPartPos = stripos($studentText, "<div style='background:#f8f9fa;");
+        if ($answersPartPos === false) {
+            $answersPartPos = stripos($studentText, "Απαντήσεις στα κενά:");
+        }
+        if ($answersPartPos === false) {
+            $answersPartPos = stripos($studentText, "--- Αλγόριθμος");
+        }
+
+        if ($answersPartPos !== false) {
+            $mainComment = substr($studentText, 0, $answersPartPos);
+            if (substr($mainComment, -8) === "<br><br>") {
+                $mainComment = substr($mainComment, 0, -8);
+            }
+
+            $answersHtml = substr($studentText, $answersPartPos);
+
+            // ΜΑΓΙΚΗ ΛΥΣΗ: Μετατροπή των <br> σε πραγματικές αλλαγές γραμμής ΠΡΙΝ διαγραφούν τα HTML tags!
+            $answersHtml = preg_replace('/<br\s*\/?>/i', "\n", $answersHtml);
+
+            $answersOnlyText = trim(str_ireplace("Απαντήσεις στα κενά:", "", strip_tags($answersHtml)));
+
+            if ($isAutoGradable) {
+                // Χρήση preg_match_all αντί για preg_split για 100% ασφαλή απομόνωση των απαντήσεων
+                if (preg_match_all('/---\s*Αλγόριθμος\s*(\d+)\s*---(.*?)(?=(?:---\s*Αλγόριθμος|$))/su', $answersOnlyText, $algoMatches, PREG_SET_ORDER)) {
+                    foreach ($algoMatches as $match) {
+                        $algoNum = trim($match[1]);
+                        $lines = explode("\n", trim($match[2]));
+                        foreach ($lines as $line) {
+                            if (preg_match('/^(\d+)\.\s*(.*)$/u', trim($line), $matches)) {
+                                $studentAnswers[$algoNum][(int)$matches[1]] = trim($matches[2]);
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback αν λείπει το tag --- Αλγόριθμος X --- (όλα πάνε στον αλγόριθμο 1)
+                    $lines = explode("\n", trim($answersOnlyText));
+                    foreach ($lines as $line) {
+                        if (preg_match('/^(\d+)\.\s*(.*)$/u', trim($line), $matches)) {
+                            $studentAnswers['1'][(int)$matches[1]] = trim($matches[2]);
+                        }
+                    }
+                }
+            }
+        } else {
+            $mainComment = $studentText;
+        }
+
+        if (trim($mainComment) !== '') {
+            $highlightedStudentText .= nl2br(htmlspecialchars(trim($mainComment))) . "<br><br>";
+        } elseif (!$isAutoGradable && empty(trim($studentText))) {
+            return ['html' => "<i>Χωρίς σχόλια.</i>", 'autoGrade' => ''];
+        }
+
+        if ($isAutoGradable) {
+            $highlightedStudentText .= "<div style='background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);'>";
+            $highlightedStudentText .= "<h6 class='fw-bold mb-3 text-secondary'><i class='fa fa-list-ol'></i> Αναλυτικές Απαντήσεις:</h6>";
+            foreach ($correctAnswers as $algoNum => $blanks) {
+                if (count($correctAnswers) > 1 || isset($studentAnswers[$algoNum])) {
+                    $highlightedStudentText .= "<div class='fw-bold text-primary mt-3 mb-2 border-bottom pb-1'>Αλγόριθμος $algoNum</div>";
+                }
+                foreach ($blanks as $ansNum => $correctAnswer) {
+                    $studentAns = isset($studentAnswers[$algoNum][$ansNum]) ? $studentAnswers[$algoNum][$ansNum] : '';
+                    $pointValue = ($totalExpected > 0) ? (20 / $totalExpected) : 0;
+
+                    $btnHtml = "<button type='button' class='btn btn-outline-success btn-sm shadow-sm px-2 py-1 ms-1 btn-mark-correct' onclick='markBlankCorrect(this, " . number_format($pointValue, 4, '.', '') . ")' title='Μαρκάρισμα ως σωστό (Παράκαμψη)'><i class='fa fa-check'></i></button>";
+                    $btnHtml .= "<button type='button' class='btn btn-outline-danger btn-sm shadow-sm px-2 py-1 ms-1 btn-undo-correct d-none' onclick='undoBlankCorrect(this, " . number_format($pointValue, 4, '.', '') . ")' title='Αναίρεση (Επαναφορά)'><i class='fa fa-undo'></i></button>";
+
+                    $dispStudentAns = htmlspecialchars(html_entity_decode($studentAns, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+                    $dispCorrectAns = htmlspecialchars(html_entity_decode($correctAnswer, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+
+                    if ($studentAns !== '') {
+                        if ($this->normalizeString($studentAns) == $this->normalizeString($correctAnswer)) {
+                            $totalCorrect++;
+                            $highlightedStudentText .= "
+                            <div class='d-flex align-items-stretch mb-2 p-2 bg-white border border-success rounded shadow-sm'>
+                                <div class='d-flex align-items-center'>
+                                    <span class='badge bg-success rounded-pill me-3 px-3 py-2'><i class='fa fa-check'></i> $ansNum</span>
+                                </div>
+                                <div class='d-flex flex-grow-1 align-items-center border-start ps-3'>
+                                    <div>
+                                        <span class='text-success small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Απάντηση Μαθητή (Σωστή):</span>
+                                        <span class='fw-bold text-success' style='font-size:1.1em;'>" . $dispStudentAns . "</span>
+                                    </div>
+                                </div>
+                            </div>";
+                        } else {
+                            $highlightedStudentText .= "
+                            <div class='wrong-answer-row d-flex justify-content-between align-items-stretch mb-2 p-2 bg-white border border-danger rounded shadow-sm'>
+                                <div class='d-flex align-items-center'>
+                                    <span class='wrong-icon badge bg-danger rounded-pill me-3 px-3 py-2'><i class='fa fa-times'></i> $ansNum</span>
+                                </div>
+                                <div class='d-flex flex-grow-1 align-items-center border-start ps-3 me-3'>
+                                    <div class='me-4' style='flex: 1;'>
+                                        <span class='text-danger small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Απάντηση Μαθητή:</span>
+                                        <span class='text-danger fw-bold' style='font-size:1.1em; text-decoration: line-through; opacity: 0.8;'>" . $dispStudentAns . "</span>
+                                    </div>
+                                    <div style='flex: 1;'>
+                                        <span class='text-success small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Σωστή Λύση:</span>
+                                        <span class='correct-hint text-success fw-bold' style='font-size:1.1em;'>" . $dispCorrectAns . "</span>
+                                    </div>
+                                </div>
+                                <div class='d-flex align-items-center border-start ps-2'>$btnHtml</div>
+                            </div>";
+                        }
+                    } else {
+                        $highlightedStudentText .= "
+                        <div class='wrong-answer-row d-flex justify-content-between align-items-stretch mb-2 p-2 bg-white border border-warning rounded shadow-sm'>
+                            <div class='d-flex align-items-center'>
+                                <span class='wrong-icon badge bg-warning text-dark rounded-pill me-3 px-3 py-2'><i class='fa fa-minus'></i> $ansNum</span>
+                            </div>
+                                <div class='d-flex flex-grow-1 align-items-center border-start ps-3 me-3'>
+                                    <div class='me-4' style='flex: 1;'>
+                                        <span class='text-muted small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Απάντηση Μαθητή:</span>
+                                        <span class='text-muted fst-italic' style='font-size:1em;'>Δεν απαντήθηκε</span>
+                                    </div>
+                                    <div style='flex: 1;'>
+                                        <span class='text-success small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Σωστή Λύση:</span>
+                                        <span class='correct-hint text-success fw-bold' style='font-size:1.1em;'>" . $dispCorrectAns . "</span>
+                                    </div>
+                                </div>
+                                <div class='d-flex align-items-center border-start ps-2'>$btnHtml</div>
+                        </div>";
+                    }
+                }
+            }
+            $highlightedStudentText .= "</div>";
+        } elseif ($answersPartPos !== false) {
+            $highlightedStudentText .= $answersHtml;
+        }
+
+        $autoGrade = '';
+        if ($isAutoGradable && $totalExpected > 0) {
+            $rawGrade = ($totalCorrect / $totalExpected) * 20;
+            $autoGrade = round($rawGrade * 2) / 2; // Στρογγυλοποίηση στο πλησιέστερο 0.5
+        }
+
+        return [
+            'html' => $highlightedStudentText,
+            'autoGrade' => (string)$autoGrade
+        ];
+    }
+
     public function listMezedakia($result, $dbHandler)
     {
 ?>
@@ -12,9 +300,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                 <input type="text" id="mezeFilter" class="form-control w-25 shadow-sm" placeholder="Αναζήτηση...">
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped shadow-sm align-middle" id="mezeTable">
-                    <thead class="table-dark text-center">
+            <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
+                <table class="table table-bordered table-striped align-middle mb-0" id="mezeTable">
+                    <thead class="table-dark text-center" style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 5%">#</th>
                             <th style="width: 10%">Ημερομηνία</th>
@@ -65,13 +353,21 @@ class MezeAdminFormMaker extends AdminFormMaker
 
                                 if (!empty($userYear)) {
                                     $ungradedCount = $dbHandler->getUngradedSubmissionsCountForMeze($mezeId, $userYear);
-                                    $notSubmittedCount = $dbHandler->getNotSubmittedCount($mezeId, $userYear);
+                                    $notSubmittedData = $dbHandler->getNotSubmittedCount($mezeId, $userYear);
+                                    $notSubmittedCount = is_array($notSubmittedData) ? $notSubmittedData['total'] : $notSubmittedData;
+                                    $ungradedNotSubmittedCount = is_array($notSubmittedData) ? $notSubmittedData['ungraded'] : 0;
+
                                     if ($ungradedCount > 0) {
                                         $badgeHtml .= '<br><span class="badge bg-warning text-dark mt-1" style="font-size: 0.75rem;"><i class="fa fa-exclamation-triangle"></i> ' . $ungradedCount . ' προς Βαθμολόγηση</span>';
                                         if (!$isFuture) $rowStyle = 'style="background-color: #fff3cd;"';
                                     }
                                     if ($notSubmittedCount > 0 && !$isFuture) {
-                                        $badgeHtml .= '<br><span class="badge bg-light text-muted border mt-1" style="font-size: 0.75rem;"><i class="fa fa-hourglass-o"></i> ' . $notSubmittedCount . ' δεν απάντησαν</span>';
+                                        if ($ungradedNotSubmittedCount > 0) {
+                                            $badgeHtml .= '<br><span class="badge bg-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-exclamation-circle"></i> ' . $notSubmittedCount . ' δεν απάντησαν (' . $ungradedNotSubmittedCount . ' αβαθμολόγητοι)</span>';
+                                            $rowStyle = 'style="background-color: #f8d7da;"';
+                                        } else {
+                                            $badgeHtml .= '<br><span class="badge bg-light text-muted border mt-1" style="font-size: 0.75rem;"><i class="fa fa-hourglass-o"></i> ' . $notSubmittedCount . ' δεν απάντησαν (βαθμολογήθηκαν)</span>';
+                                        }
                                     }
                                 }
 
@@ -259,7 +555,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                             <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
                         </button>
                     </div>
-                    <textarea name="mezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
+                    <textarea name="mezeText" id="newMezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
 
                     <!-- Το Bootstrap Modal για τον AEPP Builder -->
                     <div class="modal fade" id="builderModal" tabindex="-1" aria-labelledby="builderModalLabel" aria-hidden="true">
@@ -270,7 +566,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body p-0">
-                                    <iframe src="../builder.html" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
+                                    <iframe src="../builder.html" id="builderIframeNew" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
                                 </div>
                             </div>
                         </div>
@@ -298,6 +594,27 @@ class MezeAdminFormMaker extends AdminFormMaker
         <script>
             function togglePanFields(checkbox) {
                 document.getElementById('panelliniesFields').style.display = checkbox.checked ? 'block' : 'none';
+            }
+
+            // Αυτόματη φόρτωση της εκφώνησης στον Builder όταν ανοίγει το Modal (Προσθήκη)
+            var builderModalNew = document.getElementById('builderModal');
+            if (builderModalNew) {
+                builderModalNew.addEventListener('shown.bs.modal', function() {
+                    var iframe = document.getElementById('builderIframeNew');
+                    var textarea = document.getElementById('newMezeText');
+                    if (iframe && iframe.contentWindow && textarea) {
+                        var builderInput = iframe.contentWindow.document.getElementById('rawInput');
+                        if (builderInput && builderInput.value.trim() === '' && textarea.value.trim() !== '') {
+                            // Αυτόματη φόρτωση ΜΟΝΟ αν το κείμενο έχει παραχθεί εξ ολοκλήρου από τον Builder
+                            if (textarea.value.indexOf('AEPP_RAW_START') !== -1) {
+                                builderInput.value = textarea.value;
+                                if (typeof iframe.contentWindow.recoverFromHTML === 'function') {
+                                    iframe.contentWindow.recoverFromHTML(true);
+                                }
+                            }
+                        }
+                    }
+                });
             }
             // JS για να μην κλείνει το dropdown όταν επιλέγεις checkboxes
             $(document).on('click', '.dropdown-menu', function(e) {
@@ -439,7 +756,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                             <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
                         </button>
                     </div>
-                    <textarea name="mezeText" class="form-control" rows="5"><?php echo $row['mezeText']; ?></textarea>
+                    <textarea name="mezeText" id="editMezeText" class="form-control" rows="5"><?php echo $row['mezeText']; ?></textarea>
 
                     <!-- Το Bootstrap Modal για τον AEPP Builder (Edit) -->
                     <div class="modal fade" id="builderModalEdit" tabindex="-1" aria-labelledby="builderModalEditLabel" aria-hidden="true">
@@ -450,7 +767,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body p-0">
-                                    <iframe src="../builder.html" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
+                                    <iframe src="../builder.html" id="builderIframeEdit" style="width: 100%; height: 80vh; border: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></iframe>
                                 </div>
                             </div>
                         </div>
@@ -519,6 +836,27 @@ class MezeAdminFormMaker extends AdminFormMaker
         <script>
             function togglePanFieldsEdit(checkbox) {
                 document.getElementById('panelliniesFieldsEdit').style.display = checkbox.checked ? 'block' : 'none';
+            }
+
+            // Αυτόματη φόρτωση της εκφώνησης στον Builder όταν ανοίγει το Modal (Επεξεργασία)
+            var builderModalEdit = document.getElementById('builderModalEdit');
+            if (builderModalEdit) {
+                builderModalEdit.addEventListener('shown.bs.modal', function() {
+                    var iframe = document.getElementById('builderIframeEdit');
+                    var textarea = document.getElementById('editMezeText');
+                    if (iframe && iframe.contentWindow && textarea) {
+                        var builderInput = iframe.contentWindow.document.getElementById('rawInput');
+                        if (builderInput && builderInput.value.trim() === '' && textarea.value.trim() !== '') {
+                            // Αυτόματη φόρτωση ΜΟΝΟ αν το κείμενο έχει παραχθεί εξ ολοκλήρου από τον Builder
+                            if (textarea.value.indexOf('AEPP_RAW_START') !== -1) {
+                                builderInput.value = textarea.value;
+                                if (typeof iframe.contentWindow.recoverFromHTML === 'function') {
+                                    iframe.contentWindow.recoverFromHTML(true);
+                                }
+                            }
+                        }
+                    }
+                });
             }
         </script>
     <?php
@@ -596,16 +934,17 @@ class MezeAdminFormMaker extends AdminFormMaker
             $gradeData = isset($gradesByStudent[$stId]) ? $gradesByStudent[$stId] : null;
 
             $isGraded = false;
+            $isResubmission = false;
             if ($gradeData) {
                 $isGraded = true; // Θεωρούμε τον μαθητή βαθμολογημένο εφόσον υπάρχει εγγραφή βαθμού
 
                 // Αν υπάρχει υποβολή πιο πρόσφατη από τη βαθμολόγηση, επιστρέφει στα εκκρεμή
-                // Προστέθηκε μικρή ανοχή 2 ωρών (7200 δευτ.) για αποφυγή Timezone Bugs μεταξύ PHP και MySQL
                 if ($subData && !empty($gradeData['updated_at'])) {
                     $updTime = strtotime($gradeData['updated_at']);
                     $subTime = strtotime($subData['submission_date']);
-                    if ($updTime > 0 && $subTime > 0 && $subTime > ($updTime + 7200)) {
+                    if ($updTime > 0 && $subTime > 0 && $subTime > $updTime) {
                         $isGraded = false;
+                        $isResubmission = true;
                     }
                 }
             }
@@ -614,7 +953,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                 $gradedSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student];
             } else {
                 // Περνάμε και το grade (αν υπάρχει) για να το προφορτώσουμε στο UI των εκκρεμών
-                $pendingSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student];
+                $pendingSubmissions[] = ['sub' => $subData, 'grade' => $gradeData, 'student' => $student, 'isResubmission' => $isResubmission];
             }
         }
     ?>
@@ -658,10 +997,27 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $currGrade = isset($item['grade']['grade_value']) ? $item['grade']['grade_value'] : '';
                     $currComm = isset($item['grade']['teacher_comments']) ? htmlspecialchars($item['grade']['teacher_comments']) : '';
                     $isAllowed = $dbHandler->isSubmissionAllowed($stId, $mezeId, $userYear);
+                    $isResubmission = isset($item['isResubmission']) && $item['isResubmission'];
+
+                    // Αν είναι επανυποβολή, αγνοούμε (καθαρίζουμε) τον παλιό βαθμό και τα σχόλια
+                    if ($isResubmission) {
+                        $currGrade = '';
+                        $currComm = '';
+                    }
+
+                    $highlightData = $this->getHighlightedStudentAnswer($sub['student_text'] ?? '', $mezeData['mezeSolution'] ?? '');
+                    $highlightedHtml = $highlightData['html'];
+                    $suggestedGrade = $highlightData['autoGrade'];
+                    $displayGrade = ($suggestedGrade !== '') ? $suggestedGrade : $currGrade;
                 ?>
                     <div class="card mb-4 shadow-sm border-primary">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
-                            <strong><?php echo $st['name'] . " " . $st['lastName']; ?></strong>
+                            <strong>
+                                <?php echo $st['name'] . " " . $st['lastName']; ?>
+                                <?php if ($isResubmission): ?>
+                                    <span class="badge bg-warning text-dark ms-2"><i class="fa fa-refresh"></i> Επανυποβολή</span>
+                                <?php endif; ?>
+                            </strong>
                             <small><?php echo ($sub) ? date('d/m/Y H:i', strtotime($sub['submission_date'])) : '<span class="badge bg-warning text-dark">Δεν δόθηκε απάντηση</span>'; ?></small>
                         </div>
                         <div class="card-body">
@@ -669,7 +1025,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <div class="row">
                                     <div class="col-md-<?php echo (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])) ? '6' : '12'; ?>">
                                         <h6 class="text-muted small fw-bold">Απάντηση Μαθητή:</h6>
-                                        <p class="small bg-light p-2 border rounded" style="max-height: 250px; overflow-y: auto;"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
+                                        <div class="small bg-light p-2 border rounded" style="height: 250px; min-height: 100px; overflow-y: auto; resize: vertical;">
+                                            <?php echo $highlightedHtml; ?>
+                                        </div>
                                         <div class="row mb-3">
                                             <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
                                                     <div class="col-md-4 mb-2">
@@ -684,7 +1042,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <?php if (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])): ?>
                                         <div class="col-md-6">
                                             <h6 class="text-success small fw-bold">Σωστή Λύση:</h6>
-                                            <div class="small bg-white p-2 border border-success rounded" style="max-height: 250px; overflow-y: auto;">
+                                            <div class="small bg-white p-2 border border-success rounded" style="height: 250px; min-height: 100px; overflow-y: auto; resize: vertical;">
                                                 <?php echo $mezeData['mezeSolution']; ?>
                                                 <?php if (!empty($mezeData['mezeSolutionImage'])): ?>
                                                     <div class="mt-2"><a href="../images/mezedakia/<?php echo $mezeData['mezeSolutionImage']; ?>" target="_blank" class="btn btn-sm btn-outline-success w-100"><i class="fa fa-image"></i> Προβολή Εικόνας Λύσης</a></div>
@@ -711,7 +1069,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
                                 <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
                                 <div class="d-flex align-items-start">
-                                    <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:80px" placeholder="Βαθμός" value="<?php echo $currGrade; ?>" required>
+                                    <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:80px" placeholder="Βαθμός" value="<?php echo $displayGrade; ?>" required>
                                     <div style="flex:1;">
                                         <textarea name="teacher_comments" id="comm_<?php echo $stId; ?>" class="form-control form-control-sm mb-1" rows="2" placeholder="Σχόλια..."><?php echo $currComm; ?></textarea>
                                         <div class="d-flex flex-wrap">
@@ -719,7 +1077,12 @@ class MezeAdminFormMaker extends AdminFormMaker
                                             <button type="button" class="btn btn-outline-secondary btn-mini me-1 mb-1" onclick="document.getElementById('comm_<?php echo $stId; ?>').value='Πολύ καλή προσπάθεια, πρόσεξε λίγο περισσότερο τη σύνταξη.';">✍️ Σύνταξη</button>
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-success px-4 ms-2">OK</button>
+                                    <div class="d-flex flex-column">
+                                        <button type="submit" class="btn btn-sm btn-success px-3 ms-2 mb-1">OK</button>
+                                        <button type="button" class="btn btn-sm btn-primary ms-2" onclick="quickGrade20(this)" title="Γρήγορη Βαθμολόγηση με 20/20">
+                                            <i class="fa fa-star"></i> 20
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -737,6 +1100,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                         $grade = $item['grade'];
                         $st = $item['student'];
                         $stId = $st['studentId'];
+
+                        $highlightData = $this->getHighlightedStudentAnswer($sub['student_text'] ?? '', $mezeData['mezeSolution'] ?? '');
+                        $highlightedHtml = $highlightData['html'];
                     ?>
                         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2" style="cursor: pointer; border-left: 5px solid #28a745;" data-bs-toggle="collapse" data-bs-target="#editRow<?php echo $stId; ?>">
                             <div>
@@ -750,7 +1116,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <div class="row">
                                     <div class="col-md-<?php echo (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])) ? '6' : '12'; ?>">
                                         <h6 class="fw-bold text-muted small text-uppercase">Απάντηση:</h6>
-                                        <p class="small bg-white p-2 border rounded" style="max-height: 200px; overflow-y: auto;"><?php echo nl2br($sub['student_text'] ?: "<i>Χωρίς σχόλια.</i>"); ?></p>
+                                        <div class="small bg-white p-2 border rounded" style="height: 200px; min-height: 100px; overflow-y: auto; resize: vertical;">
+                                            <?php echo $highlightedHtml; ?>
+                                        </div>
                                         <div class="row mb-2">
                                             <?php foreach (['file1', 'file2', 'file3'] as $f): if (!empty($sub[$f])): ?>
                                                     <div class="col-md-4"><a href="../uploads/submissions/<?php echo $sub[$f]; ?>" target="_blank" class="btn btn-sm btn-outline-secondary w-100 text-truncate"><i class="fa fa-image"></i> <?php echo $sub[$f]; ?></a></div>
@@ -761,7 +1129,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <?php if (!empty($mezeData['mezeSolution']) || !empty($mezeData['mezeSolutionImage'])): ?>
                                         <div class="col-md-6">
                                             <h6 class="fw-bold text-success small text-uppercase">Σωστή Λύση:</h6>
-                                            <div class="small bg-white p-2 border border-success rounded" style="max-height: 200px; overflow-y: auto;">
+                                            <div class="small bg-white p-2 border border-success rounded" style="height: 200px; min-height: 100px; overflow-y: auto; resize: vertical;">
                                                 <?php echo $mezeData['mezeSolution']; ?>
                                                 <?php if (!empty($mezeData['mezeSolutionImage'])): ?>
                                                     <div class="mt-2"><a href="../images/mezedakia/<?php echo $mezeData['mezeSolutionImage']; ?>" target="_blank" class="btn btn-sm btn-outline-success w-100"><i class="fa fa-image"></i> Προβολή Εικόνας Λύσης</a></div>
@@ -785,6 +1153,151 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </div>
             </div>
         </div>
+        <script>
+            function quickGrade20(buttonEl) {
+                const form = buttonEl.closest('form');
+                if (form) {
+                    const gradeInput = form.querySelector('input[name="grade"]');
+                    const commentTextarea = form.querySelector('textarea[name="teacher_comments"]');
+
+                    if (gradeInput) {
+                        gradeInput.value = 20;
+                    }
+                    if (commentTextarea && commentTextarea.value.trim() === '') {
+                        commentTextarea.value = 'Εξαιρετική δουλειά! Μπράβο.';
+                    }
+
+                    // Αποθήκευση της θέσης κύλισης (scroll)
+                    sessionStorage.setItem('mezeScrollPos', window.scrollY);
+
+                    buttonEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+                    buttonEl.disabled = true;
+                    form.submit();
+                }
+            }
+
+            function markBlankCorrect(btn, points) {
+                const container = btn.closest('.card-body') || btn.closest('.collapse');
+                if (container) {
+                    const gradeInput = container.querySelector('input[name="grade"]');
+                    if (gradeInput) {
+                        let currentVal = parseFloat(gradeInput.value) || 0;
+                        let newVal = currentVal + points;
+                        if (newVal > 20) newVal = 20;
+                        gradeInput.value = (Math.round(newVal * 2) / 2).toFixed(1).replace('.0', '');
+
+                        // Οπτικό εφέ ανανέωσης στον βαθμό
+                        gradeInput.style.transition = 'background-color 0.3s';
+                        gradeInput.style.backgroundColor = '#d4edda';
+                        setTimeout(() => {
+                            gradeInput.style.backgroundColor = '';
+                        }, 800);
+                    }
+                }
+
+                const row = btn.closest('.wrong-answer-row');
+                if (row) {
+                    // Αποθήκευση της αρχικής κατάστασης αν δεν έχει αποθηκευτεί
+                    if (typeof row.dataset.originalBorder === 'undefined') {
+                        row.dataset.originalBorder = row.classList.contains('border-warning') ? 'border-warning' : (row.classList.contains('border-danger') ? 'border-danger' : '');
+                        const icon = row.querySelector('.wrong-icon');
+                        if (icon) {
+                            row.dataset.originalIconBg = icon.classList.contains('bg-warning') ? 'bg-warning' : 'bg-danger';
+                            row.dataset.originalIconText = icon.classList.contains('text-dark') ? 'text-dark' : '';
+                            row.dataset.originalIconHtml = icon.innerHTML;
+                            row.dataset.originalColor = icon.style.color || '';
+                        }
+                    }
+
+                    const icon = row.querySelector('.wrong-icon');
+                    if (icon) {
+                        if (icon.classList.contains('badge')) {
+                            icon.innerHTML = '<i class="fa fa-check"></i> ' + icon.textContent.trim();
+                            icon.classList.remove('bg-danger', 'bg-warning', 'text-dark');
+                            icon.classList.add('bg-success', 'text-white');
+                        } else {
+                            icon.innerHTML = '✔';
+                            icon.style.color = '#198754';
+                        }
+                    }
+                    const hint = row.querySelector('.correct-hint');
+                    if (hint) {
+                        hint.style.textDecoration = 'line-through';
+                        hint.style.opacity = '0.5';
+                    }
+                    row.classList.remove('border-danger', 'border-warning');
+                    row.classList.add('border-success');
+
+                    // Εναλλαγή Κουμπιών
+                    btn.classList.add('d-none');
+                    const undoBtn = row.querySelector('.btn-undo-correct');
+                    if (undoBtn) undoBtn.classList.remove('d-none');
+                }
+            }
+
+            function undoBlankCorrect(btn, points) {
+                const container = btn.closest('.card-body') || btn.closest('.collapse');
+                if (container) {
+                    const gradeInput = container.querySelector('input[name="grade"]');
+                    if (gradeInput) {
+                        let currentVal = parseFloat(gradeInput.value) || 0;
+                        let newVal = currentVal - points;
+                        if (newVal < 0) newVal = 0;
+                        gradeInput.value = (Math.round(newVal * 2) / 2).toFixed(1).replace('.0', '');
+
+                        gradeInput.style.transition = 'background-color 0.3s';
+                        gradeInput.style.backgroundColor = '#f8d7da';
+                        setTimeout(() => {
+                            gradeInput.style.backgroundColor = '';
+                        }, 800);
+                    }
+                }
+
+                const row = btn.closest('.wrong-answer-row');
+                if (row) {
+                    const icon = row.querySelector('.wrong-icon');
+                    if (icon && typeof row.dataset.originalIconHtml !== 'undefined') {
+                        icon.innerHTML = row.dataset.originalIconHtml;
+                        icon.classList.remove('bg-success', 'text-white');
+                        if (row.dataset.originalIconBg) icon.classList.add(row.dataset.originalIconBg);
+                        if (row.dataset.originalIconText) icon.classList.add(row.dataset.originalIconText);
+                        if (row.dataset.originalColor) icon.style.color = row.dataset.originalColor;
+                    }
+                    const hint = row.querySelector('.correct-hint');
+                    if (hint) {
+                        hint.style.textDecoration = '';
+                        hint.style.opacity = '1';
+                    }
+                    row.classList.remove('border-success');
+                    if (row.dataset.originalBorder) {
+                        row.classList.add(row.dataset.originalBorder);
+                    }
+
+                    // Εναλλαγή Κουμπιών
+                    btn.classList.add('d-none');
+                    const markBtn = row.querySelector('.btn-mark-correct');
+                    if (markBtn) markBtn.classList.remove('d-none');
+                }
+            }
+
+            // Αποθήκευση της θέσης του scroll και για τα κανονικά κουμπιά (OK / Ενημέρωση)
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    sessionStorage.setItem('mezeScrollPos', window.scrollY);
+                });
+            });
+
+            // Επαναφορά του scroll στο ίδιο σημείο μόλις φορτώσει η σελίδα (ή κατά την επιστροφή με το Back)
+            document.addEventListener('DOMContentLoaded', function() {
+                const scrollPos = sessionStorage.getItem('mezeScrollPos');
+                if (scrollPos) {
+                    setTimeout(() => {
+                        window.scrollTo(0, parseInt(scrollPos));
+                    }, 50);
+                    sessionStorage.removeItem('mezeScrollPos');
+                }
+            });
+        </script>
     <?php
     }
 

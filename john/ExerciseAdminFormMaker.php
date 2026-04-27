@@ -132,9 +132,16 @@ class ExerciseAdminFormMaker extends AdminFormMaker
                 </thead>
                 <tbody>
                     <?php foreach ($tasks as $task): ?>
-                        <tr>
+                        <?php
+                        $ungradedCount = $task['total_students'] - $task['graded_count'];
+                        $rowStyle = ($ungradedCount > 0) ? 'style="background-color: #f8d7da;"' : '';
+                        ?>
+                        <tr <?php echo $rowStyle; ?>>
                             <td><?php echo date('d/m/Y', strtotime($task['date_added'])); ?></td>
-                            <td><?php echo $task['group_name']; ?></td>
+                            <td>
+                                <strong><?php echo $task['group_name']; ?></strong><br>
+                                <span class="badge <?php echo ($ungradedCount > 0) ? 'bg-danger' : 'bg-success'; ?> mt-1"><?php echo $task['graded_count']; ?>/<?php echo $task['total_students']; ?> Βαθμολογήθηκαν</span>
+                            </td>
                             <td><?php echo $task['task_text']; ?></td>
                             <td>
                                 <?php if (!empty($task['task_file'])): ?>
