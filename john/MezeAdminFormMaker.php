@@ -27,7 +27,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                         <?php
                         if ($result && $result->num_rows > 0) {
                             $result->data_seek(0);
+                            $mezeCount = 0;
                             while ($row = $result->fetch_assoc()):
+                                $mezeCount++;
+                                $hiddenClass = ($mezeCount > 15) ? 'd-none hidden-admin-meze-item' : '';
                                 $mezeId = $row['mezeId'];
                                 $mTimestamp = strtotime($row['mezeDate']);
                                 $solTimestamp = strtotime($row['solutionDate'] ?? '');
@@ -81,7 +84,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $rowStyle = 'style="background-color: #e9f2fd; color: #495057;"';
                                 }
                         ?>
-                                <tr <?php echo $rowStyle; ?> class="align-middle">
+                                <tr <?php echo $rowStyle; ?> class="align-middle <?php echo $hiddenClass; ?>">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
                                     <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
                                     <td class="text-center small">
@@ -112,6 +115,33 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </tbody>
                 </table>
             </div>
+
+            <?php if (isset($mezeCount) && $mezeCount > 15): ?>
+                <div class="text-center my-4" id="loadMoreAdminMezeContainer">
+                    <button class="btn btn-outline-primary shadow-sm font-weight-bold px-4" onclick="loadMoreAdminMezedakia()">
+                        <i class="fa fa-arrow-down"></i> Εμφάνιση παλαιότερων (<?php echo ($mezeCount - 15); ?>)
+                    </button>
+                </div>
+                <script>
+                    function loadMoreAdminMezedakia() {
+                        document.querySelectorAll(".hidden-admin-meze-item").forEach(function(el) {
+                            el.classList.remove("d-none");
+                        });
+                        var container = document.getElementById("loadMoreAdminMezeContainer");
+                        if (container) container.style.display = "none";
+                    }
+
+                    // Αν ο χρήστης ξεκινήσει να γράφει στην αναζήτηση, εμφανίζουμε όλα τα παλιά μεζεδάκια 
+                    var filterInput = document.getElementById('mezeFilter');
+                    if (filterInput) {
+                        filterInput.addEventListener('input', function() {
+                            if (this.value.trim() !== '') {
+                                loadMoreAdminMezedakia();
+                            }
+                        });
+                    }
+                </script>
+            <?php endif; ?>
         </div>
     <?php
     }

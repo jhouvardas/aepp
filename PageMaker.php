@@ -534,8 +534,11 @@ class PageMaker
 
             echo '<div class="accordion" id="mezedakiaAccordion">';
             $isFirst = true; // Flag για να ανοίξουμε μόνο το πρώτο
+            $mezeCount = 0; // Μετρητής για τα μεζεδάκια
 
             while ($row = $result->fetch_assoc()) {
+                $mezeCount++;
+                $hiddenClass = ($mezeCount > 10) ? 'd-none hidden-meze-item' : '';
                 $mId = $row['mezeId'];
                 $now = new DateTime();
                 $solDate = new DateTime($row['solutionDate']);
@@ -563,7 +566,7 @@ class PageMaker
                 $showClass = $isFirst ? 'show' : ''; // Το πρώτο είναι ανοιχτό
                 $collapsedClass = $isFirst ? '' : 'collapsed'; // Το πρώτο δεν είναι collapsed
             ?>
-                <div class="container-fluid p-0 mt-2 mb-2">
+                <div class="container-fluid p-0 mt-2 mb-2 <?php echo $hiddenClass; ?>">
                     <div class="card shadow-sm border-warning meze-card border-0">
                         <!-- Η κεφαλίδα λειτουργεί πλέον ως Toggle για το Accordion -->
                         <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center meze-header <?php echo $collapsedClass; ?>"
@@ -592,7 +595,7 @@ class PageMaker
                             <div class="card-body p-2">
                                 <?php if (!empty($row['mezeImage'])): ?>
                                     <div class="text-center mb-3">
-                                        <img src="images/mezedakia/<?php echo $row['mezeImage']; ?>" class="img-fluid rounded border shadow-sm" style="max-width: 100%;">
+                                        <img src="images/mezedakia/<?php echo $row['mezeImage']; ?>" loading="lazy" class="img-fluid rounded border shadow-sm" style="max-width: 100%;">
                                     </div>
                                 <?php endif; ?>
 
@@ -660,7 +663,7 @@ class PageMaker
                                             <div class="p-2 bg-light border rounded shadow-sm text-left">
                                                 <?php if (!empty($row['mezeSolutionImage'])): ?>
                                                     <div class="text-center mb-2">
-                                                        <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" class="img-fluid rounded border border-success">
+                                                        <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" loading="lazy" class="img-fluid rounded border border-success">
                                                     </div>
                                                 <?php endif; ?>
                                                 <div class="solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
@@ -676,6 +679,25 @@ class PageMaker
                 $isFirst = false; // Μετά το πρώτο, όλα τα επόμενα θα είναι κλειστά
             }
             echo '</div>';
+
+            // Αν υπάρχουν πάνω από 10 μεζεδάκια, εμφάνισε το κουμπί "Load More"
+            if ($mezeCount > 10) {
+                echo '
+                <div class="text-center my-4" id="loadMoreMezeContainer">
+                    <button class="btn btn-outline-primary btn-lg shadow-sm font-weight-bold px-4" onclick="loadMoreMezedakia()">
+                        <i class="fa fa-arrow-down"></i> Εμφάνιση παλαιότερων (' . ($mezeCount - 10) . ')
+                    </button>
+                </div>
+                <script>
+                    function loadMoreMezedakia() {
+                        document.querySelectorAll(".hidden-meze-item").forEach(function(el) {
+                            el.classList.remove("d-none");
+                        });
+                        document.getElementById("loadMoreMezeContainer").style.display = "none";
+                    }
+                </script>
+                ';
+            }
         }
     }
 }

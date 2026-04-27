@@ -818,7 +818,7 @@
             break;
 
         case 'save_group_task':
-            $db->saveGroupTask($_POST['group_id'], $_POST['task_text'], $_POST['book_id'], $_FILES['task_file']);
+            $db->saveGroupTask($_POST['group_id'], $_POST['task_text'], $_POST['book_id'] ?? null, $_FILES['task_file'] ?? null);
             echo "<script>window.location.href='index.php?action=assign_tasks';</script>";
             break;
 
@@ -840,10 +840,73 @@
 
         case 'save_task_grades':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                foreach ($_POST['grades'] as $stId => $grade) {
-                    if ($grade !== "") $db->saveTaskGrade($_POST['task_id'], $stId, $grade, $_POST['comments'][$stId]);
+                $taskId = $_POST['task_id'];
+                $sendEmails = isset($_POST['send_emails']) && $_POST['send_emails'] == '1';
+
+                $task = $db->getTaskById($taskId);
+                $taskName = $task ? mb_substr(strip_tags($task['task_text']), 0, 60) . "..." : "Ομαδική Εργασία";
+                $students = $db->getTutorStudents($userYear);
+
+                if ($sendEmails) {
+                    require_once '../phpmailer/class.phpmailer.php';
+                    require_once '../phpmailer/class.smtp.php';
+                    require_once 'config.php';
                 }
-                echo "<script>window.location.href='index.php?action=list_all_tasks';</script>";
+
+                // Φέρνουμε τους υπάρχοντες βαθμούς για να ελέγξουμε αν υπήρξε αλλαγή
+                $existingGrades = $db->getTaskGrades($taskId);
+                $emailCount = 0;
+
+                foreach ($_POST['grades'] as $stId => $grade) {
+                    $comment = $_POST['comments'][$stId] ?? '';
+                    if ($grade !== "") {
+                        $oldGrade = isset($existingGrades[$stId]['grade_value']) ? $existingGrades[$stId]['grade_value'] : null;
+                        $oldComment = isset($existingGrades[$stId]['teacher_comments']) ? $existingGrades[$stId]['teacher_comments'] : '';
+                        $isChanged = ($oldGrade != $grade || $oldComment != $comment);
+
+                        $db->saveTaskGrade($taskId, $stId, $grade, $comment);
+
+                        if ($sendEmails && $isChanged) {
+                            $studentKey = array_search($stId, array_column($students, 'studentId'));
+                            $student = ($studentKey !== false) ? $students[$studentKey] : null;
+
+                            if ($student && !empty($student['email'])) {
+                                $mail = new PHPMailer(true);
+                                try {
+                                    $mail->isSMTP();
+                                    $mail->Host       = 'smtp.gmail.com';
+                                    $mail->SMTPAuth   = true;
+                                    $mail->Username   = SMTP_USER;
+                                    $mail->Password   = SMTP_PASS;
+                                    $mail->SMTPSecure = 'tls';
+                                    $mail->Port       = 587;
+                                    $mail->CharSet    = 'UTF-8';
+                                    $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
+                                    $mail->addAddress($student['email']);
+                                    $mail->isHTML(true);
+                                    $mail->Subject = "Ενημέρωση Βαθμολογίας: Ομαδική Εργασία";
+                                    $mail->Body = "
+                                    <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
+                                        <h2 style='color:#007bff;'>Ενημέρωση Βαθμολογίας</h2>
+                                        <p>Γεια σου <b>{$student['name']}</b>,</p>
+                                        <p>Η βαθμολογία σου για την εργασία <i>\"$taskName\"</i> καταχωρήθηκε.</p>
+                                        <div style='background:#f8f9fa; padding:15px; border-radius:5px; margin:15px 0;'>
+                                            <p style='margin:5px 0;'><b>Βαθμός:</b> <span style='color:#dc3545; font-size:1.2em;'>$grade/20</span></p>
+                                            <p style='margin:5px 0;'><b>Σχόλια:</b><br>$comment</p>
+                                        </div>
+                                        <p>Καλή συνέχεια!</p>
+                                    </div>";
+                                    $mail->send();
+                                    $emailCount++;
+                                } catch (Exception $e) {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $alertMsg = $sendEmails ? "Επιτυχής αποθήκευση! Στάλθηκαν $emailCount emails ενημέρωσης." : "Επιτυχής αποθήκευση!";
+                echo "<script>alert('$alertMsg'); window.location.href='index.php?action=list_all_tasks';</script>";
             }
             break;
 

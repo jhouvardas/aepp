@@ -106,6 +106,7 @@ class ExerciseAdminFormMaker extends AdminFormMaker
                                 <?php foreach ($groups as $g) echo "<option value='{$g['id']}'>{$g['group_name']}</option>"; ?>
                             </select></div>
                         <div class="mb-3"><label>Περιγραφή</label><textarea name="task_text" class="form-control" rows="3"></textarea></div>
+                        <div class="mb-3"><label>Συνημμένο Αρχείο (π.χ. PDF)</label><input type="file" name="task_file" class="form-control" accept=".pdf,.doc,.docx,.jpg,.png"></div>
                         <button type="submit" class="btn btn-success w-100">Αποστολή</button>
                     </form>
                 </div>
@@ -125,6 +126,7 @@ class ExerciseAdminFormMaker extends AdminFormMaker
                         <th>Ημ/νία</th>
                         <th>Ομάδα</th>
                         <th>Εργασία</th>
+                        <th>Αρχείο</th>
                         <th>Ενέργειες</th>
                     </tr>
                 </thead>
@@ -134,6 +136,13 @@ class ExerciseAdminFormMaker extends AdminFormMaker
                             <td><?php echo date('d/m/Y', strtotime($task['date_added'])); ?></td>
                             <td><?php echo $task['group_name']; ?></td>
                             <td><?php echo $task['task_text']; ?></td>
+                            <td>
+                                <?php if (!empty($task['task_file'])): ?>
+                                    <a href="../uploads/tasks/<?php echo $task['task_file']; ?>" target="_blank" class="btn btn-sm btn-outline-danger"><i class="fa fa-file-pdf-o"></i> Προβολή</a>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td><a href="index.php?action=grade_task&task_id=<?php echo $task['id']; ?>" class="btn btn-primary btn-sm">Βαθμολόγηση</a></td>
                         </tr>
                     <?php endforeach; ?>

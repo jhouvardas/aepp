@@ -893,6 +893,14 @@ class AdminDbHandler extends DbHandler
                     $onTime = 0;
                 }
             }
+        } elseif ($meze && !$sub) {
+            // Αν δεν υπάρχει καθόλου υποβολή και βαθμολογούμε, ελέγχουμε αν έχει περάσει η προθεσμία
+            if (!empty($meze['solutionDate']) && time() > strtotime($meze['solutionDate'])) {
+                $firstGrade = ($existing && isset($existing['first_grade_value'])) ? $existing['first_grade_value'] : 0;
+                if ($firstGrade <= 0) {
+                    $onTime = 0;
+                }
+            }
         }
 
         if ($existing) {
@@ -1277,7 +1285,7 @@ class AdminDbHandler extends DbHandler
         $stmtG->close();
 
         $count = 0;
-        $sql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, first_grade_value, is_on_time, teacher_comments, user_year) VALUES (?, ?, 0, 0, 1, 'Αυτόματη βαθμολόγηση λόγω μη υποβολής', ?)";
+        $sql = "INSERT INTO meze_grades (student_id, meze_id, grade_value, first_grade_value, is_on_time, teacher_comments, user_year) VALUES (?, ?, 0, 0, 0, 'Αυτόματη βαθμολόγηση λόγω μη υποβολής', ?)";
         $stmt = $conn->prepare($sql);
 
         foreach ($students as $s) {

@@ -373,7 +373,13 @@ class ReportAdminFormMaker extends AdminFormMaker
             <form action="index.php?action=save_task_grades" method="post" class="bg-white p-4 shadow rounded">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3><i class="fa fa-pencil"></i> Βαθμολόγηση: <?php echo $task['group_name']; ?></h3>
-                    <button type="submit" class="btn btn-success px-4 shadow-sm"><i class="fa fa-save"></i> Αποθήκευση Όλων</button>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-3 mt-1">
+                            <input class="form-check-input" type="checkbox" name="send_emails" value="1" id="sendEmailsCheck" checked style="cursor: pointer; transform: scale(1.2);">
+                            <label class="form-check-label fw-bold text-primary ms-1" for="sendEmailsCheck" style="cursor: pointer;"><i class="fa fa-envelope"></i> Ενημέρωση Μαθητών</label>
+                        </div>
+                        <button type="submit" class="btn btn-success px-4 shadow-sm"><i class="fa fa-save"></i> Αποθήκευση Όλων</button>
+                    </div>
                 </div>
 
                 <div class="alert alert-info mb-4"><strong>Εργασία:</strong> <?php echo nl2br(htmlspecialchars($task['task_text'])); ?></div>
