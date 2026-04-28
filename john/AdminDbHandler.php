@@ -1343,4 +1343,27 @@ class AdminDbHandler extends DbHandler
             return in_array((int)$s['studentId'], $ids) && !empty($s['email']);
         });
     }
+
+    /**
+     * Επιστρέφει τους μαθητές που δεν έχουν υποβάλει ακόμα λύση για ένα μεζεδάκι.
+     */
+    public function getStudentsWithoutSubmission($mezeId, $userYear)
+    {
+        $allStudents = $this->getTutorStudents($userYear);
+        if (empty($allStudents)) return [];
+
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT DISTINCT student_id FROM aepp_meze_submissions WHERE meze_id = ?");
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $submittedIds = [];
+        while ($row = $res->fetch_assoc()) $submittedIds[] = (int)$row['student_id'];
+        $stmt->close();
+        $conn->close();
+
+        return array_filter($allStudents, function ($student) use ($submittedIds) {
+            return (!in_array((int)$student['studentId'], $submittedIds) && !empty($student['email']));
+        });
+    }
 }

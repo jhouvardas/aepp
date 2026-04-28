@@ -5,9 +5,13 @@ class MezeAdminFormMaker extends AdminFormMaker
 {
     private function normalizeString($str)
     {
-        $str = strip_tags((string)$str);
-        $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $str = preg_replace('/^\d+[\.\)]\s*/u', '', trim($str));
+        $str = (string)$str;
+        // Πολλαπλή αποκωδικοποίηση για να καθαρίσει τυχόν διπλές κωδικοποιήσεις (π.χ. &amp;gt;)
+        for ($i = 0; $i < 3; $i++) {
+            $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        $str = preg_replace('/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/i', '', $str);
+        $str = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($str));
 
         // Αντικατάσταση κόμματος με τελεία (για δεκαδικούς αριθμούς π.χ. 2,5 -> 2.5)
         $str = str_replace(',', '.', $str);
@@ -22,6 +26,20 @@ class MezeAdminFormMaker extends AdminFormMaker
             $str = preg_replace('/[\s]+/u', '', $str);
             $str = preg_replace('/[\x00-\x1F\x7F\x{200B}-\x{200F}\x{FEFF}]/u', '', $str);
         }
+
+        // Ομαλοποίηση συγκριτικών και εκχωρητικών τελεστών (εφαρμόζεται αφού έχουν αφαιρεθεί τα κενά, π.χ. το "= <" έγινε "=<")
+        $str = str_replace(['=<', '≤'], '<=', $str);
+        $str = str_replace(['=>', '≥'], '>=', $str);
+        $str = str_replace('≠', '<>', $str);
+        $str = str_replace('←', '<-', $str);
+
+        // Ομαλοποίηση μαθηματικών τελεστών (από κινητά, Word ή άλλες γλώσσες προγραμματισμού)
+        $str = str_replace(['×', '·', '•', '∗'], '*', $str); // Εναλλακτικά σύμβολα πολλαπλασιασμού
+        $str = str_replace('÷', '/', $str);                  // Εναλλακτικό σύμβολο διαίρεσης
+        $str = str_replace('−', '-', $str);                  // Ειδικό μαθηματικό σύμβολο μείον (U+2212)
+        $str = str_replace(['ˆ', '**'], '^', $str);          // Εναλλακτικά σύμβολα δύναμης
+        $str = str_replace('!=', '<>', $str);                // Διάφορο (C/Python style)
+        $str = str_replace('==', '=', $str);                 // Ίσον (C/Python style)
 
         $str = mb_strtolower(trim($str), 'UTF-8');
 
@@ -64,6 +82,9 @@ class MezeAdminFormMaker extends AdminFormMaker
         $correctAnswers = [];
         $totalExpected = 0;
         if (!empty($solutionHtml)) {
+            // Προστασία τελεστών για να μην τους "καταπιεί" το DOMDocument θεωρώντας το < ως αρχή HTML tag
+            $solutionHtml = str_replace(['<=', '<>', '< ', '=>', ' >', '=<', '<-'], ['&lt;=', '&lt;&gt;', '&lt; ', '=&gt;', ' &gt;', '=&lt;', '&lt;-'], $solutionHtml);
+
             $dom = new DOMDocument();
             // Use error suppression and mb_convert_encoding for robustness with HTML fragments
             @$dom->loadHTML('<?xml encoding="utf-8" ?>' . $solutionHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -85,9 +106,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $items = $xpath->query(".//div[contains(@class, 'answer-item')]", $grid);
                     $ansCounter = 1;
                     foreach ($items as $item) {
-                        $strong = $xpath->query(".//strong | .//*[contains(@class, 'ans-true')]", $item)->item(0);
-                        $textVal = $strong ? $strong->nodeValue : $item->nodeValue;
-                        $textVal = preg_replace('/^\d+\.\s*/', '', trim($textVal));
+                        // Παίρνουμε όλο το κείμενο του κελιού για να μην χάσουμε σύμβολα (π.χ. >=) 
+                        // αν ο καθηγητής εφάρμοσε bold/χρώμα μόνο σε ένα μέρος της απάντησης.
+                        $textVal = $item->nodeValue;
+                        $textVal = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($textVal));
                         $correctAnswers[$algoNum][$ansCounter] = trim($textVal);
                         $ansCounter++;
                         $totalExpected++;
@@ -113,9 +135,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                         if ($ol) {
                             $lis = $xpath->query(".//li", $ol);
                             foreach ($lis as $li) {
-                                $strong = $xpath->query(".//strong", $li)->item(0);
-                                $textVal = $strong ? $strong->nodeValue : $li->nodeValue;
-                                $textVal = preg_replace('/^\d+[\.\)]\s*/u', '', trim($textVal));
+                                // Παίρνουμε όλο το κείμενο του <li> για να μην χάνονται σύμβολα
+                                $textVal = $li->nodeValue;
+                                $textVal = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($textVal));
                                 $correctAnswers[$algoNum][$ansCounter] = trim($textVal);
                                 $ansCounter++;
                                 $totalExpected++;
@@ -128,8 +150,8 @@ class MezeAdminFormMaker extends AdminFormMaker
                         $lis = $xpath->query(".//li", $ol);
                         $ansCounter = 1;
                         foreach ($lis as $li) {
-                            $strong = $xpath->query(".//strong", $li)->item(0);
-                            $textVal = $strong ? $strong->nodeValue : $li->nodeValue;
+                            // Παίρνουμε όλο το κείμενο του <li> για να μην χάνονται σύμβολα
+                            $textVal = $li->nodeValue;
                             $correctAnswers['1'][$ansCounter] = trim($textVal);
                             $ansCounter++;
                             $totalExpected++;
@@ -168,7 +190,12 @@ class MezeAdminFormMaker extends AdminFormMaker
             // ΜΑΓΙΚΗ ΛΥΣΗ: Μετατροπή των <br> σε πραγματικές αλλαγές γραμμής ΠΡΙΝ διαγραφούν τα HTML tags!
             $answersHtml = preg_replace('/<br\s*\/?>/i', "\n", $answersHtml);
 
+            // Προστασία μαθηματικών/συγκριτικών τελεστών που ίσως πληκτρολόγησε ο μαθητής 
+            // ώστε να μην διαγραφούν από το strip_tags (π.χ. το <= θεωρείται λάθος HTML tag).
+            $answersHtml = str_replace(['<=', '<>', '< ', '=>', ' >', '=<'], ['&lt;=', '&lt;&gt;', '&lt; ', '=&gt;', ' &gt;', '=&lt;'], $answersHtml);
+
             $answersOnlyText = trim(str_ireplace("Απαντήσεις στα κενά:", "", strip_tags($answersHtml)));
+            $answersOnlyText = html_entity_decode($answersOnlyText, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
             if ($isAutoGradable) {
                 // Χρήση preg_match_all αντί για preg_split για 100% ασφαλή απομόνωση των απαντήσεων
@@ -216,8 +243,24 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $btnHtml = "<button type='button' class='btn btn-outline-success btn-sm shadow-sm px-2 py-1 ms-1 btn-mark-correct' onclick='markBlankCorrect(this, " . number_format($pointValue, 4, '.', '') . ")' title='Μαρκάρισμα ως σωστό (Παράκαμψη)'><i class='fa fa-check'></i></button>";
                     $btnHtml .= "<button type='button' class='btn btn-outline-danger btn-sm shadow-sm px-2 py-1 ms-1 btn-undo-correct d-none' onclick='undoBlankCorrect(this, " . number_format($pointValue, 4, '.', '') . ")' title='Αναίρεση (Επαναφορά)'><i class='fa fa-undo'></i></button>";
 
-                    $dispStudentAns = htmlspecialchars(html_entity_decode($studentAns, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
-                    $dispCorrectAns = htmlspecialchars(html_entity_decode($correctAnswer, ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+                    // Απόλυτη αποκωδικοποίηση (loop) για προστασία από πολλαπλές κωδικοποιήσεις (π.χ. αν αποθηκεύτηκε ως &amp;gt;)
+                    $rawStudentAns = (string)$studentAns;
+                    $rawCorrectAns = (string)$correctAnswer;
+                    for ($i = 0; $i < 3; $i++) {
+                        $rawStudentAns = html_entity_decode($rawStudentAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $rawCorrectAns = html_entity_decode($rawCorrectAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    }
+
+                    // Ασφαλής αφαίρεση τυχόν "ορφανών" HTML ετικετών (π.χ. </code>) για καθαρή εμφάνιση
+                    $rawStudentAns = preg_replace('/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/i', '', $rawStudentAns);
+                    $rawCorrectAns = preg_replace('/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/i', '', $rawCorrectAns);
+
+                    // Αφαίρεση αρίθμησης (π.χ. "(2)") από την τελική εμφάνιση
+                    $rawStudentAns = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($rawStudentAns));
+                    $rawCorrectAns = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($rawCorrectAns));
+
+                    $dispStudentAns = htmlspecialchars($rawStudentAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $dispCorrectAns = htmlspecialchars($rawCorrectAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
                     if ($studentAns !== '') {
                         if ($this->normalizeString($studentAns) == $this->normalizeString($correctAnswer)) {
@@ -243,7 +286,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <div class='d-flex flex-grow-1 align-items-center border-start ps-3 me-3'>
                                     <div class='me-4' style='flex: 1;'>
                                         <span class='text-danger small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Απάντηση Μαθητή:</span>
-                                        <span class='text-danger fw-bold' style='font-size:1.1em; text-decoration: line-through; opacity: 0.8;'>" . $dispStudentAns . "</span>
+                                        <span class='text-danger fw-bold' style='font-size:1.1em;'>" . $dispStudentAns . "</span>
                                     </div>
                                     <div style='flex: 1;'>
                                         <span class='text-success small text-uppercase d-block fw-bold' style='font-size: 0.7rem; letter-spacing: 0.5px;'>Σωστή Λύση:</span>
