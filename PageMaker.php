@@ -336,6 +336,10 @@ class PageMaker
 
                     // Ανάκτηση προόδου & δυναμική προσαρμογή του πλάτους των κενών
                     document.querySelectorAll('.aepp-interactive-blank').forEach(function(input, index) {
+                        // Απενεργοποίηση της αυτόματης συμπλήρωσης (autofill) του browser 
+                        // ώστε να μην προτείνονται οι παλιές υποβληθείσες απαντήσεις.
+                        input.setAttribute('autocomplete', 'off');
+
                         var form = input.closest('form');
                         var formContext = form ? (form.id || form.getAttribute('action') || 'form') : 'noform';
                         var key = 'blank_' + formContext + '_' + (input.getAttribute('data-ex') || '1') + '_' + (input.getAttribute('data-blank') || '*') + '_' + (input.name || 'noname') + '_' + index;
@@ -685,7 +689,7 @@ class PageMaker
                                     </div>
                                 <?php endif; ?>
 
-                                <div class="meze-text px-1">
+                                <div class="html-content-wrapper meze-text px-1">
                                     <?php echo str_replace('src="../images/', 'src="images/', $row['mezeText']); ?>
                                 </div>
 
@@ -738,7 +742,7 @@ class PageMaker
                                 <?php endif; ?>
 
                                 <?php
-                                $hasSolution = (!empty($row['mezeSolution']) || !empty($row['mezeSolutionImage']));
+                                $hasSolution = (!empty(trim(strip_tags($row['mezeSolution'], '<img><iframe><br>'))) || !empty($row['mezeSolutionImage']));
                                 $canShowSolution = $db->canShowMezeSolution($mId, $userYear);
                                 if ($hasSolution && $canShowSolution): ?>
                                     <div id="accMeze<?php echo $mId; ?>" class="mt-3">
@@ -752,7 +756,7 @@ class PageMaker
                                                         <img src="images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" loading="lazy" class="img-fluid rounded border border-success">
                                                     </div>
                                                 <?php endif; ?>
-                                                <div class="solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
+                                                <div class="html-content-wrapper solution-text"><?php echo str_replace('src="../images/', 'src="images/', $row['mezeSolution']); ?></div>
                                             </div>
                                         </div>
                                     </div>

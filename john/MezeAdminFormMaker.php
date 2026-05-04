@@ -1143,6 +1143,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                         $grade = $item['grade'];
                         $st = $item['student'];
                         $stId = $st['studentId'];
+                        $isAllowed = $dbHandler->isSubmissionAllowed($stId, $mezeId, $userYear);
 
                         $highlightData = $this->getHighlightedStudentAnswer($sub['student_text'] ?? '', $mezeData['mezeSolution'] ?? '');
                         $highlightedHtml = $highlightData['html'];
@@ -1182,15 +1183,26 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <?php endif; ?>
                                 </div>
                             <?php endif; ?>
-                            <form action="index.php?action=quickGrade" method="post" class="mt-2">
-                                <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
-                                <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
-                                <div class="d-flex">
-                                    <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:70px" value="<?php echo $grade['grade_value']; ?>">
-                                    <input type="text" name="teacher_comments" class="form-control form-control-sm me-2" value="<?php echo htmlspecialchars($grade['teacher_comments']); ?>">
-                                    <button type="submit" class="btn btn-sm btn-info px-3">Ενημέρωση</button>
-                                </div>
-                            </form>
+                            <div class="d-flex justify-content-between align-items-end mt-2 border-top pt-3">
+                                <form action="index.php?action=quickGrade" method="post" class="mb-0">
+                                    <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
+                                    <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                    <div class="d-flex">
+                                        <input type="number" name="grade" step="0.5" class="form-control form-control-sm me-2" style="width:70px" value="<?php echo $grade['grade_value']; ?>">
+                                        <input type="text" name="teacher_comments" class="form-control form-control-sm me-2" value="<?php echo htmlspecialchars($grade['teacher_comments']); ?>">
+                                        <button type="submit" class="btn btn-sm btn-info px-3 shadow-sm">Ενημέρωση</button>
+                                    </div>
+                                </form>
+
+                                <form action="index.php?action=giveExtension" method="post" class="form-inline m-0 d-flex">
+                                    <input type="hidden" name="student_id" value="<?php echo $stId; ?>">
+                                    <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                    <input type="number" name="hours" class="form-control form-control-sm me-1 shadow-sm" style="width: 55px;" value="24" title="Ώρες παράτασης">
+                                    <button type="submit" class="btn btn-sm <?php echo $isAllowed ? 'btn-success' : 'btn-outline-danger'; ?> py-1 px-2 shadow-sm">
+                                        <i class="fa fa-<?php echo $isAllowed ? 'unlock' : 'lock'; ?>"></i> <?php echo $isAllowed ? "Ανοιχτή" : "Παράταση"; ?>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>

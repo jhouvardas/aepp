@@ -3,8 +3,10 @@ include_once __DIR__ . '/../DbHandler.php';
 
 class AdminDbHandler extends DbHandler
 {
-
-
+    /**
+     * @var array
+     */
+    private $cachedStudents = [];
 
     // Μέθοδος για Διαγραφή (Χρήσιμη για σένα)
     public function deleteTheoryQuestion($id)
@@ -441,11 +443,11 @@ class AdminDbHandler extends DbHandler
     public function hasGlobalExtension($mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
-        // Ελέγχουμε αν υπάρχει ενεργή (μη ληγμένη) καθολική παράταση.
-        // Αν έχει λήξει, το toggle switch στο back-end θα εμφανίζεται πλέον ανενεργό (+).
-        $sql = "SELECT id FROM aepp_meze_extensions WHERE student_id = 0 AND meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())";
+        $nowStr = (new DateTime())->format('Y-m-d H:i:s');
+
+        $sql = "SELECT id FROM aepp_meze_extensions WHERE student_id = 0 AND meze_id = ? AND (expires_at IS NULL OR expires_at > ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $mezeId);
+        $stmt->bind_param("is", $mezeId, $nowStr);
         $stmt->execute();
         $exists = ($stmt->get_result()->num_rows > 0);
         $stmt->close();
@@ -688,6 +690,10 @@ class AdminDbHandler extends DbHandler
     // 1. Φέρνει τους μαθητές από την tutor (μόνο για το admin)
     public function getTutorStudents($userYear)
     {
+        if (isset($this->cachedStudents[$userYear])) {
+            return $this->cachedStudents[$userYear];
+        }
+
         $connTutor = $this->connectToTutorDB();
         if (!$connTutor || $connTutor->connect_error) {
             return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
@@ -707,6 +713,8 @@ class AdminDbHandler extends DbHandler
 
         $stmt->close();
         $connTutor->close();
+
+        $this->cachedStudents[$userYear] = $students;
 
         return $students; // Επιστρέφει ΕΤΟΙΜΟ ΠΙΝΑΚΑ (Array)
     }
@@ -974,7 +982,7 @@ class AdminDbHandler extends DbHandler
         $conn = $this->connectToFamilyDB();
 
         // Φέρνουμε τα πάντα, ταξινομημένα από το πιο πρόσφατο
-        $sql = "SELECT * FROM aepp_mezedakia ORDER BY mezeDate DESC";
+        $sql = "SELECT * FROM aepp_mezedakia ORDER BY mezeDate DESC, mezeNumber DESC";
         $result = $conn->query($sql);
 
         $conn->close();
@@ -986,16 +994,26 @@ class AdminDbHandler extends DbHandler
      */
     public function getUngradedSubmissionsCountForMeze($mezeId, $userYear)
     {
+        $students = $this->getTutorStudents($userYear);
+        if (empty($students)) return 0;
+
+        $studentIds = array_column($students, 'studentId');
+        $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
+
         $conn = $this->connectToFamilyDB();
         $sql = "SELECT COUNT(s.student_id) 
                 FROM aepp_meze_submissions s
                 LEFT JOIN meze_grades g ON s.student_id = g.student_id AND s.meze_id = g.meze_id AND g.user_year = ?
-                WHERE s.meze_id = ? AND (
+                WHERE s.meze_id = ? AND s.student_id IN ($placeholders) AND (
                     g.grade_value IS NULL 
                     OR (g.updated_at IS NOT NULL AND s.submission_date > g.updated_at)
                 )";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $userYear, $mezeId);
+
+        $types = "si" . str_repeat('i', count($studentIds));
+        $params = array_merge([$userYear, $mezeId], $studentIds);
+        $stmt->bind_param($types, ...$params);
+
         $stmt->execute();
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
@@ -1055,9 +1073,10 @@ class AdminDbHandler extends DbHandler
     public function hasAnyExtension($mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
-        // Προσθέτουμε έλεγχο ημερομηνίας ώστε το badge να δείχνει μόνο τις πραγματικά "ενεργές" παρατάσεις
-        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())");
-        $stmt->bind_param("i", $mezeId);
+        $nowStr = (new DateTime())->format('Y-m-d H:i:s');
+
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > ?)");
+        $stmt->bind_param("is", $mezeId, $nowStr);
         $stmt->execute();
         $res = $stmt->get_result()->fetch_assoc();
         $stmt->close();

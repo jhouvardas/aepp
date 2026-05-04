@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/john/config.php'; // Χρήση __DIR__ για σωστό εντοπισμό του αρχείου
+date_default_timezone_set('Europe/Athens');
 
 class DbHandler
 {
@@ -638,16 +639,18 @@ class DbHandler
     public function isSubmissionAllowed($studentId, $mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
+        $nowStr = (new DateTime())->format('Y-m-d H:i:s');
+
         $sql = "SELECT m.mezeId FROM aepp_mezedakia m 
                 LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND (e.student_id = ? OR e.student_id = 0)
                 WHERE m.mezeId = ? AND m.isLocked = 0 
-                AND (m.solutionDate > NOW() OR (e.expires_at IS NOT NULL AND e.expires_at > NOW()))";
+                AND (m.solutionDate > ? OR (e.expires_at IS NOT NULL AND e.expires_at > ?))";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             $conn->close();
             return false;
         }
-        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->bind_param("iiss", $studentId, $mezeId, $nowStr, $nowStr);
         $stmt->execute();
         $result = $stmt->get_result();
         $allowed = ($result->num_rows > 0);
@@ -669,27 +672,27 @@ class DbHandler
         $mezeData = $result->fetch_assoc();
         $stmt->close();
 
-        if (!$mezeData) {
+        if (!$mezeData || empty($mezeData['solutionDate'])) {
             $conn->close();
             return false;
         }
 
         $now = new DateTime();
         $solDate = new DateTime($mezeData['solutionDate']);
-        $isPastDeadline = ($now > $solDate);
-
-        if (!$isPastDeadline) {
+        if ($now <= $solDate) {
             $conn->close();
             return false;
         }
 
-        // Έλεγχος αν υπάρχουν ΕΝΕΡΓΕΣ παρατάσεις (ατομικές ή καθολικές).
-        // Αν υπάρχει έστω και μία ενεργή παράταση, η λύση παραμένει κρυφή για όλους.
+        // Έλεγχος αν υπάρχουν ΕΝΕΡΓΕΣ παρατάσεις
+        // Χρησιμοποιούμε την τρέχουσα ώρα από την PHP για να αποφύγουμε προβλήματα Timezone της MySQL
+        $currentDateStr = $now->format('Y-m-d H:i:s');
+
         $extensionSql = "SELECT COUNT(*) as extCount FROM aepp_meze_extensions 
                          WHERE meze_id = ? AND user_year = ? 
-                         AND (expires_at IS NULL OR expires_at > NOW())";
+                         AND (expires_at IS NULL OR expires_at > ?)";
         $extStmt = $conn->prepare($extensionSql);
-        $extStmt->bind_param("is", $mezeId, $userYear);
+        $extStmt->bind_param("iss", $mezeId, $userYear, $currentDateStr);
         $extStmt->execute();
         $extRow = $extStmt->get_result()->fetch_assoc();
         $hasActiveExtensions = ($extRow['extCount'] > 0);
