@@ -18,6 +18,7 @@
     $db = new AdminDbHandler();
 
     $mezeFm   = new MezeAdminFormMaker();
+    $formMaker = new FormMaker();
     $theoryFm = new TheoryAdminFormMaker();
     $exFm     = new ExerciseAdminFormMaker();
     $reportFm = new ReportAdminFormMaker();
@@ -527,6 +528,11 @@
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $mezeId = $_POST['meze_id'];
                 $count = 0;
+
+                if (!isset($_POST['grades']) || !is_array($_POST['grades'])) {
+                    $_POST['grades'] = [];
+                }
+
                 foreach ($_POST['grades'] as $studentId => $grade) {
                     if ($grade !== '') { // Αποθηκεύουμε μόνο αν έχει μπει βαθμός
                         $db->saveMezeGrade($studentId, $mezeId, $grade, $userYear);
@@ -897,6 +903,13 @@
             echo "<script>window.location.href='index.php?action=manage_groups';</script>";
             break;
 
+        case 'rename_group':
+            if (isset($_POST['group_id']) && isset($_POST['new_group_name'])) {
+                $db->renameGroup($_POST['group_id'], $_POST['new_group_name'], $userYear);
+            }
+            echo "<script>window.location.href='index.php?action=manage_groups';</script>";
+            break;
+
         case 'add_student_to_group':
             $db->addStudentToGroup($_POST['student_id'], $_POST['group_id']);
             echo "<script>window.location.href='index.php?action=manage_groups';</script>";
@@ -935,6 +948,10 @@
                 // Φέρνουμε τους υπάρχοντες βαθμούς για να ελέγξουμε αν υπήρξε αλλαγή
                 $existingGrades = $db->getTaskGrades($taskId);
                 $emailCount = 0;
+
+                if (!isset($_POST['grades']) || !is_array($_POST['grades'])) {
+                    $_POST['grades'] = [];
+                }
 
                 foreach ($_POST['grades'] as $stId => $grade) {
                     $comment = $_POST['comments'][$stId] ?? '';

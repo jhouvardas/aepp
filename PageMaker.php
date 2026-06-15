@@ -235,7 +235,7 @@ class PageMaker
     {
         ?>
             <footer>
-                <div class="container">Αντώνης Χουβαρδάς 2021-26.
+                <div class="container">Γιάννης Χουβαρδάς 2021-26.
 
                 </div>
             </footer>

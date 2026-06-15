@@ -1085,6 +1085,9 @@ class DbHandler
 
         $mail = new PHPMailer(true);
         try {
+            // 1. Δίνουμε περισσότερο χρόνο (5 λεπτά) στην PHP για να μην "κόψει" το script στη μέση
+            @set_time_limit(300);
+
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
@@ -1092,6 +1095,10 @@ class DbHandler
             $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : '';
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
+
+            // 2. Ορίζουμε συγκεκριμένο χρόνο αναμονής (120 δευτερόλεπτα) για την απόκριση του Gmail
+            $mail->Timeout    = 120;
+
             $mail->CharSet    = 'UTF-8';
             $mail->setFrom($mail->Username, defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'AEPP System');
             $mail->addAddress($to);

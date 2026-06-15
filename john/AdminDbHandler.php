@@ -234,7 +234,7 @@ class AdminDbHandler extends DbHandler
 
     public function getMultipleQuestionsByIds($ids_array)
     {
-        if (empty($ids_array)) return false;
+        if (empty($ids_array) || !is_array($ids_array)) return false;
 
         $conn = $this->connectToFamilyDB();
         // Δημιουργούμε μια λίστα από ερωτηματικά (?,?,?) για το query
@@ -557,7 +557,7 @@ class AdminDbHandler extends DbHandler
         $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
         $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
 
-        $selectedTypes = isset($data['exercise_types']) ? $data['exercise_types'] : [];
+        $selectedTypes = (isset($data['exercise_types']) && is_array($data['exercise_types'])) ? $data['exercise_types'] : [];
 
         // Εικόνα Εκφώνησης
         if (!empty($file['mezeImage']['name'])) {
@@ -661,7 +661,7 @@ class AdminDbHandler extends DbHandler
         $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
         $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
 
-        $selectedTypes = isset($data['exercise_types']) ? $data['exercise_types'] : [];
+        $selectedTypes = (isset($data['exercise_types']) && is_array($data['exercise_types'])) ? $data['exercise_types'] : [];
 
         // 4. Εκτέλεση του Update (Εδώ μπαίνει το mezeHints)
         $sql = "UPDATE aepp_mezedakia SET 
@@ -1152,6 +1152,17 @@ class AdminDbHandler extends DbHandler
         $conn = $this->connectToFamilyDB();
         $stmt = $conn->prepare("INSERT INTO aepp_groups (group_name, user_year) VALUES (?, ?)");
         $stmt->bind_param("ss", $name, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function renameGroup($groupId, $newName, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("UPDATE aepp_groups SET group_name = ? WHERE id = ? AND user_year = ?");
+        $stmt->bind_param("sis", $newName, $groupId, $userYear);
         $success = $stmt->execute();
         $stmt->close();
         $conn->close();

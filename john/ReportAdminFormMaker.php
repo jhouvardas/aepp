@@ -344,7 +344,20 @@ class ReportAdminFormMaker extends AdminFormMaker
                             }
                         ?>
                             <tr>
-                                <td class="align-middle"><strong><?php echo $g['group_name']; ?></strong></td>
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <strong id="group-name-<?php echo $g['id']; ?>"><?php echo htmlspecialchars($g['group_name']); ?></strong>
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showRenameForm(<?php echo $g['id']; ?>)" title="Μετονομασία"><i class="fa fa-edit"></i></button>
+                                    </div>
+                                    <form action="index.php?action=rename_group" method="POST" id="rename-form-<?php echo $g['id']; ?>" class="d-none mt-2">
+                                        <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" name="new_group_name" class="form-control" value="<?php echo htmlspecialchars($g['group_name']); ?>" required>
+                                            <button type="submit" class="btn btn-success" title="Αποθήκευση"><i class="fa fa-save"></i></button>
+                                            <button type="button" class="btn btn-secondary" onclick="hideRenameForm(<?php echo $g['id']; ?>)" title="Ακύρωση"><i class="fa fa-times"></i></button>
+                                        </div>
+                                    </form>
+                                </td>
                                 <td>
                                     <?php if (empty($members)): ?>
                                         <span class="text-muted small italic">Κενή ομάδα</span>
@@ -369,6 +382,17 @@ class ReportAdminFormMaker extends AdminFormMaker
                 </table>
             </div>
         </div>
+        <script>
+            function showRenameForm(id) {
+                document.getElementById('group-name-' + id).parentElement.classList.add('d-none');
+                document.getElementById('rename-form-' + id).classList.remove('d-none');
+            }
+
+            function hideRenameForm(id) {
+                document.getElementById('group-name-' + id).parentElement.classList.remove('d-none');
+                document.getElementById('rename-form-' + id).classList.add('d-none');
+            }
+        </script>
     <?php
     }
 
@@ -525,8 +549,8 @@ class ReportAdminFormMaker extends AdminFormMaker
 
     public function showGroupEmailResults($groupName, $subject, $successful, $failed)
     {
-        $successCount = count($successful);
-        $failCount = count($failed);
+        $successCount = is_array($successful) ? count($successful) : 0;
+        $failCount = is_array($failed) ? count($failed) : 0;
     ?>
         <div class="container mt-4 mb-5">
             <div class="card shadow-sm border-0">
@@ -573,8 +597,8 @@ class ReportAdminFormMaker extends AdminFormMaker
                                 <?php else: ?>
                                     <?php foreach ($failed as $f): ?>
                                         <div class="list-group-item list-group-item-light small py-2">
-                                            <strong><?php echo htmlspecialchars($f['name']); ?></strong> (<?php echo htmlspecialchars($f['email']); ?>)<br>
-                                            <span class="text-danger" style="font-size: 0.8rem;"><em><?php echo htmlspecialchars($f['error']); ?></em></span>
+                                            <strong><?php echo htmlspecialchars($f['name'] ?? 'Άγνωστο Όνομα'); ?></strong> (<?php echo htmlspecialchars($f['email'] ?? '-'); ?>)<br>
+                                            <span class="text-danger" style="font-size: 0.8rem;"><em><?php echo htmlspecialchars($f['error'] ?? 'Άγνωστο Σφάλμα / Πιθανή Καθυστέρηση του Διακομιστή (Το email ίσως εστάλη)'); ?></em></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
