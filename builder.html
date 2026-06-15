@@ -57,6 +57,8 @@
                             αγκύλες <code>[[ ]]</code>. <br>
                             Για Σωστό/Λάθος, βάλε το <b>Σ</b> ή το <b>Λ</b> σε διπλές παρενθέσεις
                             <code>(( ))</code>.<br>
+                            Για Πολλαπλής Επιλογής, βάλε <code>(*)</code> για τη σωστή και <code>( )</code> για τις
+                            λάθος (στην αρχή της γραμμής).<br>
                             Π.χ. <code>Σ &lt;- Σ + [[x]]</code> ή <code>Η δομή ΟΣΟ... ((Λ))</code>
                         </p>
                         <div class="row mb-3 align-items-end">
@@ -102,6 +104,9 @@
                                 <button class="btn btn-sm btn-outline-secondary"
                                     onclick="insertTag('<ul>\n  <li>', '</li>\n</ul>')" title="Λίστα με κουκκίδες"><i
                                         class="fa fa-list-ul"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="insertTag('Ποια είναι η σωστή απάντηση;\n(*) Σωστή επιλογή\n( ) Λάθος επιλογή 1\n( ) Λάθος επιλογή 2\n', '')"
+                                    title="Πολλαπλής Επιλογής"><i class="fa fa-dot-circle-o"></i></button>
                                 <span class="border-end mx-1"></span>
                                 <button class="btn btn-sm btn-outline-secondary"
                                     onclick="insertTag('<code>', '</code>')" title="Κώδικας (Inline)"><i
@@ -235,6 +240,49 @@
             teacherHtml += `<h5 style="color: #0d6efd; margin-top: 0; border-bottom: 2px solid #b6d4fe; padding-bottom: 8px; font-weight: bold; font-family: sans-serif;">Αλγόριθμος ${exNum}</h5>\n`;
             teacherHtml += `<ol style="margin-bottom: 0; padding-left: 25px; font-family: monospace; font-size: 1.1rem; line-height: 1.8;">\n`;
             let blankCounter = 1;
+
+            // 1. Επεξεργασία Ερωτήσεων Πολλαπλής Επιλογής (MCQ)
+            let lines = studentHtml.split('\n');
+            let processedLines = [];
+            let inMcq = false;
+            let mcqCounter = 1;
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                let tLine = line.trim();
+                let isCorrect = tLine.startsWith('(*)');
+                let isWrong = tLine.startsWith('( )');
+
+                if (isCorrect || isWrong) {
+                    if (!inMcq) {
+                        inMcq = true;
+                        teacherHtml += `  <li style="margin-bottom: 10px; padding-left: 5px;"><strong style="color:#0d6efd;">Πολλαπλής Επιλογής:</strong><ul style="list-style:none; padding-left:15px; font-weight:normal; margin-top:5px; line-height:1.4;">\n`;
+                    }
+                    let optText = tLine.substring(3).trim();
+                    let safeVal = optText.replace(/"/g, '&quot;');
+
+                    if (isCorrect) {
+                        teacherHtml += `    <li style="color: #198754; font-weight: bold;">☑ ${optText}</li>\n`;
+                    } else {
+                        teacherHtml += `    <li style="color: #6c757d;">☐ ${optText}</li>\n`;
+                    }
+
+                    // Παραγωγή HTML Μαθητή (Radio Buttons)
+                    processedLines.push(`<div class="form-check ms-4 my-1" style="font-family: inherit;"><input class="form-check-input aepp-interactive-mcq" style="cursor: pointer;" type="radio" name="mcq_${exNum}_${mcqCounter}" id="mcq_${exNum}_${mcqCounter}_${i}" value="${safeVal}"><label class="form-check-label" style="cursor: pointer;" for="mcq_${exNum}_${mcqCounter}_${i}">${optText}</label></div>`);
+                } else {
+                    if (inMcq) {
+                        inMcq = false;
+                        teacherHtml += `  </ul></li>\n`;
+                        mcqCounter++;
+                    }
+                    processedLines.push(line);
+                }
+            }
+            if (inMcq) {
+                teacherHtml += `  </ul></li>\n`;
+                mcqCounter++;
+            }
+            studentHtml = processedLines.join('\n');
 
             // Regex που πιάνει ΚΑΙ τα [[κενά]] ΚΑΙ τα ((Σ)) / ((Λ))
             const regex = /\[\[(.*?)\]\]|\(\(([ΣΛσλSlsL])\)\)/g;

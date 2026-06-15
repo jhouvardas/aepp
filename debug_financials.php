@@ -2,6 +2,10 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// ΑΣΦΑΛΕΙΑ: Απαγόρευση δημόσιας πρόσβασης σε ευαίσθητα δεδομένα.
+// Διαγράψτε ή σχολιάστε την παρακάτω γραμμή ΜΟΝΟ όταν θέλετε να κάνετε debug.
+die("Access Denied. Το αρχείο είναι κλειδωμένο για λόγους ασφαλείας.");
+
 include_once 'DbHandler.php';
 $db = new DbHandler();
 
@@ -17,7 +21,7 @@ $conn = new mysqli("jhouv.eu", "jhouvardas", "Jhouv@1957", "tutor");
 mysqli_set_charset($conn, "utf8");
 
 // 0. Επαλήθευση Μαθητή
-$checkStudent = $conn->query("SELECT name, lastName, paying, user FROM student WHERE studentId = $studentId");
+$checkStudent = $conn->query("SELECT name, lastName, paying, schoolYear FROM student WHERE studentId = $studentId");
 $studentData = $checkStudent->fetch_assoc();
 
 if (!$studentData) {
@@ -30,7 +34,7 @@ if (!$studentData) {
 
 echo "<h2>Debug: " . $studentData['lastName'] . " " . $studentData['name'] . " (ID: $studentId)</h2>";
 $displayRate = ((float)$studentData['paying'] > 1) ? $studentData['paying'] : 10;
-echo "Έτος Μαθητή: " . $studentData['user'] . " | Ωριαία χρέωση: " . $displayRate . " €<br>";
+echo "Έτος Μαθητή: " . $studentData['schoolYear'] . " | Ωριαία χρέωση: " . $displayRate . " €<br>";
 
 $financials = $db->getStudentFinancials($studentId);
 

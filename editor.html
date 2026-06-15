@@ -82,293 +82,105 @@
 
         <div class="preview-box" id="mezePreview">
             <div class="html-content-wrapper container bg-white p-4 shadow-sm rounded">
-                <h3 class="text-primary border-bottom pb-2 mb-4"><i class="fa fa-book"></i> ΕΡΩΤΗΣΗ ΘΕΩΡΙΑΣ</h3>
+                <h3 class="text-danger border-bottom pb-2 mb-4"><i class="fa fa-bug"></i> ΕΝΤΟΠΙΣΜΟΣ ΛΑΘΩΝ (ΜΑΘΗΤΕΣ ΚΑΙ
+                    ΒΑΘΜΟΛΟΓΙΕΣ)
+                </h3>
 
-                <div class="card mb-4 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="fw-bold text-dark mb-4 border-bottom pb-2">Ασκήσεις Συμπλήρωσης Κενών σε Αλγορίθμους
-                        </h5>
+                <p>Δίνεται το παρακάτω πρόγραμμα το οποίο διαβάζει τα ονόματα των μαθητών και τους βαθμούς τους στα
+                    Μαθηματικά, στις ΑΟΘ και στη Γλώσσα. Υπολογίζει τον μεγαλύτερο βαθμό κάθε μαθητή, τον μέσο όρο του
+                    και στο τέλος τον γενικό μέσο όρο της τάξης.</p>
+                <p>Ωστόσο, το πρόγραμμα περιέχει <strong>συντακτικά λάθη, λογικά λάθη, καθώς και λάθη κατά την
+                        εκτέλεση</strong>.</p>
 
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 1 (Εύρεση Αθροίσματος)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά ώστε ο αλγόριθμος να διαβάζει 100
-                                αριθμούς και να εκτυπώνει το άθροισμά τους.</p>
-                            <pre class="aepp-code shadow-sm">
-Σ &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΔΙΑΒΑΣΕ x
-    Σ &lt;- Σ + <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΓΡΑΨΕ Σ</pre>
-                        </div>
+                <pre class="aepp-code mb-4" style="font-size: 0.95rem;">1.  ΠΡΟΓΡΑΜΜΑ last2026bug
+2.  ΜΕΤΑΒΛΗΤΕΣ
+3.    ΑΚΕΡΑΙΕΣ: πληθοςΜαθητών, σ, συνολοΤάξης
+4.    ΠΡΑΓΜΑΤΙΚΕΣ: μαθ, αοθ, γλωσ, μαξ, μεσοςΟροςΤαξης
+5.    ΧΑΡΑΚΤΗΡΕΣ: ον
+6.  ΑΡΧΗ
+7.    πληθοςΜαθητών &lt;- 1
+8.    ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
+9.      ΓΡΑΨΕ 'Δώστε όνομα ή τέλος'
+10.     ΔΙΑΒΑΣΕ ον
+11.     ΓΡΑΨΕ 'Δώστε στα μαθηματικά, αοθ, γλώσσα'
+12.     ΔΙΑΒΑΣΕ μαθ, αοθ, γλωσ
+13.     μαξ &lt;- μαθ
+14.     μαξΜαθ &lt;- 'μαθηματικά'
+15.     ΑΝ αοθ &gt; μαξ ΤΟΤΕ
+16.       μαξ &lt;- αοθ
+17.       μαξΜαθ &lt;- 'αοθ'
+18.     ΑΛΛΙΩΣ γλωσ &gt; μαξ ΤΟΤΕ
+19.       μαξ &lt;- αοθ
+20.       μαξΜαθ &lt;- 'αοθ'
+21.     ΤΕΛΟΣ_ΑΝ
+22.     ΓΡΑΨΕ 'Ο μεγαλύτερος βαθμός ήταν στο ', μαξΜαθ
+23.     μο &lt;- μαθ + αοθ + γλωσ/ 3
+24.     ΓΡΑΨΕ 'Ο μέσος όρος του ', ον, ' είναι ', μο
+25.     πληθοςΜαθητών &lt;- πληθοςΜαθητών + μο
+26.     συνολοΤάξης &lt;- συνολοΤάξης + 1
+27.   ΜΕΧΡΙΣ_ΟΤΟΥ ον = 'τέλος'
+28.   μεσοςΟροςΤαξης &lt;- συνολοΤάξης/ πληθοςΜαθητών
+29.   ΓΡΑΨΕ 'Ο μέσος όρος της τάξης είναι ', μεσοςΟροςΤαξης
+30. ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</pre>
 
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 2 (Μέσος Όρος με συνθήκη τερματισμού)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά ώστε να υπολογίζεται ο μέσος όρος
-                                των θετικών αριθμών που δίνονται, μέχρι να δοθεί το μηδέν (0).</p>
-                            <pre class="aepp-code shadow-sm">
-Σ &lt;- 0
-Π &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΔΙΑΒΑΣΕ x
-ΟΣΟ x <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> 0 ΕΠΑΝΑΛΑΒΕ
-    ΑΝ x &gt; 0 ΤΟΤΕ
-        Σ &lt;- Σ + x
-        Π &lt;- Π + <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΤΕΛΟΣ_ΑΝ
-    ΔΙΑΒΑΣΕ x
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΑΝ Π &gt; 0 ΤΟΤΕ
-    ΜΟ &lt;- <input type="text" name="ans[4]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> / Π
-    ΓΡΑΨΕ ΜΟ
-ΤΕΛΟΣ_ΑΝ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 3 (Εύρεση Μεγίστου σε Πίνακα)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την εύρεση της μέγιστης τιμής
-                                σε έναν πίνακα Π[50].</p>
-                            <pre class="aepp-code shadow-sm">
-ΜΑΞ &lt;- Π[<input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ 50
-    ΑΝ Π[i] <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΜΑΞ ΤΟΤΕ
-        ΜΑΞ &lt;- <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΓΡΑΨΕ ΜΑΞ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 4 (Σειριακή Αναζήτηση)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την αναζήτηση μιας τιμής 'key'
-                                σε έναν πίνακα 100 θέσεων.</p>
-                            <pre class="aepp-code shadow-sm">
-βρέθηκε &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-i &lt;- 1
-ΟΣΟ i &lt;= 100 ΚΑΙ βρέθηκε = <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΕΠΑΝΑΛΑΒΕ
-    ΑΝ Π[i] = key ΤΟΤΕ
-        βρέθηκε &lt;- <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-        θέση &lt;- i
-    ΑΛΛΙΩΣ
-        i &lt;- i + 1
-    ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 5 (Ταξινόμηση Φυσαλίδας - Αύξουσα)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την ταξινόμηση ενός πίνακα
-                                Π[20] σε αυξάνουσα σειρά.</p>
-                            <pre class="aepp-code shadow-sm">
-ΓΙΑ i ΑΠΟ 2 ΜΕΧΡΙ <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΓΙΑ j ΑΠΟ 20 ΜΕΧΡΙ i ΜΕ ΒΗΜΑ <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-        ΑΝ Π[j-1] &gt; Π[j] ΤΟΤΕ
-            temp &lt;- Π[j-1]
-            Π[j-1] &lt;- <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-            Π[j] &lt;- temp
-        ΤΕΛΟΣ_ΑΝ
-    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 6 (Άθροισμα Γραμμών Δισδιάστατου Πίνακα)</p>
-                            <p class="small text-muted mb-2">Να υπολογιστεί το άθροισμα των στοιχείων κάθε γραμμής ενός
-                                πίνακα Π[10, 20] και να αποθηκευτεί σε μονοδιάστατο πίνακα Σ.</p>
-                            <pre class="aepp-code shadow-sm">
-ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    Σ[i] &lt;- <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ 20
-        Σ[i] &lt;- Σ[i] + Π[i, <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 7 (Ώθηση σε Στοίβα)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την εισαγωγή ενός στοιχείου σε
-                                μία Στοίβα μεγέθους Ν.</p>
-                            <pre class="aepp-code shadow-sm">
-ΑΝ top = <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΤΟΤΕ
-    ΓΡΑΨΕ 'Υπερχείλιση Στοίβας'
-ΑΛΛΙΩΣ
-    top &lt;- top + <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    Στοίβα[<input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">] &lt;- στοιχείο
-ΤΕΛΟΣ_ΑΝ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 8 (Εξαγωγή από Ουρά)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για τη λειτουργία της εξαγωγής από
-                                μία Ουρά (χρησιμοποιώντας πολλαπλή επιλογή).</p>
-                            <pre class="aepp-code shadow-sm">
-ΑΝ front = <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΤΟΤΕ
-    ΓΡΑΨΕ 'Υποχείλιση Ουράς'
-ΑΛΛΙΩΣ_ΑΝ front = <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΤΟΤΕ
-    front &lt;- 0
-    rear &lt;- 0
-ΑΛΛΙΩΣ
-    front &lt;- front + <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΑΝ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 9 (Υπολογισμός Παραγοντικού N!)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά ώστε να υπολογίζεται το γινόμενο 1
-                                * 2 * ... * N (όπου N &gt; 0).</p>
-                            <pre class="aepp-code shadow-sm">
-Παραγοντικό &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    Παραγοντικό &lt;- Παραγοντικό * <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 10 (Μετατροπή ΓΙΑ σε ΟΣΟ)</p>
-                            <p class="small text-muted mb-2">Μετατρέψτε την εντολή
-                                <code>ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 10 ΜΕ ΒΗΜΑ 2</code> σε ισοδύναμη δομή <code>ΟΣΟ</code>.
-                            </p>
-                            <pre class="aepp-code shadow-sm">
-i &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΟΣΟ i <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> 10 ΕΠΑΝΑΛΑΒΕ
-    ΓΡΑΨΕ i
-    i &lt;- i + <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 11 (Δυαδική Αναζήτηση)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την αναζήτηση μιας τιμής key σε
-                                έναν ταξινομημένο πίνακα Π[100].</p>
-                            <pre class="aepp-code shadow-sm">
-top &lt;- 100
-bottom &lt;- 1
-βρέθηκε &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΟΣΟ bottom &lt;= top ΚΑΙ βρέθηκε = ΨΕΥΔΗΣ ΕΠΑΝΑΛΑΒΕ
-    mid &lt;- (top + bottom) DIV <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΑΝ Π[mid] = key ΤΟΤΕ
-        βρέθηκε &lt;- <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-        θέση &lt;- mid
-    ΑΛΛΙΩΣ_ΑΝ Π[mid] &lt; key ΤΟΤΕ
-        bottom &lt;- mid + <input type="text" name="ans[4]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΑΛΛΙΩΣ
-        top &lt;- mid - 1
-    ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 12 (Αντιμετάθεση Γραμμών Πίνακα)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την αντιμετάθεση της 2ης με την
-                                5η γραμμή σε έναν πίνακα Π[10, 10].</p>
-                            <pre class="aepp-code shadow-sm">
-ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    temp &lt;- Π[2, <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-    Π[2, j] &lt;- Π[<input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">, j]
-    Π[5, j] &lt;- <input type="text" name="ans[4]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 13 (Άθροισμα Κύριας Διαγωνίου)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για τον υπολογισμό του αθροίσματος
-                                των στοιχείων της κύριας (πρωτεύουσας) διαγωνίου ενός τετράγωνου πίνακα Π[20, 20].</p>
-                            <pre class="aepp-code shadow-sm">
-Σ &lt;- <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΓΙΑ i ΑΠΟ 1 ΜΕΧΡΙ 20
-    Σ &lt;- Σ + Π[i, <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΓΡΑΨΕ Σ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 14 (Ταξινόμηση κάθε Στήλης Πίνακα)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για την αύξουσα ταξινόμηση των
-                                στοιχείων <strong>κάθε στήλης</strong> ξεχωριστά, σε έναν πίνακα Π[10, 20].</p>
-                            <pre class="aepp-code shadow-sm">
-ΓΙΑ j ΑΠΟ 1 ΜΕΧΡΙ <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-    ΓΙΑ k ΑΠΟ 2 ΜΕΧΡΙ 10
-        ΓΙΑ i ΑΠΟ 10 ΜΕΧΡΙ k ΜΕ ΒΗΜΑ <input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-            ΑΝ Π[i-1, j] &gt; Π[i, <input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">] ΤΟΤΕ
-                temp &lt;- Π[i-1, j]
-                Π[i-1, j] &lt;- Π[i, j]
-                Π[<input type="text" name="ans[4]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">, j] &lt;- temp
-            ΤΕΛΟΣ_ΑΝ
-        ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-    ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-
-                        <div class="mb-4">
-                            <p class="fw-bold mb-1 text-primary">Άσκηση 15 (Συγχώνευση Πινάκων)</p>
-                            <p class="small text-muted mb-2">Να συμπληρώσετε τα κενά για τη συγχώνευση δύο αυξουσών
-                                ταξινομημένων πινάκων Α[100] και Β[200] σε έναν τρίτο πίνακα Γ[300]. (Βασικός βρόχος)
-                            </p>
-                            <pre class="aepp-code shadow-sm">
-i &lt;- 1
-j &lt;- 1
-k &lt;- 1
-ΟΣΟ i &lt;= 100 ΚΑΙ j &lt;= <input type="text" name="ans[1]" class="aepp-interactive-blank" autocomplete="off" placeholder="..."> ΕΠΑΝΑΛΑΒΕ
-    ΑΝ Α[i] &lt; Β[j] ΤΟΤΕ
-        Γ[k] &lt;- Α[<input type="text" name="ans[2]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-        i &lt;- i + 1
-    ΑΛΛΙΩΣ
-        Γ[k] &lt;- Β[<input type="text" name="ans[3]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">]
-        j &lt;- j + 1
-    ΤΕΛΟΣ_ΑΝ
-    k &lt;- k + <input type="text" name="ans[4]" class="aepp-interactive-blank" autocomplete="off" placeholder="...">
-ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</pre>
-                        </div>
-                    </div>
-                </div>
+                <p>Να εντοπίσετε τα λάθη αναφέροντας τον αριθμό της γραμμής, να τα διορθώσετε και να τα κατατάξετε σε
+                    μία από τις παρακάτω κατηγορίες:</p>
+                <ul>
+                    <li>Συντακτικό λάθος</li>
+                    <li>Λογικό λάθος</li>
+                    <li>Λάθος κατά την εκτέλεση</li>
+                </ul>
+                <p class="mt-3 fw-bold">Στη συνέχεια, να γράψετε ολόκληρο το πρόγραμμα στη σωστή του μορφή.</p>
             </div>
         </div>
+    </div>
 
-        <script>
-            function copyMezeHTML() {
-                const wrapper = document.querySelector('.html-content-wrapper');
-                if (!wrapper) return;
+    <script>
+        function copyMezeHTML() {
+            const wrapper = document.querySelector('.html-content-wrapper');
+            if (!wrapper) return;
 
-                const finalHtml = wrapper.outerHTML;
+            const finalHtml = wrapper.outerHTML;
 
-                // Προσπάθεια με το σύγχρονο API
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(finalHtml).then(() => {
-                        showSuccess();
-                    }).catch(() => {
-                        fallbackCopy(finalHtml);
-                    });
-                } else {
-                    fallbackCopy(finalHtml);
-                }
-            }
-
-            function fallbackCopy(text) {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
+            // Προσπάθεια με το σύγχρονο API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(finalHtml).then(() => {
                     showSuccess();
-                } catch (err) {
-                    alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
-                }
-                document.body.removeChild(textArea);
+                }).catch(() => {
+                    fallbackCopy(finalHtml);
+                });
+            } else {
+                fallbackCopy(finalHtml);
             }
+        }
 
-            function showSuccess() {
-                const btn = document.querySelector('.sticky-top button');
-                const originalContent = btn.innerHTML;
-
-                btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-                btn.classList.replace('btn-success', 'btn-light');
-
-                setTimeout(() => {
-                    btn.innerHTML = originalContent;
-                    btn.classList.replace('btn-light', 'btn-success');
-                }, 2000);
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
             }
-        </script>
+            document.body.removeChild(textArea);
+        }
+
+        function showSuccess() {
+            const btn = document.querySelector('.sticky-top button');
+            const originalContent = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+            btn.classList.replace('btn-success', 'btn-light');
+
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.replace('btn-light', 'btn-success');
+            }, 2000);
+        }
+    </script>
 
 </body>
 

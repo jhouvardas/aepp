@@ -20,6 +20,24 @@ class AdminPageMaker extends PageMaker
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
             <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
 
+            <!-- Ενσωμάτωση CodeMirror για Syntax Highlighting HTML -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+
+            <!-- Ενσωμάτωση js-beautify για αυτόματη μορφοποίηση HTML -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"></script>
+            <style>
+                .CodeMirror {
+                    border: 1px solid #ced4da;
+                    border-radius: 0.375rem;
+                    height: auto;
+                    min-height: 250px;
+                    font-family: Consolas, monospace;
+                    font-size: 14px;
+                }
+            </style>
+
         </head>
 
         <body class="admin-body">
@@ -43,36 +61,43 @@ class AdminPageMaker extends PageMaker
 
                 <div class="collapse navbar-collapse" id="adminNavbar">
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=add_theory">Νέα Ερώτηση</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=list_theory">Λίστα Θεωρίας</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=manage_books">Διαχείριση Βιβλίων</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=list_for_test">Δημιουργία Τεστ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-info" href="index.php?action=assign_tasks">
-                                <i class="fa fa-tasks"></i> Ανάθεση Εργασιών
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-success font-weight-bold" href="#" id="studentsDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-users"></i> Μαθητές
                             </a>
+                            <div class="dropdown-menu shadow border-success">
+                                <a class="dropdown-item text-success fw-bold" href="index.php?action=viewStudentProfile"><i class="fa fa-address-card"></i> Καρτέλες Μαθητών</a>
+                                <a class="dropdown-item" href="index.php?action=manage_groups"><i class="fa fa-sitemap"></i> Διαχείριση Ομάδων</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=list_all_tasks">
-                                <i class="fa fa-history"></i> Ιστορικό Εργασιών
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-info font-weight-bold" href="#" id="tasksDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-tasks"></i> Εργασίες
                             </a>
+                            <div class="dropdown-menu shadow border-info">
+                                <a class="dropdown-item" href="index.php?action=assign_tasks"><i class="fa fa-plus"></i> Ανάθεση Εργασιών</a>
+                                <a class="dropdown-item" href="index.php?action=list_all_tasks"><i class="fa fa-history"></i> Ιστορικό Εργασιών</a>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-success font-weight-bold" href="index.php?action=viewStudentProfile">
-                                <i class="fa fa-address-card"></i> Καρτέλες Μαθητών
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="theoryDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-book"></i> Θεωρία & Τεστ
                             </a>
+                            <div class="dropdown-menu shadow">
+                                <a class="dropdown-item" href="index.php?action=add_theory"><i class="fa fa-plus-circle"></i> Νέα Ερώτηση</a>
+                                <a class="dropdown-item" href="index.php?action=list_theory"><i class="fa fa-list"></i> Λίστα Θεωρίας</a>
+                                <a class="dropdown-item" href="index.php?action=manage_books"><i class="fa fa-book"></i> Διαχείριση Βιβλίων</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="index.php?action=list_for_test"><i class="fa fa-file-text-o"></i> Δημιουργία Τεστ</a>
+                            </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="index.php?action=manage_groups">
-                                <i class="fa fa-users"></i> Διαχείριση Ομάδων
+                            <a class="nav-link text-primary font-weight-bold" href="index.php?action=manage_announcements">
+                                <i class="fa fa-bullhorn"></i> Ανακοινώσεις
                             </a>
                         </li>
 
@@ -96,9 +121,12 @@ class AdminPageMaker extends PageMaker
                                 <a class="dropdown-item" href="index.php?action=manage_exercise_types">
                                     <i class="fa fa-tags text-info"></i> 4. Διαχείριση Τύπων/Τεχνικών
                                 </a>
+                                <a class="dropdown-item" href="index.php?action=mezeBank">
+                                    <i class="fa fa-archive text-warning"></i> 5. Τράπεζα Μεζεδακίων (Κατάλογος)
+                                </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="index.php?action=fullReport">
-                                    <i class="fa fa-file-text-o text-success"></i> 3. Συγκεντρωτικό Βαθμολόγιο
+                                    <i class="fa fa-file-text-o text-success"></i> Συγκεντρωτικό Βαθμολόγιο
                                 </a>
                             </div>
                         </li>
@@ -125,14 +153,14 @@ class AdminPageMaker extends PageMaker
                     <hr class="border-secondary">
 
                     <form class="form-inline pb-3" action="index.php?action=setYear" method="post">
-                        <div class="input-group input-group-sm">
+                        <div class="input-group input-group-sm shadow-sm">
                             <div class="input-group-prepend">
-                                <span class="input-group-text bg-dark text-white border-0"><i class="fa fa-user"></i></span>
+                                <span class="input-group-text bg-dark text-white border-0"><i class="fa fa-calendar"></i> Σχολ. Έτος:</span>
                             </div>
-                            <input type="text" name="tutor_user" class="form-control border-0"
-                                placeholder="Username"
-                                value="<?php echo isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : ''; ?>"
-                                style="width: 120px;"
+                            <input type="number" name="exam_year" class="form-control border-0 text-center fw-bold"
+                                placeholder="π.χ. <?php echo date('Y') + 1; ?>"
+                                value="<?php echo isset($_SESSION['exam_year']) ? $_SESSION['exam_year'] : (isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : (date('Y') + 1)); ?>"
+                                style="width: 100px;"
                                 autocomplete="off">
                             <div>
                                 <button class="btn btn-dark border-0 text-success fw-bold" type="submit">Ορισμός</button>

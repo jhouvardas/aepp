@@ -22,7 +22,7 @@
     $exFm     = new ExerciseAdminFormMaker();
     $reportFm = new ReportAdminFormMaker();
 
-    $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+    $userYear = $db->getCurrentTutorYear();
 
     // Sanitization της παραμέτρου action
     $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['action']) : 'dashboard';
@@ -34,6 +34,27 @@
         $page->displayHeadMatter(); // Καλείται πρώτα το head
         $page->displayMenu($userYear, $db); // Περιλαμβάνουμε το userYear και το $db object
         if (isset($_GET['status'])) $page->showToast($_GET['status']);
+
+        // --- ΕΛΕΓΧΟΣ ΚΑΙ ΕΜΦΑΝΙΣΗ ΓΕΝΕΘΛΙΩΝ (ΑΥΡΙΟ) ΓΙΑ ΤΟ ADMIN ---
+        if (!empty($userYear)) {
+            $students = $db->getTutorStudents($userYear);
+            $birthdayStudents = [];
+            $tomorrowMD = date('m-d', strtotime('+1 day'));
+            if (is_array($students)) {
+                foreach ($students as $student) {
+                    if (!empty($student['birthday']) && $student['birthday'] !== '0000-00-00' && $student['birthday'] !== '-') {
+                        if (date('m-d', strtotime($student['birthday'])) === $tomorrowMD) {
+                            $birthdayStudents[] = $student['name'] . ' ' . $student['lastName'];
+                        }
+                    }
+                }
+            }
+            if (!empty($birthdayStudents)) {
+                $names = implode(', ', $birthdayStudents);
+                echo "<div class='container mt-3'><div class='alert alert-info text-center shadow-sm border-info' style='border-radius: 10px;'><i class='fa fa-gift text-primary fa-2x align-middle me-3'></i><span class='align-middle fs-5'><strong>Υπενθύμιση:</strong> Αύριο έχει γενέθλια: <strong>{$names}</strong>! 🎈</span></div></div>";
+            }
+        }
+        // --- ΤΕΛΟΣ ΕΛΕΓΧΟΥ ΓΕΝΕΘΛΙΩΝ ---
     }
 
     switch ($action) {
@@ -237,6 +258,19 @@
             exit();
             break;
 
+        case 'massHideMezedakia':
+            $db->massHideOldMezedakia();
+            // Ενημέρωση και επιστροφή στη λίστα
+            echo "<script>alert('Όλα τα παλιά μεζεδάκια μεταφέρθηκαν στο 2030 και κρύφτηκαν από τους μαθητές!'); window.location.href='index.php?action=listMezedakia';</script>";
+            exit();
+            break;
+
+        case 'massDeleteSubmissions':
+            $db->massDeleteOldSubmissions();
+            echo "<script>alert('Όλες οι παλιές υποβολές και τα αρχεία τους διαγράφηκαν επιτυχώς! Το σύστημα ελάφρυνε.'); window.location.href='index.php?action=listMezedakia';</script>";
+            exit();
+            break;
+
         case 'saveMezedaki':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $success = $db->insertMezedaki($_POST, $_FILES);
@@ -251,6 +285,11 @@
         case 'addMezedaki':
             $nextNum = $db->getNextMezeNumber();
             $mezeFm->addMezedakiForm([], $nextNum);
+            break;
+
+        case 'mezeBank':
+            $result = $db->getAllMezedakiaForAdmin();
+            $mezeFm->mezeBank($result, $db);
             break;
 
         case 'manage_exercise_types':
@@ -321,24 +360,88 @@
                 <head>
                     <meta charset="UTF-8">
                     <base href="../">
-                    <title>Προεπισκόπηση Μεζεδακίου #<?php echo $meze['mezeNumber']; ?></title>
+                    <title>Μεζεδάκι #<?php echo $meze['mezeNumber']; ?></title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-                    <link rel="stylesheet" href="aepp.css">
+                    <link rel="stylesheet" href="aepp.css?v=<?php echo @filemtime(__DIR__ . '/../aepp.css'); ?>">
+                    <style>
+                        @media print {
+                            .preview-box {
+                                border: none !important;
+                                padding: 0 !important;
+                                box-shadow: none !important;
+                            }
+
+                            .bg-light {
+                                background-color: transparent !important;
+                            }
+
+                            .container {
+                                padding: 0 !important;
+                                max-width: 100% !important;
+                            }
+
+                            .shadow-sm,
+                            .shadow {
+                                box-shadow: none !important;
+                            }
+
+                            .border {
+                                border: 1px solid #dee2e6 !important;
+                            }
+
+                            .html-content-wrapper {
+                                padding: 0 !important;
+                                border: none !important;
+                            }
+
+                            h4 {
+                                page-break-after: avoid;
+                            }
+                        }
+                    </style>
                 </head>
 
-                <body class="p-4 bg-light">
+                <body class="p-2 p-md-4 bg-light">
+                    <!-- Control Panel Εκτύπωσης -->
+                    <div class="container d-print-none mb-4">
+                        <div class="card shadow border-info">
+                            <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+                                <div class="mb-2 mb-md-0">
+                                    <strong class="text-info me-3"><i class="fa fa-print"></i> Επιλογές Εκτύπωσης:</strong>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="chkQuestion" checked onchange="document.getElementById('questionBlock').classList.toggle('d-none', !this.checked)">
+                                        <label class="form-check-label fw-bold" for="chkQuestion">Εκφώνηση</label>
+                                    </div>
+                                    <?php if (!empty($meze['mezeHints'])): ?>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="chkHints" checked onchange="document.getElementById('hintsBlock').classList.toggle('d-none', !this.checked)">
+                                            <label class="form-check-label fw-bold" for="chkHints">Υποδείξεις</label>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="chkSolution" checked onchange="document.getElementById('solutionBlock').classList.toggle('d-none', !this.checked)">
+                                        <label class="form-check-label fw-bold" for="chkSolution">Λύση</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-info text-white shadow-sm fw-bold px-4" onclick="window.print()"><i class="fa fa-print"></i> Εκτύπωση</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="container">
                         <div class="preview-box">
                             <h2 class="border-bottom pb-2 mb-4 text-dark font-weight-bold">
-                                Προεπισκόπηση: Μεζεδάκι #<?php echo $meze['mezeNumber']; ?>
+                                Μεζεδάκι #<?php echo $meze['mezeNumber']; ?>
                                 <?php if (isset($meze['isSos']) && $meze['isSos'] == 1): ?>
                                     <span class="badge bg-danger ms-2" style="font-size: 1rem;"><i class="fa fa-fire"></i> SOS</span>
                                 <?php endif; ?>
                             </h2>
 
                             <!-- Ενότητα Εκφώνησης -->
-                            <div class="mb-5">
+                            <div class="mb-5" id="questionBlock">
                                 <h4 class="text-primary mb-3"><i class="fa fa-file-text-o"></i> Εκφώνηση</h4>
                                 <?php if (!empty($meze['mezeImage'])): ?>
                                     <div class="text-center mb-3">
@@ -352,7 +455,7 @@
 
                             <!-- Ενότητα Hints -->
                             <?php if (!empty($meze['mezeHints'])): ?>
-                                <div class="mb-5">
+                                <div class="mb-5" id="hintsBlock">
                                     <h4 class="text-info mb-3"><i class="fa fa-lightbulb-o"></i> Υποδείξεις / Hints</h4>
                                     <div class="alert alert-info border-info shadow-sm">
                                         <?php echo nl2br($meze['mezeHints']); ?>
@@ -361,7 +464,7 @@
                             <?php endif; ?>
 
                             <!-- Ενότητα Λύσης -->
-                            <div class="mb-4">
+                            <div class="mb-4" id="solutionBlock">
                                 <h4 class="text-success mb-3"><i class="fa fa-check-circle"></i> Λύση</h4>
                                 <div class="p-3 border border-success rounded bg-light shadow-sm">
                                     <?php if (!empty($meze['mezeSolutionImage'])): ?>
@@ -378,6 +481,16 @@
                     </div>
                     <!-- Bootstrap 5 JS Bundle (Περιλαμβάνει Popper) -->
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                    <script>
+                        if (new URLSearchParams(window.location.search).get('autoprint') === '1') {
+                            let hintsCheck = document.getElementById('chkHints');
+                            if (hintsCheck) {
+                                hintsCheck.checked = false; // Απόκρυψη Hints από προεπιλογή στην αυτόματη εκτύπωση
+                                document.getElementById('hintsBlock').classList.add('d-none');
+                            }
+                            setTimeout(() => window.print(), 800);
+                        }
+                    </script>
                 </body>
 
                 </html>
@@ -427,9 +540,14 @@
             }
             break;
         case 'setYear':
-            if (isset($_POST['tutor_user'])) {
-                $_SESSION['tutor_user'] = $_POST['tutor_user'];
-                echo "<div class='container mt-2'><div class='alert alert-info'>Το έτος εργασίας ορίστηκε σε: " . $_SESSION['tutor_user'] . "</div></div>";
+            if (isset($_POST['exam_year'])) {
+                $_SESSION['exam_year'] = trim($_POST['exam_year']);
+                $_SESSION['tutor_user'] = trim($_POST['exam_year']); // Για συμβατότητα με το παλιό
+                echo "<div class='container mt-2'><div class='alert alert-info shadow-sm'><i class='fa fa-calendar-check-o'></i> Το σχολικό έτος (εξετάσεων) ορίστηκε σε: <b>" . $_SESSION['exam_year'] . "</b></div></div>";
+            } elseif (isset($_POST['tutor_user'])) { // Fallback
+                $_SESSION['tutor_user'] = trim($_POST['tutor_user']);
+                $_SESSION['exam_year'] = trim($_POST['tutor_user']);
+                echo "<div class='container mt-2'><div class='alert alert-info shadow-sm'><i class='fa fa-calendar-check-o'></i> Το σχολικό έτος (εξετάσεων) ορίστηκε σε: <b>" . $_SESSION['tutor_user'] . "</b></div></div>";
             }
             // Επιστροφή στο dashboard
             $mezeFm->listMezedakia($db->getAllMezedakiaForAdmin(), $db);
@@ -531,27 +649,10 @@
                 if (empty($studentsToEmail)) {
                     echo "<div class='container mt-3'><div class='alert alert-warning shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>Δεν βρέθηκαν μαθητές με βαθμό 0 και email.</div></div>";
                 } else {
-                    require_once '../phpmailer/class.phpmailer.php';
-                    require_once '../phpmailer/class.smtp.php';
-                    require_once 'config.php';
-
                     $successCount = 0;
                     foreach ($studentsToEmail as $student) {
-                        $mail = new PHPMailer(true);
-                        try {
-                            $mail->isSMTP();
-                            $mail->Host = 'smtp.gmail.com';
-                            $mail->SMTPAuth = true;
-                            $mail->Username = SMTP_USER;
-                            $mail->Password = SMTP_PASS;
-                            $mail->SMTPSecure = 'tls';
-                            $mail->Port = 587;
-                            $mail->CharSet = 'UTF-8';
-                            $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                            $mail->addAddress($student['email']);
-                            $mail->isHTML(true);
-                            $mail->Subject = "Ενημέρωση Βαθμολογίας: Μεζεδάκι #$mezeNum";
-                            $mail->Body = "
+                        $subject = "Ενημέρωση Βαθμολογίας: Μεζεδάκι #$mezeNum";
+                        $body = "
                                 <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
                                     <h2 style='color:#dc3545;'>Ενημέρωση Βαθμολογίας (ΑΕΠΠ)</h2>
                                     <p>Γεια σου <b>{$student['name']}</b>,</p>
@@ -559,9 +660,8 @@
                                     <p>Αν επιθυμείς να υποβάλεις τη λύση σου τώρα για βελτίωση ή εκπρόθεσμα, επικοινώνησε με τον δάσκαλό σου ή ζήτησε παράταση μέσω της πλατφόρμας.</p>
                                     <p>Καλή συνέχεια!</p>
                                 </div>";
-                            $mail->send();
+                        if ($db->sendSystemEmail($student['email'], $subject, $body) === true) {
                             $successCount++;
-                        } catch (Exception $e) { /* Σφάλμα σε μεμονωμένο email */
                         }
                     }
                     echo "<div class='container mt-3'><div class='alert alert-success shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>Ολοκληρώθηκε! Στάλθηκαν $successCount emails ενημέρωσης.</div></div>";
@@ -594,27 +694,10 @@
                 if (empty($studentsToEmail)) {
                     echo "<script>alert('Όλοι οι μαθητές έχουν ήδη υποβάλει λύση ή δεν έχουν δηλωμένο email!'); window.location.href='index.php?action=listMezedakia';</script>";
                 } else {
-                    require_once '../phpmailer/class.phpmailer.php';
-                    require_once '../phpmailer/class.smtp.php';
-                    require_once 'config.php';
-
                     $successCount = 0;
                     foreach ($studentsToEmail as $student) {
-                        $mail = new PHPMailer(true);
-                        try {
-                            $mail->isSMTP();
-                            $mail->Host = 'smtp.gmail.com';
-                            $mail->SMTPAuth = true;
-                            $mail->Username = SMTP_USER;
-                            $mail->Password = SMTP_PASS;
-                            $mail->SMTPSecure = 'tls';
-                            $mail->Port = 587;
-                            $mail->CharSet = 'UTF-8';
-                            $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                            $mail->addAddress($student['email']);
-                            $mail->isHTML(true);
-                            $mail->Subject = "⏳ Υπενθύμιση: Λήξη προθεσμίας - Μεζεδάκι #$mezeNum";
-                            $mail->Body = "
+                        $subject = "⏳ Υπενθύμιση: Λήξη προθεσμίας - Μεζεδάκι #$mezeNum";
+                        $body = "
                                 <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
                                     <h2 style='color:#ffc107;'>⏳ Υπενθύμιση Προθεσμίας</h2>
                                     <p>Γεια σου <b>{$student['name']}</b>,</p>
@@ -622,9 +705,8 @@
                                     <p>Παρακαλούμε συνδέσου στην πλατφόρμα και ολοκλήρωσε την άσκηση εγκαίρως.</p>
                                     <p>Καλή συνέχεια!</p>
                                 </div>";
-                            $mail->send();
+                        if ($db->sendSystemEmail($student['email'], $subject, $body) === true) {
                             $successCount++;
-                        } catch (Exception $e) { /* Αγνόησε λάθη σε μεμονωμένα email για να συνεχιστεί η λούπα */
                         }
                     }
                     echo "<script>alert('Ολοκληρώθηκε! Στάλθηκαν $successCount emails υπενθύμισης.'); window.location.href='index.php?action=listMezedakia';</script>";
@@ -669,40 +751,13 @@
                 $htmlContent = htmlspecialchars_decode($_POST['html_message']);
                 $mezeId = $_POST['meze_id'];
 
-                // Χρήση PHPMailer από τον τοπικό φάκελο (έκδοση 5.2.x)
-                require_once '../phpmailer/class.phpmailer.php';
-                require_once '../phpmailer/class.smtp.php';
+                $replyTo = defined('SMTP_REPLY_TO') ? SMTP_REPLY_TO : null;
+                $result = $db->sendSystemEmail($to, $subject, $htmlContent, $replyTo);
 
-                require_once 'config.php';
-
-                $mail = new PHPMailer(true);
-
-                try {
-                    // Ρυθμίσεις Gmail SMTP
-                    $mail->isSMTP();
-                    $mail->Host       = 'smtp.gmail.com';
-                    $mail->SMTPAuth   = true;
-                    $mail->Username   = SMTP_USER;
-                    $mail->Password   = SMTP_PASS;
-                    $mail->SMTPSecure = 'tls';
-                    $mail->Port       = 587;
-                    $mail->CharSet    = 'UTF-8';
-
-                    // Στοιχεία Αποστολέα
-                    $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                    $mail->addAddress($to);
-                    $mail->addReplyTo(SMTP_REPLY_TO, 'Πληροφορίες');
-
-                    // Περιεχόμενο
-                    $mail->isHTML(true);
-                    $mail->Subject = $subject;
-                    $mail->Body    = $htmlContent;
-                    $mail->AltBody = strip_tags($htmlContent);
-
-                    $mail->send();
+                if ($result === true) {
                     echo "<div class='container mt-3'><div class='alert alert-success shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>✅ Το Email στάλθηκε επιτυχώς μέσω Gmail SMTP!</div></div>";
-                } catch (Exception $e) {
-                    $errorMsg = addslashes($mail->ErrorInfo);
+                } else {
+                    $errorMsg = addslashes($result);
                     echo "<div class='container mt-3'><div class='alert alert-danger shadow alert-dismissible fade show'><button type='button' class='btn-close' data-bs-dismiss='alert'></button>❌ Η αποστολή απέτυχε. Σφάλμα: $errorMsg</div></div>";
                 }
 
@@ -781,39 +836,20 @@
                     $mezeNum = $db->getMezeNumberById($mId);
 
                     if ($student && !empty($student['email'])) {
-                        require_once '../phpmailer/class.phpmailer.php';
-                        require_once '../phpmailer/class.smtp.php';
-                        require_once 'config.php';
-
-                        $mail = new PHPMailer(true);
-                        try {
-                            $mail->isSMTP();
-                            $mail->Host       = 'smtp.gmail.com';
-                            $mail->SMTPAuth   = true;
-                            $mail->Username   = SMTP_USER;
-                            $mail->Password   = SMTP_PASS;
-                            $mail->SMTPSecure = 'tls';
-                            $mail->Port       = 587;
-                            $mail->CharSet    = 'UTF-8';
-
-                            $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                            $mail->addAddress($student['email']);
-                            $mail->isHTML(true);
-
-                            if ($approve) {
-                                $mail->Subject = "Έγκριση Παράτασης: Μεζεδάκι #$mezeNum";
-                                $mail->Body = "
+                        if ($approve) {
+                            $subject = "Έγκριση Παράτασης: Μεζεδάκι #$mezeNum";
+                            $body = "
                                 <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                                     <h2 style='color: #28a745;'>Έγκριση Παράτασης!</h2>
                                     <p>Γεια σου <b>" . $student['name'] . "</b>,</p>
                                     <p>Το αίτημά σου για παράταση στο <b>Μεζεδάκι #$mezeNum</b> εγκρίθηκε από τον δάσκαλο.</p>
                                     <p>Έχεις πλέον <b>$hours επιπλέον ώρες</b> από τώρα για να υποβάλεις τη λύση σου στην πλατφόρμα.</p>
-                                    <p><a href='https://jhouv.eu/aepp/index.php?action=viewMezedakia' style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Μετάβαση στα Μεζεδάκια</a></p>
+                                    <p><a href='http://jhouv.eu/aepp/index.php?action=viewMezedakia' style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Μετάβαση στα Μεζεδάκια</a></p>
                                 <p>Καλή συνέχεια και καλή μελέτη,<br><b>Ο Δάσκαλος</b></p>
                                 </div>";
-                            } else {
-                                $mail->Subject = "Ενημέρωση Αιτήματος Παράτασης: Μεζεδάκι #$mezeNum";
-                                $mail->Body = "
+                        } else {
+                            $subject = "Ενημέρωση Αιτήματος Παράτασης: Μεζεδάκι #$mezeNum";
+                            $body = "
                                 <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
                                     <h2 style='color: #dc3545;'>Απόρριψη Αιτήματος Παράτασης</h2>
                                     <p>Γεια σου <b>" . $student['name'] . "</b>,</p>
@@ -821,10 +857,8 @@
                                     <p>Μπορείς να επικοινωνήσεις με τον δάσκαλό σου για οποιαδήποτε διευκρίνιση.</p>
                                 <p>Καλή συνέχεια,<br><b>Ο Δάσκαλος</b></p>
                                 </div>";
-                            }
-                            $mail->send();
-                        } catch (Exception $e) { /* Silent fail */
                         }
+                        $db->sendSystemEmail($student['email'], $subject, $body);
                     }
                 }
                 $status = $approve ? 'ext_approved' : 'ext_rejected';
@@ -898,12 +932,6 @@
                 $taskName = $task ? mb_substr(strip_tags($task['task_text']), 0, 60) . "..." : "Ομαδική Εργασία";
                 $students = $db->getTutorStudents($userYear);
 
-                if ($sendEmails) {
-                    require_once '../phpmailer/class.phpmailer.php';
-                    require_once '../phpmailer/class.smtp.php';
-                    require_once 'config.php';
-                }
-
                 // Φέρνουμε τους υπάρχοντες βαθμούς για να ελέγξουμε αν υπήρξε αλλαγή
                 $existingGrades = $db->getTaskGrades($taskId);
                 $emailCount = 0;
@@ -922,34 +950,20 @@
                             $student = ($studentKey !== false) ? $students[$studentKey] : null;
 
                             if ($student && !empty($student['email'])) {
-                                $mail = new PHPMailer(true);
-                                try {
-                                    $mail->isSMTP();
-                                    $mail->Host       = 'smtp.gmail.com';
-                                    $mail->SMTPAuth   = true;
-                                    $mail->Username   = SMTP_USER;
-                                    $mail->Password   = SMTP_PASS;
-                                    $mail->SMTPSecure = 'tls';
-                                    $mail->Port       = 587;
-                                    $mail->CharSet    = 'UTF-8';
-                                    $mail->setFrom(SMTP_USER, SMTP_FROM_NAME);
-                                    $mail->addAddress($student['email']);
-                                    $mail->isHTML(true);
-                                    $mail->Subject = "Ενημέρωση Βαθμολογίας: Ομαδική Εργασία";
-                                    $mail->Body = "
+                                $subject = "Ενημέρωση Βαθμολογίας: Ομαδική Εργασία";
+                                $body = "
                                     <div style='font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; border-radius:10px; max-width:600px;'>
                                         <h2 style='color:#007bff;'>Ενημέρωση Βαθμολογίας</h2>
                                         <p>Γεια σου <b>{$student['name']}</b>,</p>
                                         <p>Η βαθμολογία σου για την εργασία <i>\"$taskName\"</i> καταχωρήθηκε.</p>
                                         <div style='background:#f8f9fa; padding:15px; border-radius:5px; margin:15px 0;'>
                                             <p style='margin:5px 0;'><b>Βαθμός:</b> <span style='color:#dc3545; font-size:1.2em;'>$grade/20</span></p>
-                                            <p style='margin:5px 0;'><b>Σχόλια:</b><br>$comment</p>
+                                            <div style='margin:5px 0;'><b>Σχόλια:</b><br><div style='white-space: pre-wrap; font-style: italic; padding-top: 5px;'>$comment</div></div>
                                         </div>
                                         <p>Καλή συνέχεια!</p>
                                     </div>";
-                                    $mail->send();
+                                if ($db->sendSystemEmail($student['email'], $subject, $body) === true) {
                                     $emailCount++;
-                                } catch (Exception $e) {
                                 }
                             }
                         }
@@ -958,6 +972,225 @@
 
                 $alertMsg = $sendEmails ? "Επιτυχής αποθήκευση! Στάλθηκαν $emailCount emails ενημέρωσης." : "Επιτυχής αποθήκευση!";
                 echo "<script>alert('$alertMsg'); window.location.href='index.php?action=list_all_tasks';</script>";
+            }
+            break;
+
+        case 'manage_announcements':
+            $announcements = $db->getAllAnnouncements($userYear);
+            $mezeFm->listAnnouncements($announcements);
+            break;
+
+        case 'add_announcement':
+            $mezeFm->announcementForm();
+            break;
+
+        case 'save_announcement':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $db->insertAnnouncement($_POST['title'], $_POST['content'], $_FILES, $userYear);
+                echo "<script>window.location.href='index.php?action=manage_announcements';</script>";
+                exit();
+            }
+            break;
+
+        case 'edit_announcement':
+            if (isset($_GET['id'])) {
+                $announcement = $db->getAnnouncementById($_GET['id']);
+                $mezeFm->announcementForm($announcement);
+            }
+            break;
+
+        case 'update_announcement':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $deleteImage = isset($_POST['deleteImage']) ? "1" : "0";
+                $db->updateAnnouncement($_POST['id'], $_POST['title'], $_POST['content'], $_FILES, $deleteImage, $userYear);
+                echo "<script>window.location.href='index.php?action=manage_announcements';</script>";
+                exit();
+            }
+            break;
+
+        case 'delete_announcement':
+            if (isset($_GET['id'])) {
+                $db->deleteAnnouncement($_GET['id']);
+                echo "<script>window.location.href='index.php?action=manage_announcements';</script>";
+                exit();
+            }
+            break;
+
+        case 'notify_announcement':
+            if (isset($_GET['id'])) {
+                $announcement = $db->getAnnouncementById($_GET['id']);
+                $students = $db->getTutorStudents($userYear);
+
+                if ($announcement && !empty($students)) {
+                    $successCount = 0;
+                    foreach ($students as $student) {
+                        if (empty($student['email'])) continue;
+                        $subject = "Νέα Ανακοίνωση: " . $announcement['title'];
+                        $body = "
+                        <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                            <h2 style='color: #007bff;'>" . htmlspecialchars($announcement['title']) . "</h2>
+                            <p>Γεια σου <b>" . htmlspecialchars($student['name']) . "</b>,</p>
+                            <div style='padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 20px;'>
+                                " . $announcement['content'] . "
+                            </div>
+                            <p><a href='http://jhouv.eu/aepp/index.php?action=announcements#ann-" . $announcement['id'] . "' style='display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Προβολή Ανακοίνωσης</a></p>
+                            <p>Καλή συνέχεια!</p>
+                        </div>";
+                        if ($db->sendSystemEmail($student['email'], $subject, $body) === true) {
+                            $successCount++;
+                        }
+                    }
+                    echo "<script>alert('Εστάλησαν $successCount emails επιτυχώς!'); window.location.href='index.php?action=manage_announcements';</script>";
+                } else {
+                    echo "<script>alert('Δεν βρέθηκαν μαθητές με έγκυρο email.'); window.location.href='index.php?action=manage_announcements';</script>";
+                }
+                exit();
+            }
+            break;
+
+        case 'group_email_form':
+            $groups = $db->getGroups($userYear);
+            $reportFm->groupEmailForm($groups);
+            break;
+
+        case 'send_group_email':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $groupId = $_POST['group_id'];
+                $subject = $_POST['subject'];
+                $messageHtml = $_POST['message'];
+
+                $students = $db->getStudentsByGroupId($groupId, $userYear);
+                $groupInfo = null;
+
+                $groups = $db->getGroups($userYear);
+                foreach ($groups as $g) {
+                    if ($g['id'] == $groupId) {
+                        $groupInfo = $g;
+                        break;
+                    }
+                }
+
+                $groupName = $groupInfo ? $groupInfo['group_name'] : "Ομάδα";
+
+                // New arrays for results
+                $successfulRecipients = [];
+                $failedRecipients = [];
+
+                if (!empty($students)) {
+                    foreach ($students as $student) {
+                        if (!empty($student['email'])) {
+                            $body = "
+                                <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                                    <h2 style='color: #007bff;'>Ενημέρωση Ομάδας: $groupName</h2>
+                                    <p>Γεια σου <b>{$student['name']}</b>,</p>
+                                    <div style='padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 20px;'>
+                                        $messageHtml
+                                    </div>
+                                    <p>Καλή συνέχεια!</p>
+                                </div>";
+                            $res = $db->sendSystemEmail($student['email'], $subject, $body);
+                            if ($res === true) {
+                                $successfulRecipients[] = [
+                                    'name' => $student['name'] . ' ' . $student['lastName'],
+                                    'email' => $student['email']
+                                ];
+                            } else {
+                                $failedRecipients[] = [
+                                    'name' => $student['name'] . ' ' . $student['lastName'],
+                                    'email' => $student['email'],
+                                    'error' => $res
+                                ];
+                            }
+                        } else {
+                            $failedRecipients[] = [
+                                'name' => $student['name'] . ' ' . $student['lastName'],
+                                'email' => 'Δεν υπάρχει email',
+                                'error' => 'Δεν έχει δηλωθεί διεύθυνση email για αυτόν τον μαθητή.'
+                            ];
+                        }
+                    }
+                }
+                if (count($successfulRecipients) > 0) {
+                    $db->logGroupEmail($groupId, $subject, $messageHtml, $userYear);
+                }
+
+                $_SESSION['email_results'] = [
+                    'groupName' => $groupName,
+                    'subject' => $subject,
+                    'message' => $messageHtml,
+                    'successful' => $successfulRecipients,
+                    'failed' => $failedRecipients
+                ];
+
+                echo "<script>window.location.href='index.php?action=group_email_results';</script>";
+            }
+            break;
+
+        case 'group_email_history':
+            $history = $db->getGroupEmailHistory($userYear);
+            $reportFm->showGroupEmailHistory($history);
+            break;
+
+        case 'group_email_results':
+            if (isset($_SESSION['email_results'])) {
+                $results = $_SESSION['email_results'];
+                $reportFm->showGroupEmailResults(
+                    $results['groupName'],
+                    $results['subject'],
+                    $results['message'],
+                    $results['successful'],
+                    $results['failed']
+                );
+                unset($_SESSION['email_results']);
+            } else {
+                echo "<script>window.location.href='index.php?action=group_email_form';</script>";
+            }
+            break;
+
+        case 'retry_failed_emails':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $subject = $_POST['subject'];
+                $messageHtml = $_POST['message'];
+                $failedRecipientsJson = $_POST['failed_recipients'];
+                $recipientsToRetry = json_decode(htmlspecialchars_decode($failedRecipientsJson), true);
+
+                $successfulRecipients = [];
+                $failedRecipients = [];
+                $groupName = $_POST['group_name'];
+
+                if (!empty($recipientsToRetry)) {
+                    foreach ($recipientsToRetry as $student) {
+                        if (!empty($student['email']) && $student['email'] !== 'Δεν υπάρχει email') {
+                            $body = "
+                                <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                                    <h2 style='color: #007bff;'>Ενημέρωση Ομάδας: $groupName</h2>
+                                    <p>Γεια σου <b>{$student['name']}</b>,</p>
+                                    <div style='padding: 15px; background-color: #f8f9fa; border-radius: 5px; margin-bottom: 20px;'>
+                                        $messageHtml
+                                    </div>
+                                    <p>Καλή συνέχεια!</p>
+                                </div>";
+                            $res = $db->sendSystemEmail($student['email'], $subject, $body);
+                            if ($res === true) {
+                                $successfulRecipients[] = $student;
+                            } else {
+                                $failedRecipients[] = ['name' => $student['name'], 'email' => $student['email'], 'error' => $res];
+                            }
+                        } else {
+                            $failedRecipients[] = $student; // Keep them in the failed list
+                        }
+                    }
+                }
+
+                $_SESSION['email_results'] = [
+                    'groupName' => $groupName . " (Επανάληψη)",
+                    'subject' => $subject,
+                    'message' => $messageHtml,
+                    'successful' => $successfulRecipients,
+                    'failed' => $failedRecipients
+                ];
+
+                echo "<script>window.location.href='index.php?action=group_email_results';</script>";
             }
             break;
 

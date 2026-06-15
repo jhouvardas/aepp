@@ -3,271 +3,234 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Λύσεις Θεμάτων Σωστό/Λάθος</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Πρόχειρο Λύσης</title>
+  <!-- Bootstrap 5 CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="aepp.css">
   <style>
     body {
-      padding-top: 60px !important;
+      padding: 50px;
+      background-color: #f8f9fa;
+    }
+
+    .preview-box {
+      background: white;
+      padding: 20px;
+      border-left: 5px solid #28a745;
+      /* Πράσινο χρώμα για να ξεχωρίζει ότι είναι Λύση */
+      border-bottom: 1px solid #dee2e6;
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    body {
+      padding: 0 !important;
+      margin: 0;
+    }
+
+    /* Επιπλέον στυλ για το κείμενο του θέματος */
+    .html-content-wrapper code {
+      color: #d63384;
+      font-weight: bold;
+      background-color: #f8f9fa;
+      padding: 0 4px;
+      border-radius: 3px;
     }
   </style>
 </head>
 
-<body class="p-0">
-  <!-- Sticky Header με κουμπί Αντιγραφής -->
-  <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
-    <span class="text-white ms-3 fw-bold small"><i class="fa fa-code text-info"></i> HTML ΛΥΣΕΩΝ</span>
-    <button onclick="copySolutionHTML()" class="btn btn-success btn-sm me-3 fw-bold">
-      <i class="fa fa-copy"></i> Αντιγραφή HTML
-    </button>
-  </div>
+<body>
 
-  <div class="container py-4">
-    <div class="html-content-wrapper">
-      <h4 class="text-success mb-4 border-bottom pb-2"><i class="fa fa-check-circle"></i> Λύσεις: Συμπλήρωση Κενών σε
-        Αλγορίθμους</h4>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 1 (Εύρεση Αθροίσματος)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>0</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>100</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>x</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 2 (Μέσος Όρος με συνθήκη τερματισμού)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>0</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>&lt;&gt;</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>1</code></div>
-          <div class="answer-item"><span class="ans-num">(4)</span> <code>Σ</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 3 (Εύρεση Μεγίστου σε Πίνακα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>1</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>&gt;</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>Π[i]</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 4 (Σειριακή Αναζήτηση)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>ΨΕΥΔΗΣ</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>ΨΕΥΔΗΣ</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>ΑΛΗΘΗΣ</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 5 (Ταξινόμηση Φυσαλίδας - Αύξουσα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>20</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>-1</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>Π[j]</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 6 (Άθροισμα Γραμμών Δισδιάστατου Πίνακα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>10</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>0</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>j</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 7 (Ώθηση σε Στοίβα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>Ν</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>1</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>top</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 8 (Εξαγωγή από Ουρά)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>0</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>rear</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>1</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 9 (Υπολογισμός Παραγοντικού N!)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>1</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>Ν</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>i</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 10 (Μετατροπή ΓΙΑ σε ΟΣΟ)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>1</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>&lt;=</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>2</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 11 (Δυαδική Αναζήτηση)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>ΨΕΥΔΗΣ</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>2</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>ΑΛΗΘΗΣ</code></div>
-          <div class="answer-item"><span class="ans-num">(4)</span> <code>1</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 12 (Αντιμετάθεση Γραμμών Πίνακα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>10</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>j</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>5</code></div>
-          <div class="answer-item"><span class="ans-num">(4)</span> <code>temp</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 13 (Άθροισμα Κύριας Διαγωνίου)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>0</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>i</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 14 (Ταξινόμηση κάθε Στήλης Πίνακα)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>20</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>-1</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>j</code></div>
-          <div class="answer-item"><span class="ans-num">(4)</span> <code>i</code></div>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="fw-bold mb-1 text-primary">Άσκηση 15 (Συγχώνευση Πινάκων)</p>
-        <div class="answer-grid">
-          <div class="answer-item"><span class="ans-num">(1)</span> <code>200</code></div>
-          <div class="answer-item"><span class="ans-num">(2)</span> <code>i</code></div>
-          <div class="answer-item"><span class="ans-num">(3)</span> <code>j</code></div>
-          <div class="answer-item"><span class="ans-num">(4)</span> <code>1</code></div>
-        </div>
-      </div>
-
+  <div class="container-fluid px-0">
+    <!-- Sticky Header με κουμπί Αντιγραφής -->
+    <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
+      <span class="text-white ms-3 fw-bold small"><i class="fa fa-eye text-success"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ ΛΥΣΗΣ</span>
+      <button onclick="copyMezeHTML()" class="btn btn-success btn-sm me-3 fw-bold">
+        <i class="fa fa-copy"></i> Αντιγραφή HTML
+      </button>
     </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    function copySolutionHTML() {
-      const wrapper = document.querySelector('.html-content-wrapper');
-      if (!wrapper) return;
 
-      const finalHtml = wrapper.outerHTML;
+    <div class="preview-box" id="mezePreview">
+      <div class="html-content-wrapper container bg-white p-4 shadow-sm rounded">
 
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(finalHtml).then(() => {
-          showSuccess();
-        }).catch(() => {
+        <h3 class="text-success border-bottom pb-2 mb-4"><i class="fa fa-check-circle"></i> ΕΝΔΕΙΚΤΙΚΗ ΑΠΑΝΤΗΣΗ</h3>
+
+        <p>Η σωστή ομαδοποίηση των λαθών (Συντακτικά, Κατά την εκτέλεση, Λογικά) είναι εξαιρετικά σημαντική. Τα λάθη του
+          προγράμματος κατατάσσονται ως εξής:</p>
+
+        <!-- ΣΥΝΤΑΚΤΙΚΑ ΛΑΘΗ -->
+        <h5 class="text-danger mt-4 mb-3"><i class="fa fa-times-circle"></i> 1. Συντακτικά Λάθη</h5>
+        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
+          <li class="list-group-item">
+            <strong>Δηλώσεις μεταβλητών:</strong> Απουσία δήλωσης των μεταβλητών <code>μαξΜαθ</code> (Γραμμή 14) και
+            <code>μο</code> (Γραμμή 23). Επίσης, το <code>συνολοΤάξης</code> δηλώθηκε στις <code>ΑΚΕΡΑΙΕΣ</code> ενώ
+            δέχεται πραγματικούς αριθμούς.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 18:</strong> <code>ΑΛΛΙΩΣ γλωσ &gt; μαξ ΤΟΤΕ</code>. Η δεσμευμένη λέξη <code>ΑΛΛΙΩΣ</code>
+            δεν δέχεται ποτέ συνθήκη, έπρεπε να χρησιμοποιηθεί <code>ΑΛΛΙΩΣ_ΑΝ</code> (αν και λογικά απαιτείται κάτι
+            διαφορετικό).
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 25:</strong> <code>πληθοςΜαθητών &lt;- πληθοςΜαθητών + μο</code>. Ασυμβατότητα τύπων.
+            Προσπάθεια εκχώρησης πραγματικής τιμής (μο) σε ακέραια μεταβλητή (πληθοςΜαθητών). Το συντακτικό αυτό παύει
+            να ισχύει αν διορθωθεί το λογικό λάθος.
+          </li>
+        </ul>
+
+        <!-- ΛΟΓΙΚΑ ΛΑΘΗ -->
+        <h5 class="text-primary mt-4 mb-3"><i class="fa fa-puzzle-piece"></i> 2. Λογικά Λάθη</h5>
+        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
+          <li class="list-group-item">
+            <strong>Γραμμή 7:</strong> Ο μετρητής <code>πληθοςΜαθητών</code> πρέπει να αρχικοποιηθεί στο 0, και όχι στο
+            1.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 11:</strong> Επειδή χρησιμοποιείται δομή επανάληψης <code>ΜΕΧΡΙΣ_ΟΤΟΥ</code>, πρέπει να
+            υπάρχει εσωτερικός έλεγχος <code>ΑΝ ον &lt;&gt; 'τέλος' ΤΟΤΕ</code>, ώστε αν ο χρήστης δώσει 'τέλος' εξ
+            αρχής, να μην του ζητηθούν βαθμοί (δείχνοντας την πολυπλοκότητα αυτής της δομής σε τέτοια προβλήματα).
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 18:</strong> Αν παραμείνει ως <code>ΑΛΛΙΩΣ_ΑΝ</code>, προκύπτει λογικό λάθος: Αν ο βαθμός των
+            ΑΟΘ είναι μεγαλύτερος, το πρόγραμμα δεν θα εξετάσει <strong>ποτέ</strong> τον βαθμό της Γλώσσας! Απαιτούνται
+            ανεξάρτητες δομές <code>ΑΝ</code>.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμές 19 & 20:</strong> Αντεστραμμένες μεταβλητές. Έπρεπε να ενημερωθούν ως:
+            <code>μαξ &lt;- γλωσ</code> και <code>μαξΜαθ &lt;- 'γλώσσα'</code>.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 23:</strong> <code>μο &lt;- μαθ + αοθ + γλωσ/ 3</code>. Λόγω ιεραρχίας πράξεων, διαιρείται
+            μόνο η γλώσσα δια το 3. Χρειάζονται παρενθέσεις.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμές 25 & 26:</strong> Έγινε αντιστροφή των ρόλων. Στον μετρητή πλήθους πρέπει να προσθέτουμε 1
+            και στον αθροιστή συνόλου πρέπει να προσθέτουμε τον μέσο όρο.
+          </li>
+        </ul>
+
+        <!-- ΛΑΘΗ ΚΑΤΑ ΤΗΝ ΕΚΤΕΛΕΣΗ -->
+        <h5 class="text-warning text-dark mt-4 mb-3"><i class="fa fa-bolt"></i> 2. Λάθη Κατά Την Εκτέλεση (Runtime
+          Errors)</h5>
+        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
+          <li class="list-group-item">
+            <strong>Γραμμή 26:</strong> Δεν έχει γίνει αρχικοποίηση της μεταβλητής <code>συνολοΤάξης</code> στην αρχή
+            του προγράμματος. Η προσπάθεια αύξησης μιας άγνωστης τιμής θα προκαλέσει διακοπή.
+          </li>
+          <li class="list-group-item">
+            <strong>Γραμμή 28:</strong> Κατά τον υπολογισμό του τελικού μέσου όρου της τάξης, δεν υπάρχει έλεγχος
+            <code>ΑΝ πληθοςΜαθητών &gt; 0</code>. Αν δοθεί 'τέλος' με την πρώτη, το πλήθος θα είναι 0 και θα προκληθεί
+            διαίρεση με το μηδέν.
+          </li>
+        </ul>
+
+        <h5 class="text-success mt-5 mb-3"><i class="fa fa-code"></i> Το Σωστό Πρόγραμμα</h5>
+        <pre class="aepp-code shadow-sm" style="font-size: 0.95rem;">ΠΡΟΓΡΑΜΜΑ last2026_Corrected
+ΜΕΤΑΒΛΗΤΕΣ
+  ΑΚΕΡΑΙΕΣ: πληθοςΜαθητών
+  ΠΡΑΓΜΑΤΙΚΕΣ: μαθ, αοθ, γλωσ, μαξ, μο, μεσοςΟροςΤαξης, συνολοΤάξης
+  ΧΑΡΑΚΤΗΡΕΣ: ον, μαξΜαθ
+ΑΡΧΗ
+  συνολοΤάξης &lt;- 0
+  πληθοςΜαθητών &lt;- 0
+
+  ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
+    ΓΡΑΨΕ 'Δώστε όνομα ή τέλος'
+    ΔΙΑΒΑΣΕ ον
+    
+    ΑΝ ον &lt;&gt; 'τέλος' ΤΟΤΕ
+      ΓΡΑΨΕ 'Δώστε βαθμούς στα μαθηματικά, αοθ, γλώσσα'
+      ΔΙΑΒΑΣΕ μαθ, αοθ, γλωσ
+
+      ! Εύρεση μεγίστου με ανεξάρτητες δομές ΑΝ
+      μαξ &lt;- μαθ
+      μαξΜαθ &lt;- 'μαθηματικά'
+
+      ΑΝ αοθ &gt; μαξ ΤΟΤΕ
+        μαξ &lt;- αοθ
+        μαξΜαθ &lt;- 'αοθ'
+      ΤΕΛΟΣ_ΑΝ
+
+      ΑΝ γλωσ &gt; μαξ ΤΟΤΕ
+        μαξ &lt;- γλωσ
+        μαξΜαθ &lt;- 'γλώσσα'
+      ΤΕΛΟΣ_ΑΝ
+
+      ΓΡΑΨΕ 'Ο μεγαλύτερος βαθμός ήταν στο ', μαξΜαθ
+
+      μο &lt;- (μαθ + αοθ + γλωσ) / 3
+      ΓΡΑΨΕ 'Ο μέσος όρος του ', ον, ' είναι ', μο
+
+      πληθοςΜαθητών &lt;- πληθοςΜαθητών + 1
+      συνολοΤάξης &lt;- συνολοΤάξης + μο
+    ΤΕΛΟΣ_ΑΝ
+
+  ΜΕΧΡΙΣ_ΟΤΟΥ ον = 'τέλος'
+
+  ! Προστασία από διαίρεση με το μηδέν
+  ΑΝ πληθοςΜαθητών &gt; 0 ΤΟΤΕ
+    μεσοςΟροςΤαξης &lt;- συνολοΤάξης / πληθοςΜαθητών
+    ΓΡΑΨΕ 'Ο μέσος όρος της τάξης είναι ', μεσοςΟροςΤαξης
+  ΑΛΛΙΩΣ
+    ΓΡΑΨΕ 'Δεν δόθηκαν μαθητές.'
+  ΤΕΛΟΣ_ΑΝ
+ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</pre>
+      </div>
+    </div>
+
+    <script>
+      // Script αντιγραφής όπως στο editor.html
+      function copyMezeHTML() {
+        const wrapper = document.querySelector('.html-content-wrapper');
+        if (!wrapper) return;
+
+        const finalHtml = wrapper.outerHTML;
+
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(finalHtml).then(() => {
+            showSuccess();
+          }).catch(() => {
+            fallbackCopy(finalHtml);
+          });
+        } else {
           fallbackCopy(finalHtml);
-        });
-      } else {
-        fallbackCopy(finalHtml);
+        }
       }
-    }
 
-    function fallbackCopy(text) {
-      const textArea = document.createElement("textarea");
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        showSuccess();
-      } catch (err) {
-        alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
+      function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showSuccess();
+        } catch (err) {
+          alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
+        }
+        document.body.removeChild(textArea);
       }
-      document.body.removeChild(textArea);
-    }
 
-    function showSuccess() {
-      const btn = document.querySelector('.sticky-top button');
-      const originalContent = btn.innerHTML;
-      btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-      btn.classList.replace('btn-success', 'btn-light');
-      setTimeout(() => {
-        btn.innerHTML = originalContent;
-        btn.classList.replace('btn-light', 'btn-success');
-      }, 2000);
-    }
+      function showSuccess() {
+        const btn = document.querySelector('.sticky-top button');
+        const originalContent = btn.innerHTML;
 
-    // Αυτόματη φόρτωση των απαντήσεων του μαθητή από το LocalStorage 
-    // και δυναμική μορφοποίηση δίπλα στα σωστά!
-    document.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('studentMezeAnswers');
-      let studentAnswers = saved ? JSON.parse(saved) : null;
+        btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+        btn.classList.replace('btn-success', 'btn-light');
 
-      if (!studentAnswers) return;
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.classList.replace('btn-light', 'btn-success');
+        }, 2000);
+      }
+    </script>
 
-      let exNum = 1;
-      document.querySelectorAll('.mb-4').forEach((block) => {
-        const grid = block.querySelector('.answer-grid');
-        if (!grid) return;
-
-        const answerItems = grid.querySelectorAll('.answer-item');
-
-        answerItems.forEach((item, index) => {
-          const blankNum = index + 1;
-
-          const correctCodeEl = item.querySelector('code');
-          const correctText = correctCodeEl ? correctCodeEl.textContent.trim() : '';
-
-          let studentText = '-';
-          if (studentAnswers[exNum] && studentAnswers[exNum][blankNum]) {
-            studentText = studentAnswers[exNum][blankNum];
-          }
-
-          let isCorrect = false;
-          if (studentText !== '-') {
-            // Σύγκριση αγνοώντας τα κενά και κεφαλαία/μικρά
-            const normalize = (str) => str.replace(/\s+/g, '').toLowerCase();
-            isCorrect = normalize(studentText) === normalize(correctText);
-          }
-
-          const studentColorClass = studentText === '-' ? 'text-secondary' : (isCorrect ? 'text-success' : 'text-danger');
-          const studentIcon = isCorrect ? '<i class="fa fa-check text-success"></i>' : (studentText !== '-' ? '<i class="fa fa-times text-danger"></i>' : '');
-
-          item.className = "answer-item flex-column align-items-stretch";
-          item.innerHTML = `
-            <div class="d-flex justify-content-between mb-1">
-              <span class="ans-num">(${blankNum})</span>
-              <span class="small text-muted">Σωστό: <code class="text-success fw-bold">${correctText}</code></span>
-            </div>
-            <div class="d-flex justify-content-between border-top pt-1 bg-light rounded px-1 align-items-center">
-              <span class="small text-primary">Μαθητής:</span>
-              <div>
-                 ${studentIcon} <code class="${studentColorClass} fw-bold" style="font-size:0.9rem;">${studentText}</code>
-              </div>
-            </div>
-          `;
-        });
-        exNum++;
-      });
-    });
-  </script>
+  </div>
 </body>
 
 </html>

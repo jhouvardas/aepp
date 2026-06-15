@@ -17,7 +17,7 @@ class PageMaker
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
             <link rel="icon" href="images/favicon.jpg" sizes="16x16" type="image/jpg">
-            <link rel="stylesheet" href="aepp.css">
+            <link rel="stylesheet" href="aepp.css?v=<?php echo @filemtime(__DIR__ . '/aepp.css'); ?>">
         </head>
 
         <body>
@@ -38,15 +38,25 @@ class PageMaker
 
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link text-warning fw-bold" href="index.php?action=viewMezedakia">
-                                <i class="fa fa-star"></i> Μεζεδάκια
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="navbardropStudents" data-bs-toggle="dropdown">
+                                <i class="fa fa-users"></i> Μαθητές
                             </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-info fw-bold" href="index.php?action=myGrades">
-                                <i class="fa fa-graduation-cap"></i> Βαθμοί & Εργασίες
-                            </a>
+                            <div class="dropdown-menu shadow border-warning">
+                                <a class="dropdown-item fw-bold text-primary" href="index.php?action=register">
+                                    <i class="fa fa-user-plus"></i> Εγγραφή
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item fw-bold text-warning" href="index.php?action=viewMezedakia">
+                                    <i class="fa fa-star"></i> Μεζεδάκια
+                                </a>
+                                <a class="dropdown-item fw-bold text-info" href="index.php?action=myGrades">
+                                    <i class="fa fa-bar-chart"></i> Βαθμοί & Εργασίες
+                                </a>
+                                <a class="dropdown-item fw-bold text-success" href="index.php?action=announcements">
+                                    <i class="fa fa-bullhorn"></i> Ανακοινώσεις
+                                </a>
+                            </div>
                         </li>
 
                         <li class="nav-item dropdown">
@@ -642,7 +652,6 @@ class PageMaker
                     foreach ($studentsArray as $st) {
                         if ($db->isSubmissionAllowed($st['studentId'], $mId, $userYear)) {
                             $allowedStudents[] = $st;
-                            $allowedNames[] = $st['name'];
                         }
                     }
                 } else {
@@ -724,11 +733,10 @@ class PageMaker
                                         </button>
 
                                         <div class="collapse mt-3 text-left" id="formMeze<?php echo $mId; ?>">
-                                            <?php if ($isPastDeadline && !empty($allowedNames)): ?>
+                                            <?php if ($isPastDeadline && !empty($allowedStudents)): ?>
                                                 <div class="alert alert-danger py-2 mb-3 small shadow-sm border-danger">
                                                     <i class="fa fa-unlock-alt fa-lg mr-2"></i>
-                                                    <strong>Ειδική Παράταση:</strong> Επιτρεπτοί:
-                                                    <b class="text-dark"><?php echo implode(', ', $allowedNames); ?></b>.
+                                                    <strong>Ειδική Παράταση:</strong> Η υποβολή είναι ανοιχτή μόνο για όσους έχουν λάβει παράταση.
                                                 </div>
                                             <?php endif; ?>
 

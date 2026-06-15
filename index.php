@@ -1,5 +1,7 @@
 <?php
 session_start();
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 spl_autoload_register(function ($name) {
     if (file_exists($name . '.php')) {
@@ -13,6 +15,28 @@ $fm = new FormMaker();
 $db = new DbHandler();
 $page->displayHeadMatter();
 $page->displayMenu();
+
+// --- ΕΛΕΓΧΟΣ ΚΑΙ ΕΜΦΑΝΙΣΗ ΓΕΝΕΘΛΙΩΝ ---
+$currentYear = $db->getCurrentTutorYear();
+$students = $db->getTutorStudents($currentYear);
+$birthdayStudents = [];
+$todayMD = date('m-d');
+if (is_array($students)) {
+    foreach ($students as $student) {
+        if (!empty($student['birthday']) && $student['birthday'] !== '0000-00-00' && $student['birthday'] !== '-') {
+            if (date('m-d', strtotime($student['birthday'])) === $todayMD) {
+                $birthdayStudents[] = $student['name'] . ' ' . $student['lastName'];
+                // Αυτόματη αποστολή email (μόνο μία φορά το χρόνο)
+                $db->sendBirthdayEmailIfNeeded($student);
+            }
+        }
+    }
+}
+if (!empty($birthdayStudents)) {
+    $names = implode(', ', $birthdayStudents);
+    echo "<div class='container mt-3'><div class='alert alert-warning text-center shadow-sm border-warning' style='border-radius: 15px;'><i class='fa fa-birthday-cake text-danger fa-2x align-middle me-3' style='animation: pulse-sos 2s infinite;'></i><span class='align-middle fs-5'>Χρόνια πολλά! Σήμερα έχει γενέθλια: <strong>{$names}</strong>! 🎉 🎈</span></div></div>";
+}
+// --- ΤΕΛΟΣ ΕΛΕΓΧΟΥ ΓΕΝΕΘΛΙΩΝ ---
 ?>
 
 <!--<div class="container-fluid">-->
@@ -22,6 +46,7 @@ $page->displayMenu();
 $action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
 switch ($action) {
+
     case 'listKenaDynamic':
 
         $exercises = $db->getAllKenaExercises();
@@ -46,6 +71,52 @@ switch ($action) {
             $page->displayThemaGD($result); // Το νέο PageMaker display
         }
         break;
+
+    case 'register':
+        $fm->studentRegistrationForm();
+        break;
+
+    case 'processRegistration':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $result = $db->registerStudent($_POST);
+
+            if ($result === "email_exists") {
+                echo "<div class='container mt-5 text-center'><div class='alert alert-warning shadow d-inline-block px-5'><h4><i class='fa fa-exclamation-triangle'></i> Το Email υπάρχει ήδη!</h4><p>Παρακαλώ χρησιμοποιήστε άλλο email ή συνδεθείτε στο λογαριασμό σας.</p><hr><a href='index.php?action=register' class='btn btn-warning'>Επιστροφή</a></div></div>";
+            } elseif ($result) {
+                // Ειδοποίηση Email στον Καθηγητή
+                $adminEmail = defined('SMTP_USER') ? SMTP_USER : 'admin@jhouv.eu';
+                $studentName = htmlspecialchars($_POST['name'] . ' ' . $_POST['lastName']);
+                $studentEmail = htmlspecialchars($_POST['email']);
+                $schoolYear = date('Y') + 1;
+                $phone = htmlspecialchars($_POST['phone']);
+                $birthdate = htmlspecialchars(isset($_POST['birthdate']) ? $_POST['birthdate'] : '-');
+                $school = htmlspecialchars(isset($_POST['school']) ? $_POST['school'] : '-');
+
+                $subject = "Νέα Εγγραφή Μαθητή: $studentName";
+                $body = "
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                        <h2 style='color: #007bff;'>Νέα Εγγραφή στην ΑΕΠΠ</h2>
+                        <p>Ένας νέος μαθητής μόλις γράφτηκε στην πλατφόρμα!</p>
+                        <div style='padding: 15px; background-color: #f8f9fa; border-radius: 5px;'>
+                            <p><strong>Ονοματεπώνυμο:</strong> $studentName</p>
+                            <p><strong>Email:</strong> $studentEmail</p>
+                            <p><strong>Τηλέφωνο:</strong> $phone</p>
+                            <p><strong>Ημ/νία Γέννησης:</strong> $birthdate</p>
+                            <p><strong>Σχολή:</strong> $school</p>
+                            <p><strong>Σχολικό Έτος:</strong> $schoolYear</p>
+                        </div>
+                        <p>Μπορείτε να διαχειριστείτε την καρτέλα του από το <a href='http://jhouv.eu/aepp/john/index.php' style='color:#007bff; text-decoration:none;'>Admin Panel</a>.</p>
+                    </div>
+                ";
+                $db->sendSystemEmail($adminEmail, $subject, $body);
+
+                echo "<div class='container mt-5 text-center'><div class='alert alert-success shadow d-inline-block px-5'><h4><i class='fa fa-check-circle text-success' style='font-size:40px;'></i> Εγγραφή Επιτυχής!</h4><p>Μπορείτε πλέον να συνδεθείτε με το Email και τον 6-ψήφιο κωδικό σας.</p><hr><a href='index.php?action=myGrades' class='btn btn-success'><i class='fa fa-sign-in'></i> Σύνδεση στις Βαθμολογίες</a></div></div>";
+            } else {
+                echo "<div class='container mt-5 text-center'><div class='alert alert-danger shadow d-inline-block px-5'><h4><i class='fa fa-times-circle'></i> Σφάλμα!</h4><p>Κάτι πήγε στραβά με την αποθήκευση των στοιχείων.</p><hr><a href='index.php?action=register' class='btn btn-danger'>Επιστροφή</a></div></div>";
+            }
+        }
+        break;
+
     case 'viewMezedakia':
         $result = $db->getAllMezedakia();
         $page->displayMezedakiaList($result);
@@ -53,7 +124,7 @@ switch ($action) {
 
     case 'submitMezeAnswer':
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $studentId = $_POST['student_id'];
+            $email = $_POST['student_email'];
             $mezeId = $_POST['meze_id'];
             $pass = $_POST['st_access'];
             $text = $_POST['student_text'];
@@ -69,8 +140,9 @@ switch ($action) {
                 exit();
             }
 
-            // 2. Έλεγχος αν ο κωδικός είναι σωστός
-            if ($db->checkStudentPassword($studentId, $pass)) {
+            // 2. Έλεγχος αν το email και ο κωδικός είναι σωστά
+            $studentId = $db->authenticateStudentByEmail($email, $pass);
+            if ($studentId) {
                 // 3. Αποθήκευση
                 $success = $db->saveMezeSubmission($studentId, $mezeId, $text, $_FILES['files']);
                 if ($success) {
@@ -115,30 +187,61 @@ switch ($action) {
         }
         break;
 
+    case 'forgotPassword':
+?>
+        <div class="container mt-5">
+            <div class="card shadow mx-auto" style="max-width: 500px; border-radius: 15px; border: none;">
+                <div class="card-header bg-warning text-dark text-center py-3" style="border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0"><i class="fa fa-unlock-alt"></i> Επαναφορά Κωδικού</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted text-center mb-4">Συμπληρώστε το email σας και θα σας στείλουμε έναν νέο κωδικό πρόσβασης.</p>
+                    <form action="index.php?action=processForgotPassword" method="POST" autocomplete="off">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control form-control-lg shadow-sm" placeholder="name@example.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-lg w-100 shadow-sm fw-bold"><i class="fa fa-envelope"></i> Αποστολή Νέου Κωδικού</button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <a href="index.php?action=myGrades" class="text-decoration-none text-secondary"><i class="fa fa-arrow-left"></i> Επιστροφή στη Σύνδεση</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php
+        break;
+
+    case 'processForgotPassword':
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $email = isset($_POST['email']) ? $_POST['email'] : '';
+            if ($db->resetStudentPassword($email)) {
+                echo "<div class='container mt-5 text-center'><div class='alert alert-success shadow d-inline-block px-5'><h4><i class='fa fa-check-circle text-success' style='font-size:40px;'></i> Επιτυχία!</h4><p>Ο νέος κωδικός στάλθηκε στο email σας.</p><hr><a href='index.php?action=myGrades' class='btn btn-success'><i class='fa fa-sign-in'></i> Σύνδεση</a></div></div>";
+            } else {
+                echo "<div class='container mt-5 text-center'><div class='alert alert-danger shadow d-inline-block px-5'><h4><i class='fa fa-exclamation-triangle'></i> Σφάλμα</h4><p>Δεν βρέθηκε ενεργός μαθητής με αυτό το email.</p><hr><a href='index.php?action=forgotPassword' class='btn btn-danger'>Επιστροφή</a></div></div>";
+            }
+        }
+        break;
+
     case 'myGrades':
         unset($_SESSION['student_id']);
         unset($_SESSION['student_pass']);
         $currentYear = $db->getCurrentTutorYear();
         $students = $db->getTutorStudents($currentYear);
-?>
+    ?>
         <div class="container mt-5">
             <div class="card shadow mx-auto" style="max-width: 500px; border-radius: 15px; border: none;">
                 <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 15px 15px 0 0;">
                     <h4 class="mb-0"><i class="fa fa-graduation-cap"></i> Οι Βαθμολογίες μου</h4>
                 </div>
                 <div class="card-body p-4">
-                    <p class="text-muted text-center mb-4">Επιλέξτε το όνομά σας και πληκτρολογήστε τον προσωπικό σας κωδικό.</p>
+                    <p class="text-muted text-center mb-4">Πληκτρολογήστε το Email και τον προσωπικό σας κωδικό.</p>
                     <form action="index.php?action=showMyGrades" method="POST" autocomplete="off" onsubmit="return true;">
                         <!-- Hidden fields to confuse browser autofill -->
                         <input type="text" style="display:none"><input type="password" style="display:none">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Ονοματεπώνυμο</label>
-                            <select name="student_id" class="form-select form-select-lg shadow-sm" required style="display: block; width: 100%;">
-                                <option value="">--- Επιλέξτε από τη λίστα ---</option>
-                                <?php if (is_array($students)) foreach ($students as $s): ?>
-                                    <option value="<?php echo $s['studentId']; ?>"><?php echo $s['lastName'] . " " . $s['name']; ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" name="student_email" class="form-control form-control-lg shadow-sm" placeholder="name@example.com" required>
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-bold">Προσωπικός Κωδικός</label>
@@ -153,6 +256,9 @@ switch ($action) {
                                     id="eye_login" style="cursor: pointer; color: #6c757d; z-index: 10;"
                                     onclick="toggleMask('st_access_login', 'eye_login')"></i>
                             </div>
+                            <div class="text-end mt-2">
+                                <a href="index.php?action=forgotPassword" class="text-decoration-none small text-primary"><i class="fa fa-question-circle"></i> Ξέχασα τον κωδικό μου</a>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm"><i class="fa fa-search"></i> Εμφάνιση Αποτελεσμάτων</button>
                     </form>
@@ -164,13 +270,22 @@ switch ($action) {
 
     case 'showMyGrades':
         $currentYear = $db->getCurrentTutorYear();
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' || (isset($_SESSION['student_id']) && isset($_SESSION['student_pass']))) {
-            $studentId = $_POST['student_id'] ?? $_SESSION['student_id'];
-            $pass = $_POST['st_access'] ?? $_SESSION['student_pass'];
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_SESSION['student_id'])) {
+            $studentId = null;
 
-            if ($db->checkStudentPassword($studentId, $pass)) {
-                $_SESSION['student_id'] = $studentId;
-                $_SESSION['student_pass'] = $pass;
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $email = isset($_POST['student_email']) ? $_POST['student_email'] : '';
+                $pass = isset($_POST['st_access']) ? $_POST['st_access'] : '';
+                $studentId = $db->authenticateStudentByEmail($email, $pass);
+
+                if ($studentId) {
+                    $_SESSION['student_id'] = $studentId;
+                }
+            } else {
+                $studentId = $_SESSION['student_id'];
+            }
+
+            if ($studentId) {
 
                 $grades = $db->getStudentGradesForStudent($studentId, $currentYear);
                 $students = $db->getTutorStudents($currentYear);
@@ -260,7 +375,7 @@ switch ($action) {
                                                             <?php echo $g['grade_value']; ?>
                                                         </div>
                                                     </td>
-                                                    <td class="text-wrap" style="max-width: 400px;"><?php echo !empty($g['teacher_comments']) ? $g['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
+                                                    <td class="text-wrap" style="max-width: 400px; white-space: pre-wrap;"><?php echo !empty($g['teacher_comments']) ? $g['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -384,7 +499,7 @@ switch ($action) {
                                                             <?php echo $task['grade_value']; ?> / 20
                                                         </div>
                                                     </td>
-                                                    <td class="text-wrap" style="max-width: 400px;"><?php echo !empty($task['teacher_comments']) ? $task['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
+                                                    <td class="text-wrap" style="max-width: 400px; white-space: pre-wrap;"><?php echo !empty($task['teacher_comments']) ? $task['teacher_comments'] : '<span class="text-muted small">Χωρίς σχόλια.</span>'; ?></td>
                                                 </tr>
                                             <?php
                                             endif;
@@ -492,8 +607,7 @@ switch ($action) {
         <?php
             } else {
                 unset($_SESSION['student_id']);
-                unset($_SESSION['student_pass']);
-                echo "<div class='container mt-5 text-center'><div class='alert alert-danger d-inline-block px-5 shadow'><h4><i class='fa fa-exclamation-triangle'></i> Λάθος Κωδικός</h4><p>Παρακαλώ προσπαθήστε ξανά.</p><hr><a href='index.php?action=myGrades' class='btn btn-danger'>Επιστροφή</a></div></div>";
+                echo "<div class='container mt-5 text-center'><div class='alert alert-danger d-inline-block px-5 shadow'><h4><i class='fa fa-exclamation-triangle'></i> Σφάλμα Σύνδεσης</h4><p>Λάθος Email ή Κωδικός. Παρακαλώ προσπαθήστε ξανά.</p><hr><a href='index.php?action=myGrades' class='btn btn-danger'>Επιστροφή</a></div></div>";
             }
         } else {
             header("Location: index.php?action=myGrades");
@@ -501,12 +615,52 @@ switch ($action) {
         }
         break;
 
+    case 'announcements':
+        $currentYear = $db->getCurrentTutorYear();
+        $announcements = $db->getStudentAnnouncements($currentYear);
+        ?>
+        <div class="container-fluid mt-5 mb-5">
+            <h2 class="mb-4 text-primary border-bottom pb-2"><i class="fa fa-bullhorn"></i> Πίνακας Ανακοινώσεων</h2>
+            <?php if (empty($announcements)): ?>
+                <div class="alert alert-info shadow-sm"><i class="fa fa-info-circle"></i> Δεν υπάρχουν ανακοινώσεις για το τρέχον έτος.</div>
+            <?php else: ?>
+                <div class="row justify-content-center">
+                    <?php
+                    foreach ($announcements as $ann):
+                        // Υπολογισμός για το αν η ανακοίνωση είναι "Νέα"
+                        $is_new = false;
+                        $ann_timestamp = strtotime($ann['created_at']);
+                        if ($ann_timestamp > strtotime('-3 days')) {
+                            $is_new = true;
+                        }
+                    ?>
+                        <div class="col-12 col-lg-8 mb-5" id="ann-<?php echo $ann['id']; ?>">
+                            <div class="card shadow-sm border-0" style="border-top: 4px solid #007bff;">
+                                <?php if (!empty($ann['imagePath'])): ?>
+                                    <img src="images/announcements/<?php echo htmlspecialchars($ann['imagePath']); ?>" class="card-img-top p-3" style="max-height:400px; object-fit:contain;">
+                                <?php endif; ?>
+                                <div class="card-body p-4">
+                                    <h4 class="card-title fw-bold text-dark mb-3">
+                                        <?php echo htmlspecialchars($ann['title']); ?>
+                                        <?php if ($is_new): ?>
+                                            <span class="badge bg-danger ms-2 shadow-sm">ΝΕΟ!</span>
+                                        <?php endif; ?>
+                                    </h4>
+                                    <h6 class="card-subtitle mb-3 text-muted small"><i class="fa fa-clock-o"></i> <?php echo date('d/m/Y H:i', strtotime($ann['created_at'])); ?></h6>
+                                    <div class="card-text text-dark" style="font-size: 1.05rem; line-height: 1.6;"><?php echo $ann['content']; ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php
+        break;
+
     case 'home':
     default:
-        ?>
-
-
-
+    ?>
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm ">
@@ -617,7 +771,7 @@ max <- 0
 ΤΕΛΟΣ_ΑΝ                           
             </pre>
 
-                    <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό <b>θετικών</b> ακεραίων</h5>
+                    <!--    <h5>Δύο μεγαλύτεροι από άγνωστο αριθμό <b>θετικών</b> ακεραίων</h5>
                     <pre>
 ΠΡΟΓΡΑΜΜΑ μεγαλύτεροι
 ΜΕΤΑΒΛΗΤΕΣ
@@ -691,7 +845,7 @@ max <- 0
     ΓΡΑΨΕ 'επόμενος ο ', μαξ
   ΤΕΛΟΣ_ΑΝ
 ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ 
-            </pre>
+            </pre> -->
                     <h5>Πόσοι μαθητές είχαν τον μεγαλύτερο βαθμό</h5>
                     <pre>
 ΠΡΟΓΡΑΜΜΑ πόσεςΦορέςΟΜεγαλύτεροςΒαθμός

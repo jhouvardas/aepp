@@ -340,9 +340,25 @@ class MezeAdminFormMaker extends AdminFormMaker
         <div class="container mt-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
-                <input type="text" id="mezeFilter" class="form-control w-25 shadow-sm" placeholder="Αναζήτηση...">
+                <div class="d-flex w-75 justify-content-end">
+                    <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm me-2 fw-bold" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
+                        <i class="fa fa-trash"></i> Καθαρισμός Υποβολών
+                    </a>
+                    <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm me-3 text-dark fw-bold" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
+                        <i class="fa fa-eye-slash"></i> Μαζική Απόκρυψη Παλιών
+                    </a>
+                    <input type="text" id="mezeFilter" class="form-control w-25 shadow-sm" placeholder="Αναζήτηση...">
+                </div>
             </div>
 
+            <?php
+            // Προετοιμασία των Τεχνικών (Tags) για να μπορούμε να τα εμφανίζουμε στη λίστα
+            $allTypes = $dbHandler->getExerciseTypes();
+            $typeMap = [];
+            foreach ($allTypes as $t) {
+                $typeMap[$t['id']] = $t['name'];
+            }
+            ?>
             <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
                 <table class="table table-bordered table-striped align-middle mb-0" id="mezeTable">
                     <thead class="table-dark text-center" style="position: sticky; top: 0; z-index: 2;">
@@ -422,6 +438,35 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $badgeHtml .= '<br><span class="badge bg-primary text-white mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-calendar-check-o"></i> Προγραμματισμένο</span>';
                                     $rowStyle = 'style="background-color: #e9f2fd; color: #495057;"';
                                 }
+
+                                // Βελτιωμένος καθαρισμός κειμένου HTML για την προεπισκόπηση
+                                $cleanText = preg_replace('/<(style|script)[^>]*>.*?<\/\1>/si', '', $row['mezeText']);
+                                $cleanText = str_replace(['<br>', '<br/>', '</p>', '</div>', 'AEPP_RAW_START', 'AEPP_RAW_END', '&nbsp;'], ' ', $cleanText);
+                                $cleanText = strip_tags($cleanText);
+                                $cleanText = preg_replace('/\s+/u', ' ', $cleanText);
+
+                                // Αφαίρεση τυποποιημένων επικεφαλίδων Πανελλαδικών (με ανοχή στους τόνους πεζών/κεφαλαίων)
+                                // 1. Αφαιρεί ολόκληρο το κατεβατό "ΠΑΝΕΛΛΑΔΙΚΕΣ ΕΞΕΤΑΣΕΙΣ ... ΑΝΑΠΤΥΞΗ ΕΦΑΡΜΟΓΩΝ..." (ό,τι και αν μεσολαβεί)
+                                $cleanText = preg_replace('/(ΕΠΑΝΑΛΗΠΤΙΚ[ΕΈ]Σ\s+)?ΠΑΝΕΛΛΑΔΙΚ[ΕΈ]Σ\s+ΕΞΕΤ[ΑΆ]ΣΕΙΣ.*?(ΑΝ[ΑΆ]ΠΤΥΞΗ\s+ΕΦΑΡΜΟΓ[ΩΏ]Ν\s+ΣΕ\s+ΠΡΟΓΡΑΜΜΑΤΙΣΤΙΚ[ΟΌ]\s+ΠΕΡΙΒ[ΑΆ]ΛΛΟΝ|ΠΛΗΡΟΦΟΡΙΚ[ΗΉ](?:\s+ΠΡΟΣΑΝΑΤΟΛΙΣΜΟ[ΥΎ])?)(?:\s*Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+)?/iu', '', $cleanText);
+                                // 2. Αφαιρεί σκέτο το όνομα του μαθήματος (αν έχει ξεμείνει χωρίς το "Πανελλαδικές")
+                                $cleanText = preg_replace('/(ΕΞΕΤΑΖ[ΟΌ]ΜΕΝΟ\s+Μ[ΑΆ]ΘΗΜΑ:?)?\s*(ΑΝ[ΑΆ]ΠΤΥΞΗ\s+ΕΦΑΡΜΟΓ[ΩΏ]Ν\s+ΣΕ\s+ΠΡΟΓΡΑΜΜΑΤΙΣΤΙΚ[ΟΌ]\s+ΠΕΡΙΒ[ΑΆ]ΛΛΟΝ|ΠΛΗΡΟΦΟΡΙΚ[ΗΉ](?:\s+ΠΡΟΣΑΝΑΤΟΛΙΣΜΟ[ΥΎ])?)\s*(Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+)?/iu', '', $cleanText);
+                                // 3. Αφαιρεί τυχόν "ΘΕΜΑ Χ" που έμεινε ακάλυπτο στην αρχή του κειμένου
+                                $cleanText = preg_replace('/^\s*Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+\s*/iu', '', $cleanText);
+
+                                $previewText = mb_substr(trim($cleanText), 0, 80);
+                                if (mb_strlen(trim($cleanText)) > 80) $previewText .= "...";
+
+                                // Ανάκτηση των Τεχνικών (Tags) για το συγκεκριμένο Μεζεδάκι
+                                $typeIds = $dbHandler->getMezeTypeIds($mezeId);
+                                $tagsHtml = '';
+                                if (!empty($typeIds)) {
+                                    foreach ($typeIds as $tid) {
+                                        if (isset($typeMap[$tid])) {
+                                            $tagsHtml .= '<span class="badge bg-info text-dark me-1 shadow-sm mt-1" style="font-size: 0.7rem;"><i class="fa fa-tag"></i> ' . $typeMap[$tid] . '</span> ';
+                                        }
+                                    }
+                                    $tagsHtml = '<div class="mt-1">' . $tagsHtml . '</div>';
+                                }
                         ?>
                                 <tr <?php echo $rowStyle; ?> class="align-middle <?php echo $hiddenClass; ?>">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
@@ -437,11 +482,16 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         }
                                         ?>
                                     </td>
-                                    <td class="small"><?php echo mb_substr(strip_tags($row['mezeText']), 0, 60) . "..."; ?><?php echo $badgeHtml; ?></td>
+                                    <td class="small">
+                                        <div class="text-dark fw-bold mb-1" style="line-height: 1.3; font-size: 0.85rem;"><?php echo $previewText; ?></div>
+                                        <?php echo $tagsHtml; ?>
+                                        <?php echo $badgeHtml; ?>
+                                    </td>
                                     <td>
                                         <div class="d-flex flex-wrap justify-content-center">
                                             <a href="index.php?action=toggleMezeLock&id=<?php echo $mezeId; ?>&status=<?php echo $isLocked ? 0 : 1; ?>" class="btn btn-outline-<?php echo $isLocked ? 'success' : 'secondary'; ?> btn-sm m-1"><i class="fa fa-<?php echo $isLocked ? 'unlock' : 'lock'; ?>"></i></a>
-                                            <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-dark btn-sm m-1"><i class="fa fa-search"></i></a>
+                                            <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-dark btn-sm m-1" title="Προεπισκόπηση"><i class="fa fa-search"></i></a>
+                                            <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>&autoprint=1" target="_blank" class="btn btn-outline-info btn-sm m-1" title="Εκτύπωση (Επιλογή Εκφώνησης/Λύσης)"><i class="fa fa-print"></i></a>
                                             <a href="index.php?action=viewSubmissions&id=<?php echo $mezeId; ?>" class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm m-1"><i class="fa fa-eye"></i></a>
                                             <a href="index.php?action=manageGrades&id=<?php echo $mezeId; ?>" class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-primary'; ?> btn-sm m-1"><i class="fa fa-graduation-cap"></i></a>
                                             <a href="index.php?action=editMezedaki&id=<?php echo $mezeId; ?>" class="btn btn-warning btn-sm m-1"><i class="fa fa-edit"></i></a>
@@ -593,10 +643,18 @@ class MezeAdminFormMaker extends AdminFormMaker
                 <div class="form-group">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="mb-0">Κείμενο / Κώδικας (HTML/Bootstrap)</label>
-                        <!-- Κουμπί που ανοίγει το Modal του Builder -->
-                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModal">
-                            <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
-                        </button>
+                        <div>
+                            <button type="button" id="formatBtn_newMezeText" class="btn btn-outline-info btn-sm me-2 shadow-sm d-none" onclick="formatCM('newMezeEditor_cm')" title="Αυτόματη στοίχιση κώδικα">
+                                <i class="fa fa-indent"></i> Format
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-2 shadow-sm" onclick="toggleCKEditor('newMezeText', 'newMezeEditor', Base64UploadAdapterPlugin)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                                <i class="fa fa-code"></i> HTML
+                            </button>
+                            <!-- Κουμπί που ανοίγει το Modal του Builder -->
+                            <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModal">
+                                <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
+                            </button>
+                        </div>
                     </div>
                     <textarea name="mezeText" id="newMezeText" class="form-control" rows="6" placeholder="Γράψε την εκφώνηση εδώ..."></textarea>
 
@@ -620,12 +678,32 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <input type="file" name="mezeImage" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label><strong>Οδηγίες / Hints (προς μαθητές):</strong></label>
-                    <textarea name="mezeHints" class="form-control" rows="3" placeholder="Μικρές βοήθειες..."></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0"><strong>Οδηγίες / Hints (προς μαθητές):</strong></label>
+                        <div>
+                            <button type="button" id="formatBtn_newMezeHints" class="btn btn-outline-info btn-sm me-2 shadow-sm d-none" onclick="formatCM('newHintsEditor_cm')" title="Αυτόματη στοίχιση κώδικα">
+                                <i class="fa fa-indent"></i> Format
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditor('newMezeHints', 'newHintsEditor', Base64UploadAdapterPlugin)">
+                                <i class="fa fa-code"></i> HTML
+                            </button>
+                        </div>
+                    </div>
+                    <textarea name="mezeHints" id="newMezeHints" class="form-control" rows="3" placeholder="Μικρές βοήθειες..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
-                    <textarea name="mezeSolution" class="form-control" rows="4" placeholder="Γράψε τη λύση εδώ..."></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Λύση (Προαιρετικά - θα εμφανίζεται σε accordion)</label>
+                        <div>
+                            <button type="button" id="formatBtn_newMezeSolution" class="btn btn-outline-info btn-sm me-2 shadow-sm d-none" onclick="formatCM('newSolutionEditor_cm')" title="Αυτόματη στοίχιση κώδικα">
+                                <i class="fa fa-indent"></i> Format
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditor('newMezeSolution', 'newSolutionEditor', Base64UploadAdapterPlugin)">
+                                <i class="fa fa-code"></i> HTML
+                            </button>
+                        </div>
+                    </div>
+                    <textarea name="mezeSolution" id="newMezeSolution" class="form-control" rows="4" placeholder="Γράψε τη λύση εδώ..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Φωτογραφία Λύσης (Προαιρετικά)</label>
@@ -635,6 +713,153 @@ class MezeAdminFormMaker extends AdminFormMaker
             </form>
         </div>
         <script>
+            // Custom Upload Adapter για να επιτρέπει την εισαγωγή (paste/drag-drop) εικόνων κατευθείαν στον Editor ως Base64
+            class Base64UploadAdapter {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+                upload() {
+                    return this.loader.file.then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const MAX_WIDTH = 800; // Μέγιστο πλάτος για να χωράει στα κινητά και να μην βαραίνει τη βάση
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > MAX_WIDTH) {
+                                    height = Math.round((height * MAX_WIDTH) / width);
+                                    width = MAX_WIDTH;
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#ffffff'; // Λευκό φόντο για τυχόν διάφανα PNG
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve({
+                                    default: canvas.toDataURL('image/jpeg', 0.85)
+                                }); // Αυτόματη συμπίεση σε ελαφρύ JPEG
+                            };
+                            img.onerror = () => resolve({
+                                default: e.target.result
+                            }); // Σε περίπτωση σφάλματος κρατάει την αρχική
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    }));
+                }
+                abort() {}
+            }
+
+            function Base64UploadAdapterPlugin(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapter(loader);
+            }
+
+            window.newMezeEditor = null;
+            window.newSolutionEditor = null;
+            window.newHintsEditor = null;
+
+            function initSmartEditorNew(textareaId, editorVar, plugin) {
+                const textarea = document.querySelector('#' + textareaId);
+                if (!textarea) return;
+
+                const val = textarea.value;
+                const cmVar = editorVar + '_cm';
+                const formatBtnId = 'formatBtn_' + textareaId;
+                const formatBtn = document.getElementById(formatBtnId);
+
+                // Έλεγχος για "ευαίσθητο" HTML κώδικα
+                const hasRawHtml = val.includes('<pre') || val.includes('<table') || val.includes('AEPP_RAW_START') || val.includes('<div');
+
+                if (hasRawHtml) {
+                    window[cmVar] = CodeMirror.fromTextArea(textarea, {
+                        mode: "xml",
+                        htmlMode: true,
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        viewportMargin: Infinity
+                    });
+                    window[cmVar].on('change', function(cm) {
+                        textarea.value = cm.getValue();
+                    });
+                    if (formatBtn) formatBtn.classList.remove('d-none');
+                } else {
+                    ClassicEditor.create(textarea, {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            textarea.value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
+
+            initSmartEditorNew('newMezeText', 'newMezeEditor', Base64UploadAdapterPlugin);
+            initSmartEditorNew('newMezeSolution', 'newSolutionEditor', Base64UploadAdapterPlugin);
+            initSmartEditorNew('newMezeHints', 'newHintsEditor', Base64UploadAdapterPlugin);
+
+            if (typeof formatCM === 'undefined') {
+                window.formatCM = function(cmVar) {
+                    if (window[cmVar] && typeof html_beautify !== 'undefined') {
+                        const unformatted = window[cmVar].getValue();
+                        const formatted = html_beautify(unformatted, {
+                            indent_size: 4,
+                            wrap_line_length: 0,
+                            unformatted: ['pre', 'code']
+                        });
+                        window[cmVar].setValue(formatted);
+                    }
+                }
+            }
+
+            if (typeof toggleCKEditor === 'undefined') {
+                window.toggleCKEditor = function(textareaId, editorVar, plugin) {
+                    const cmVar = editorVar + '_cm';
+                    const formatBtnId = 'formatBtn_' + textareaId;
+                    const formatBtn = document.getElementById(formatBtnId);
+
+                    if (window[editorVar]) {
+                        document.querySelector('#' + textareaId).value = window[editorVar].getData();
+                        window[editorVar].destroy().then(() => {
+                            window[editorVar] = null;
+
+                            window[cmVar] = CodeMirror.fromTextArea(document.querySelector('#' + textareaId), {
+                                mode: "xml",
+                                htmlMode: true,
+                                lineNumbers: true,
+                                lineWrapping: true,
+                                viewportMargin: Infinity
+                            });
+                            window[cmVar].on('change', function(cm) {
+                                document.querySelector('#' + textareaId).value = cm.getValue();
+                            });
+
+                            if (formatBtn) formatBtn.classList.remove('d-none');
+                        });
+                    } else {
+                        if (window[cmVar]) {
+                            document.querySelector('#' + textareaId).value = window[cmVar].getValue();
+                            window[cmVar].toTextArea();
+                            window[cmVar] = null;
+
+                            if (formatBtn) formatBtn.classList.add('d-none');
+                        }
+                        ClassicEditor.create(document.querySelector('#' + textareaId), {
+                            extraPlugins: [plugin]
+                        }).then(editor => {
+                            window[editorVar] = editor;
+                            editor.model.document.on('change:data', () => {
+                                document.querySelector('#' + textareaId).value = editor.getData();
+                            });
+                        }).catch(error => console.error(error));
+                    }
+                }
+            }
+
             function togglePanFields(checkbox) {
                 document.getElementById('panelliniesFields').style.display = checkbox.checked ? 'block' : 'none';
             }
@@ -644,13 +869,18 @@ class MezeAdminFormMaker extends AdminFormMaker
             if (builderModalNew) {
                 builderModalNew.addEventListener('shown.bs.modal', function() {
                     var iframe = document.getElementById('builderIframeNew');
-                    var textarea = document.getElementById('newMezeText');
-                    if (iframe && iframe.contentWindow && textarea) {
+                    var textVal = document.getElementById('newMezeText').value;
+                    if (window.newMezeEditor) {
+                        textVal = window.newMezeEditor.getData();
+                    } else if (window.newMezeEditor_cm) {
+                        textVal = window.newMezeEditor_cm.getValue();
+                    }
+                    if (iframe && iframe.contentWindow) {
                         var builderInput = iframe.contentWindow.document.getElementById('rawInput');
-                        if (builderInput && builderInput.value.trim() === '' && textarea.value.trim() !== '') {
+                        if (builderInput && builderInput.value.trim() === '' && textVal.trim() !== '') {
                             // Αυτόματη φόρτωση ΜΟΝΟ αν το κείμενο έχει παραχθεί εξ ολοκλήρου από τον Builder
-                            if (textarea.value.indexOf('AEPP_RAW_START') !== -1) {
-                                builderInput.value = textarea.value;
+                            if (textVal.indexOf('AEPP_RAW_START') !== -1) {
+                                builderInput.value = textVal;
                                 if (typeof iframe.contentWindow.recoverFromHTML === 'function') {
                                     iframe.contentWindow.recoverFromHTML(true);
                                 }
@@ -658,6 +888,42 @@ class MezeAdminFormMaker extends AdminFormMaker
                         }
                     }
                 });
+
+                // Όταν κλείνει το Modal, αν ο Builder ενημέρωσε την textarea, περνάμε την αλλαγή στον Editor
+                builderModalNew.addEventListener('hidden.bs.modal', function() {
+                    var ta = document.getElementById('newMezeText');
+                    if (window.newMezeEditor && ta.value !== window.newMezeEditor.getData()) {
+                        window.newMezeEditor.setData(ta.value);
+                    } else if (window.newMezeEditor_cm && ta.value !== window.newMezeEditor_cm.getValue()) {
+                        window.newMezeEditor_cm.setValue(ta.value);
+                    }
+                });
+
+                // Αλλαγή συμπεριφοράς του κουμπιού "Επιστροφή" μέσα στον Builder για να κλείνει απλώς το Modal
+                var iframeNew = document.getElementById('builderIframeNew');
+                if (iframeNew) {
+                    iframeNew.addEventListener('load', function() {
+                        try {
+                            var doc = iframeNew.contentWindow.document;
+                            var elements = doc.querySelectorAll('a, button');
+                            for (var i = 0; i < elements.length; i++) {
+                                var el = elements[i];
+                                if (el.textContent.includes('Επιστροφή') || el.innerText.includes('Επιστροφή')) {
+                                    el.removeAttribute('href');
+                                    el.removeAttribute('onclick');
+                                    el.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        e.stopImmediatePropagation();
+                                        var bsModal = bootstrap.Modal.getInstance(builderModalNew);
+                                        if (bsModal) bsModal.hide();
+                                    }, true);
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Builder iframe cross-origin error:', e);
+                        }
+                    });
+                }
             }
             // JS για να μην κλείνει το dropdown όταν επιλέγεις checkboxes
             $(document).on('click', '.dropdown-menu', function(e) {
@@ -794,10 +1060,18 @@ class MezeAdminFormMaker extends AdminFormMaker
                 <div class="form-group">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="mb-0">Εκφώνηση (Κείμενο ή HTML)</label>
-                        <!-- Κουμπί που ανοίγει το Modal του Builder (Edit) -->
-                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModalEdit">
-                            <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
-                        </button>
+                        <div>
+                            <button type="button" id="formatBtn_newMezeText" class="btn btn-outline-info btn-sm me-2 shadow-sm d-none" onclick="formatCM('newMezeEditor_cm')" title="Αυτόματη στοίχιση κώδικα">
+                                <i class="fa fa-indent"></i> Format
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-2 shadow-sm" onclick="toggleCKEditor('editMezeText', 'editMezeEditor', Base64UploadAdapterPluginEdit)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                                <i class="fa fa-code"></i> HTML
+                            </button>
+                            <!-- Κουμπί που ανοίγει το Modal του Builder (Edit) -->
+                            <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#builderModalEdit">
+                                <i class="fa fa-magic"></i> Γρήγορη Δημιουργία Κενών / Σ-Λ
+                            </button>
+                        </div>
                     </div>
                     <textarea name="mezeText" id="editMezeText" class="form-control" rows="5"><?php echo $row['mezeText']; ?></textarea>
 
@@ -818,8 +1092,13 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </div>
 
                 <div class="form-group card p-3 bg-white border-info shadow-sm">
-                    <label class="font-weight-bold text-info"><i class="fa fa-lightbulb-o"></i> Οδηγίες / Hints (Προς Μαθητές)</label>
-                    <textarea name="mezeHints" class="form-control" rows="3" placeholder="Γράψτε εδώ μικρές βοήθειες ή hints..."><?php echo isset($row['mezeHints']) ? $row['mezeHints'] : ''; ?></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold text-info mb-0"><i class="fa fa-lightbulb-o"></i> Οδηγίες / Hints (Προς Μαθητές)</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditor('editMezeHints', 'editHintsEditor', Base64UploadAdapterPluginEdit)">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="mezeHints" id="editMezeHints" class="form-control" rows="3" placeholder="Γράψτε εδώ μικρές βοήθειες ή hints..."><?php echo isset($row['mezeHints']) ? $row['mezeHints'] : ''; ?></textarea>
                     <small class="form-text text-muted">Αυτό το κείμενο θα εμφανίζεται στο Site των μαθητών με κουμπί "Χρειάζεσαι βοήθεια;".</small>
                 </div>
 
@@ -842,8 +1121,13 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </div>
 
                 <div class="form-group card p-3 bg-white border-success shadow-sm">
-                    <label class="font-weight-bold text-success">Λύση (mezeSolution)</label>
-                    <textarea name="mezeSolution" class="form-control mb-3" rows="5"><?php echo $row['mezeSolution']; ?></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold text-success mb-0">Λύση (mezeSolution)</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditor('editMezeSolution', 'editSolutionEditor', Base64UploadAdapterPluginEdit)">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="mezeSolution" id="editMezeSolution" class="form-control mb-3" rows="5"><?php echo $row['mezeSolution']; ?></textarea>
 
                     <label class="font-weight-bold">Εικόνα Λύσης (Προαιρετικά)</label>
                     <?php if (!empty($row['mezeSolutionImage'])): ?>
@@ -877,6 +1161,148 @@ class MezeAdminFormMaker extends AdminFormMaker
             </form>
         </div>
         <script>
+            class Base64UploadAdapterEdit {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+                upload() {
+                    return this.loader.file.then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const MAX_WIDTH = 800;
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > MAX_WIDTH) {
+                                    height = Math.round((height * MAX_WIDTH) / width);
+                                    width = MAX_WIDTH;
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve({
+                                    default: canvas.toDataURL('image/jpeg', 0.85)
+                                });
+                            };
+                            img.onerror = () => resolve({
+                                default: e.target.result
+                            });
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    }));
+                }
+                abort() {}
+            }
+
+            function Base64UploadAdapterPluginEdit(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapterEdit(loader);
+            }
+
+            window.editMezeEditor = null;
+            window.editSolutionEditor = null;
+            window.editHintsEditor = null;
+
+            function initSmartEditorEdit(textareaId, editorVar, plugin) {
+                const textarea = document.querySelector('#' + textareaId);
+                if (!textarea) return;
+
+                const val = textarea.value;
+                const cmVar = editorVar + '_cm';
+                const formatBtnId = 'formatBtn_' + textareaId;
+                const formatBtn = document.getElementById(formatBtnId);
+
+                // Έλεγχος για "ευαίσθητο" HTML κώδικα
+                const hasRawHtml = val.includes('<pre') || val.includes('<table') || val.includes('AEPP_RAW_START') || val.includes('<div');
+
+                if (hasRawHtml) {
+                    window[cmVar] = CodeMirror.fromTextArea(textarea, {
+                        mode: "xml",
+                        htmlMode: true,
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        viewportMargin: Infinity
+                    });
+                    window[cmVar].on('change', function(cm) {
+                        textarea.value = cm.getValue();
+                    });
+                    if (formatBtn) formatBtn.classList.remove('d-none');
+                } else {
+                    ClassicEditor.create(textarea, {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            textarea.value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
+
+            initSmartEditorEdit('editMezeText', 'editMezeEditor', Base64UploadAdapterPluginEdit);
+            initSmartEditorEdit('editMezeSolution', 'editSolutionEditor', Base64UploadAdapterPluginEdit);
+            initSmartEditorEdit('editMezeHints', 'editHintsEditor', Base64UploadAdapterPluginEdit);
+
+            function formatCM(cmVar) {
+                if (window[cmVar] && typeof html_beautify !== 'undefined') {
+                    const unformatted = window[cmVar].getValue();
+                    const formatted = html_beautify(unformatted, {
+                        indent_size: 4,
+                        wrap_line_length: 0,
+                        unformatted: ['pre', 'code']
+                    });
+                    window[cmVar].setValue(formatted);
+                }
+            }
+
+            function toggleCKEditor(textareaId, editorVar, plugin) {
+                const cmVar = editorVar + '_cm';
+                const formatBtnId = 'formatBtn_' + textareaId;
+                const formatBtn = document.getElementById(formatBtnId);
+
+                if (window[editorVar]) {
+                    document.querySelector('#' + textareaId).value = window[editorVar].getData();
+                    window[editorVar].destroy().then(() => {
+                        window[editorVar] = null;
+
+                        window[cmVar] = CodeMirror.fromTextArea(document.querySelector('#' + textareaId), {
+                            mode: "xml",
+                            htmlMode: true,
+                            lineNumbers: true,
+                            lineWrapping: true,
+                            viewportMargin: Infinity
+                        });
+                        window[cmVar].on('change', function(cm) {
+                            document.querySelector('#' + textareaId).value = cm.getValue();
+                        });
+
+                        if (formatBtn) formatBtn.classList.remove('d-none');
+                    });
+                } else {
+                    if (window[cmVar]) {
+                        document.querySelector('#' + textareaId).value = window[cmVar].getValue();
+                        window[cmVar].toTextArea();
+                        window[cmVar] = null;
+
+                        if (formatBtn) formatBtn.classList.add('d-none');
+                    }
+                    ClassicEditor.create(document.querySelector('#' + textareaId), {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            document.querySelector('#' + textareaId).value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
+
             function togglePanFieldsEdit(checkbox) {
                 document.getElementById('panelliniesFieldsEdit').style.display = checkbox.checked ? 'block' : 'none';
             }
@@ -886,13 +1312,18 @@ class MezeAdminFormMaker extends AdminFormMaker
             if (builderModalEdit) {
                 builderModalEdit.addEventListener('shown.bs.modal', function() {
                     var iframe = document.getElementById('builderIframeEdit');
-                    var textarea = document.getElementById('editMezeText');
-                    if (iframe && iframe.contentWindow && textarea) {
+                    var textVal = document.getElementById('editMezeText').value;
+                    if (window.editMezeEditor) {
+                        textVal = window.editMezeEditor.getData();
+                    } else if (window.editMezeEditor_cm) {
+                        textVal = window.editMezeEditor_cm.getValue();
+                    }
+                    if (iframe && iframe.contentWindow) {
                         var builderInput = iframe.contentWindow.document.getElementById('rawInput');
-                        if (builderInput && builderInput.value.trim() === '' && textarea.value.trim() !== '') {
+                        if (builderInput && builderInput.value.trim() === '' && textVal.trim() !== '') {
                             // Αυτόματη φόρτωση ΜΟΝΟ αν το κείμενο έχει παραχθεί εξ ολοκλήρου από τον Builder
-                            if (textarea.value.indexOf('AEPP_RAW_START') !== -1) {
-                                builderInput.value = textarea.value;
+                            if (textVal.indexOf('AEPP_RAW_START') !== -1) {
+                                builderInput.value = textVal;
                                 if (typeof iframe.contentWindow.recoverFromHTML === 'function') {
                                     iframe.contentWindow.recoverFromHTML(true);
                                 }
@@ -900,6 +1331,41 @@ class MezeAdminFormMaker extends AdminFormMaker
                         }
                     }
                 });
+
+                builderModalEdit.addEventListener('hidden.bs.modal', function() {
+                    var ta = document.getElementById('editMezeText');
+                    if (window.editMezeEditor && ta.value !== window.editMezeEditor.getData()) {
+                        window.editMezeEditor.setData(ta.value);
+                    } else if (window.editMezeEditor_cm && ta.value !== window.editMezeEditor_cm.getValue()) {
+                        window.editMezeEditor_cm.setValue(ta.value);
+                    }
+                });
+
+                // Αλλαγή συμπεριφοράς του κουμπιού "Επιστροφή" μέσα στον Builder για να κλείνει απλώς το Modal
+                var iframeEdit = document.getElementById('builderIframeEdit');
+                if (iframeEdit) {
+                    iframeEdit.addEventListener('load', function() {
+                        try {
+                            var doc = iframeEdit.contentWindow.document;
+                            var elements = doc.querySelectorAll('a, button');
+                            for (var i = 0; i < elements.length; i++) {
+                                var el = elements[i];
+                                if (el.textContent.includes('Επιστροφή') || el.innerText.includes('Επιστροφή')) {
+                                    el.removeAttribute('href');
+                                    el.removeAttribute('onclick');
+                                    el.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        e.stopImmediatePropagation();
+                                        var bsModal = bootstrap.Modal.getInstance(builderModalEdit);
+                                        if (bsModal) bsModal.hide();
+                                    }, true);
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Builder iframe cross-origin error:', e);
+                        }
+                    });
+                }
             }
         </script>
     <?php
@@ -1372,7 +1838,7 @@ class MezeAdminFormMaker extends AdminFormMaker
             <p>Η βαθμολογία σου στο <b>Μεζεδάκι #$mezeNumber</b> καταχωρήθηκε:</p>
             <div style='background:#f8f9fa; padding:15px; border-radius:5px; margin:15px 0;'>
                 <p style='margin:5px 0;'><b>Βαθμός:</b> <span style='color:#dc3545; font-size:1.2em;'>$grade/20</span></p>
-                <p style='margin:5px 0;'><b>Σχόλια:</b> $comments</p>
+                <div style='margin:5px 0;'><b>Σχόλια:</b><br><div style='white-space: pre-wrap; font-style: italic; padding-top: 5px;'>$comments</div></div>
                 <p style='margin:5px 0;'><b>Τρέχων Μ.Ο.:</b> " . number_format($average, 2) . "</p>
             </div>
             <p>Καλή συνέχεια στη μελέτη σου!</p>
@@ -1417,7 +1883,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </div>
                     <div class="p-4 border rounded mb-4" style="background-color: #fffaf0; min-height: 100px;">
                         <h6 class="text-muted small text-uppercase mb-2"><i class="fa fa-commenting-o"></i> Σχόλια Καθηγητή</h6>
-                        <p class="lead italic mb-0"><?php echo nl2br($comments) ?: "<i>Δεν καταχωρήθηκαν σχόλια.</i>"; ?></p>
+                        <p class="lead italic mb-0" style="white-space: pre-wrap;"><?php echo $comments ?: "<i>Δεν καταχωρήθηκαν σχόλια.</i>"; ?></p>
                     </div>
                 </div>
 
@@ -1560,6 +2026,234 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </tbody>
             </table>
         </div>
+    <?php
+    }
+
+    public function mezeBank($result, $dbHandler)
+    {
+        $allTypes = $dbHandler->getExerciseTypes();
+        $typeMap = [];
+        foreach ($allTypes as $t) {
+            $typeMap[$t['id']] = $t['name'];
+        }
+    ?>
+        <div class="container mt-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-dark fw-bold"><i class="fa fa-archive text-warning"></i> Τράπεζα Μεζεδακίων (Κατάλογος)</h3>
+                <div class="w-50">
+                    <input type="text" id="bankFilter" class="form-control form-control-lg shadow-sm" placeholder="Αναζήτηση (λέξη-κλειδί, έτος, θέμα)...">
+                </div>
+            </div>
+
+            <div class="row" id="bankContainer">
+                <?php
+                if ($result && $result->num_rows > 0) {
+                    $result->data_seek(0);
+                    while ($row = $result->fetch_assoc()) {
+                        $mezeId = $row['mezeId'];
+
+                        // Clean text for preview
+                        $cleanText = preg_replace('/<(style|script)[^>]*>.*?<\/\1>/si', '', $row['mezeText']);
+                        $cleanText = str_replace(['<br>', '<br/>', '</p>', '</div>', 'AEPP_RAW_START', 'AEPP_RAW_END', '&nbsp;'], ' ', $cleanText);
+                        $cleanText = strip_tags($cleanText);
+                        $cleanText = preg_replace('/\s+/u', ' ', $cleanText);
+
+                        // Αφαίρεση τυποποιημένων επικεφαλίδων Πανελλαδικών (με ανοχή στους τόνους πεζών/κεφαλαίων)
+                        // 1. Αφαιρεί ολόκληρο το κατεβατό "ΠΑΝΕΛΛΑΔΙΚΕΣ ΕΞΕΤΑΣΕΙΣ ... ΑΝΑΠΤΥΞΗ ΕΦΑΡΜΟΓΩΝ..." (ό,τι και αν μεσολαβεί)
+                        $cleanText = preg_replace('/(ΕΠΑΝΑΛΗΠΤΙΚ[ΕΈ]Σ\s+)?ΠΑΝΕΛΛΑΔΙΚ[ΕΈ]Σ\s+ΕΞΕΤ[ΑΆ]ΣΕΙΣ.*?(ΑΝ[ΑΆ]ΠΤΥΞΗ\s+ΕΦΑΡΜΟΓ[ΩΏ]Ν\s+ΣΕ\s+ΠΡΟΓΡΑΜΜΑΤΙΣΤΙΚ[ΟΌ]\s+ΠΕΡΙΒ[ΑΆ]ΛΛΟΝ|ΠΛΗΡΟΦΟΡΙΚ[ΗΉ](?:\s+ΠΡΟΣΑΝΑΤΟΛΙΣΜΟ[ΥΎ])?)(?:\s*Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+)?/iu', '', $cleanText);
+                        // 2. Αφαιρεί σκέτο το όνομα του μαθήματος (αν έχει ξεμείνει χωρίς το "Πανελλαδικές")
+                        $cleanText = preg_replace('/(ΕΞΕΤΑΖ[ΟΌ]ΜΕΝΟ\s+Μ[ΑΆ]ΘΗΜΑ:?)?\s*(ΑΝ[ΑΆ]ΠΤΥΞΗ\s+ΕΦΑΡΜΟΓ[ΩΏ]Ν\s+ΣΕ\s+ΠΡΟΓΡΑΜΜΑΤΙΣΤΙΚ[ΟΌ]\s+ΠΕΡΙΒ[ΑΆ]ΛΛΟΝ|ΠΛΗΡΟΦΟΡΙΚ[ΗΉ](?:\s+ΠΡΟΣΑΝΑΤΟΛΙΣΜΟ[ΥΎ])?)\s*(Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+)?/iu', '', $cleanText);
+                        // 3. Αφαιρεί τυχόν "ΘΕΜΑ Χ" που έμεινε ακάλυπτο στην αρχή του κειμένου
+                        $cleanText = preg_replace('/^\s*Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+\s*/iu', '', $cleanText);
+
+                        $previewText = mb_substr(trim($cleanText), 0, 200);
+                        if (mb_strlen(trim($cleanText)) > 200) $previewText .= "...";
+
+                        // Tags
+                        $typeIds = $dbHandler->getMezeTypeIds($mezeId);
+                        $tagsHtml = '';
+                        if (!empty($typeIds)) {
+                            foreach ($typeIds as $tid) {
+                                if (isset($typeMap[$tid])) {
+                                    $tagsHtml .= '<span class="badge bg-info text-dark me-1 mb-1 shadow-sm" style="font-size: 0.8rem;"><i class="fa fa-tag"></i> ' . $typeMap[$tid] . '</span> ';
+                                }
+                            }
+                        }
+
+                        // Panhellenic
+                        $panHtml = '';
+                        if (isset($row['isPanhellenic']) && $row['isPanhellenic'] == 1) {
+                            $panTypeStr = ($row['panExamType'] == 'Kanonikes') ? 'Κανονικές' : 'Επαναληπτικές';
+                            $panSchoolStr = ($row['panSchoolType'] == 'Hmerisio') ? 'Ημερ.' : 'Εσπερ.';
+                            $panHtml = '<span class="badge bg-primary me-1 mb-1 shadow-sm" style="font-size: 0.8rem;"><i class="fa fa-university"></i> Πανελλαδικές ' . $row['panYear'] . ' - Θέμα ' . $row['panThema'] . ' (' . $panTypeStr . ' ' . $panSchoolStr . ')</span>';
+                        }
+
+                        if (isset($row['isSos']) && $row['isSos'] == 1) {
+                            $panHtml .= '<span class="badge bg-danger me-1 mb-1 shadow-sm" style="font-size: 0.8rem;"><i class="fa fa-fire"></i> SOS</span>';
+                        }
+                ?>
+                        <div class="col-md-6 col-lg-4 mb-4 bank-item">
+                            <div class="card h-100 shadow-sm border-0" style="border-top: 5px solid #ffc107 !important; transition: transform 0.2s;">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom-0 pb-0">
+                                    <h5 class="mb-0 fw-bold text-dark">Μεζεδάκι #<?php echo $row['mezeNumber']; ?></h5>
+                                    <span class="text-muted small fw-bold bg-light px-2 py-1 rounded border"><i class="fa fa-calendar"></i> <?php echo date('d/m/Y', strtotime($row['mezeDate'])); ?></span>
+                                </div>
+                                <div class="card-body pt-2">
+                                    <div class="mb-3">
+                                        <?php echo $panHtml; ?>
+                                        <?php echo $tagsHtml; ?>
+                                    </div>
+                                    <p class="card-text text-dark" style="font-size: 0.95rem; line-height: 1.5;">
+                                        <?php echo $previewText ?: "<i class='text-muted'>Δεν υπάρχει κείμενο εκφώνησης.</i>"; ?>
+                                    </p>
+                                    <?php if (!empty($row['mezeImage'])): ?>
+                                        <div class="text-primary small mt-2 fw-bold"><i class="fa fa-image"></i> Έχει εικόνα εκφώνησης</div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="card-footer bg-light border-0 d-flex justify-content-between">
+                                    <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-dark btn-sm flex-fill me-1" title="Προβολή"><i class="fa fa-eye"></i></a>
+                                    <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>&autoprint=1" target="_blank" class="btn btn-outline-info btn-sm flex-fill mx-1" title="Εκτύπωση"><i class="fa fa-print"></i></a>
+                                    <a href="index.php?action=editMezedaki&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-primary btn-sm flex-fill ms-1" title="Επεξεργασία"><i class="fa fa-edit"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                <?php
+                    }
+                } else {
+                    echo "<div class='col-12'><div class='alert alert-warning shadow-sm'>Δεν βρέθηκαν μεζεδάκια στη βάση δεδομένων.</div></div>";
+                }
+                ?>
+            </div>
+        </div>
+        <style>
+            .bank-item .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+            }
+        </style>
+        <script>
+            document.getElementById('bankFilter').addEventListener('input', function() {
+                let filter = this.value.toLowerCase();
+                let items = document.querySelectorAll('.bank-item');
+                items.forEach(function(item) {
+                    let text = item.innerText.toLowerCase();
+                    if (text.includes(filter)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        </script>
+    <?php
+    }
+
+    // --- ΠΙΝΑΚΑΣ ΑΝΑΚΟΙΝΩΣΕΩΝ ---
+
+    public function listAnnouncements($announcements)
+    {
+    ?>
+        <div class="container mt-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0"><i class="fa fa-bullhorn text-primary"></i> Πίνακας Ανακοινώσεων</h3>
+                <a href="index.php?action=add_announcement" class="btn btn-success shadow-sm">
+                    <i class="fa fa-plus"></i> Νέα Ανακοίνωση
+                </a>
+            </div>
+            <div class="table-responsive shadow-sm border rounded bg-white">
+                <table class="table table-bordered table-striped align-middle mb-0">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th style="width: 15%">Ημερομηνία</th>
+                            <th style="width: 40%">Τίτλος / Προεπισκόπηση</th>
+                            <th style="width: 15%">Εικόνα</th>
+                            <th style="width: 30%">Ενέργειες</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($announcements)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">Δεν υπάρχουν ανακοινώσεις.</td>
+                            </tr>
+                            <?php else: foreach ($announcements as $ann): ?>
+                                <tr>
+                                    <td class="text-center small fw-bold text-muted"><?php echo date('d/m/Y H:i', strtotime($ann['created_at'])); ?></td>
+                                    <td>
+                                        <strong class="text-primary" style="font-size: 1.1rem;"><?php echo htmlspecialchars($ann['title']); ?></strong><br>
+                                        <span class="text-muted small"><?php echo mb_substr(strip_tags($ann['content']), 0, 80); ?>...</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php if (!empty($ann['imagePath'])): ?>
+                                            <img src="../images/announcements/<?php echo $ann['imagePath']; ?>" height="50" class="rounded shadow-sm border">
+                                        <?php else: ?>
+                                            <span class="text-muted small">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="index.php?action=notify_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-info btn-sm m-1 text-white shadow-sm" onclick="return confirm('Θα σταλεί email σε όλους τους ενεργούς μαθητές. Είστε σίγουροι;')"><i class="fa fa-envelope"></i> Email</a>
+                                        <a href="index.php?action=edit_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-warning btn-sm m-1 shadow-sm"><i class="fa fa-edit"></i></a>
+                                        <a href="index.php?action=delete_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-danger btn-sm m-1 shadow-sm" onclick="return confirm('Οριστική διαγραφή ανακοίνωσης;')"><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                        <?php endforeach;
+                        endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    public function announcementForm($announcement = null)
+    {
+        $isEdit = $announcement !== null;
+        $action = $isEdit ? 'update_announcement' : 'save_announcement';
+        $title = $isEdit ? $announcement['title'] : '';
+        $content = $isEdit ? $announcement['content'] : '';
+        $image = $isEdit ? $announcement['imagePath'] : '';
+        $id = $isEdit ? $announcement['id'] : '';
+    ?>
+        <div class="container mt-4 border p-4 bg-light shadow mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-primary"><i class="fa <?php echo $isEdit ? 'fa-edit' : 'fa-bullhorn'; ?>"></i> <?php echo $isEdit ? 'Επεξεργασία Ανακοίνωσης' : 'Νέα Ανακοίνωση'; ?></h3>
+                <a href="index.php?action=manage_announcements" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-arrow-left"></i> Επιστροφή
+                </a>
+            </div>
+            <form action="index.php?action=<?php echo $action; ?>" method="post" enctype="multipart/form-data">
+                <?php if ($isEdit): ?><input type="hidden" name="id" value="<?php echo $id; ?>"><?php endif; ?>
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Τίτλος Ανακοίνωσης</label>
+                    <input type="text" name="title" class="form-control form-control-lg" value="<?php echo htmlspecialchars($title); ?>" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="fw-bold mb-2">Κείμενο (Υποστηρίζεται πλήρης HTML / Rich Text)</label>
+                    <textarea name="content" id="annContent" class="form-control" rows="8"><?php echo $content; ?></textarea>
+                </div>
+                <div class="form-group card p-3 bg-white shadow-sm mb-4 border-info">
+                    <label class="font-weight-bold text-info"><i class="fa fa-image"></i> Εικόνα / Αφίσα (Προαιρετικά)</label>
+                    <?php if ($isEdit && !empty($image)): ?>
+                        <div class="mb-3 p-2 border rounded bg-light" style="max-width: 250px;">
+                            <img src="../images/announcements/<?php echo $image; ?>" class="img-fluid mb-2 rounded shadow-sm border">
+                            <div class="mt-1">
+                                <input type="checkbox" name="deleteImage" value="1" id="delAnnImg">
+                                <label for="delAnnImg" class="text-danger font-weight-bold" style="cursor:pointer; margin-left: 5px;">Διαγραφή υπάρχουσας εικόνας</label>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="image" class="form-control-file" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100 shadow fw-bold"><i class="fa fa-save"></i> Αποθήκευση Ανακοίνωσης</button>
+            </form>
+        </div>
+        <script>
+            // Ενεργοποίηση του CKEditor στο textarea με ID annContent
+            document.addEventListener("DOMContentLoaded", function() {
+                if (typeof ClassicEditor !== 'undefined') {
+                    ClassicEditor.create(document.querySelector('#annContent')).catch(error => console.error(error));
+                }
+            });
+        </script>
 <?php
     }
 }

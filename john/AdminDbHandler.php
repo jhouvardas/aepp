@@ -51,7 +51,7 @@ class AdminDbHandler extends DbHandler
         if (!$connTutor) return [];
 
         $placeholders = implode(',', array_fill(0, count($studentIds), '?'));
-        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE studentId IN ($placeholders) AND user = ? ORDER BY name ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone, birthday, school FROM student WHERE studentId IN ($placeholders) AND schoolYear = ? ORDER BY name ASC";
         $stmtT = $connTutor->prepare($sql);
 
         $types = str_repeat('i', count($studentIds)) . 's';
@@ -413,6 +413,52 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function massHideOldMezedakia($futureDate = '2030-01-01', $futureSolutionDate = '2030-01-02 23:59:00')
+    {
+        $conn = $this->connectToFamilyDB();
+        // Ενημερώνει ΜΟΝΟ τα μεζεδάκια που είναι ήδη ορατά (έτσι αν έχεις ήδη ετοιμάσει κάποια νέα για τον Ιούλιο δεν θα επηρεαστούν)
+        $stmt = $conn->prepare("UPDATE aepp_mezedakia SET mezeDate = ?, solutionDate = ? WHERE mezeDate <= CURDATE()");
+        $stmt->bind_param("ss", $futureDate, $futureSolutionDate);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function massDeleteOldSubmissions()
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // 1. Βρίσκουμε τα αρχεία για να τα διαγράψουμε από τον server (εξοικονόμηση χώρου)
+        $stmt = $conn->prepare("SELECT file1, file2, file3 FROM aepp_meze_submissions");
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        $targetDir = "../uploads/submissions/";
+        while ($row = $res->fetch_assoc()) {
+            for ($i = 1; $i <= 3; $i++) {
+                $f = "file" . $i;
+                if (!empty($row[$f])) {
+                    $filePath = $targetDir . $row[$f];
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
+            }
+        }
+        $stmt->close();
+
+        // 2. Διαγράφουμε τις εγγραφές από τη βάση
+        $success = $conn->query("DELETE FROM aepp_meze_submissions");
+
+        // Προαιρετικά: Καθαρίζουμε και τα παλιά αιτήματα παράτασης/ενεργές παρατάσεις
+        $conn->query("DELETE FROM aepp_meze_requests");
+        $conn->query("DELETE FROM aepp_meze_extensions");
+
+        $conn->close();
+        return $success;
+    }
+
     public function extendMezeForAll($mezeId, $hours, $userYear)
     {
         $conn = $this->connectToFamilyDB();
@@ -699,7 +745,7 @@ class AdminDbHandler extends DbHandler
             return []; // Επιστρέφει άδειο πίνακα αν αποτύχει η σύνδεση
         }
 
-        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY name ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone, birthday, school FROM student WHERE status = 1 AND schoolYear = ? ORDER BY name ASC";
         $stmt = $connTutor->prepare($sql);
         $stmt->bind_param("s", $userYear);
         $stmt->execute();
@@ -1384,5 +1430,146 @@ class AdminDbHandler extends DbHandler
         return array_filter($allStudents, function ($student) use ($submittedIds) {
             return (!in_array((int)$student['studentId'], $submittedIds) && !empty($student['email']));
         });
+    }
+
+    // --- ΑΝΑΚΟΙΝΩΣΕΙΣ (ANNOUNCEMENTS) ---
+
+    public function insertAnnouncement($title, $content, $file, $userYear)
+    {
+        $imageName = null;
+        if (isset($file['image']) && $file['image']['error'] == 0) {
+            $targetDir = "../images/announcements/";
+            if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+            $imageName = time() . "_" . basename($file['image']['name']);
+            move_uploaded_file($file['image']['tmp_name'], $targetDir . $imageName);
+        }
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("INSERT INTO aepp_announcements (title, content, imagePath, user_year) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $title, $content, $imageName, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function updateAnnouncement($id, $title, $content, $file, $deleteImage, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT imagePath FROM aepp_announcements WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $imageName = $row['imagePath'];
+        $targetDir = "../images/announcements/";
+
+        if ($deleteImage == "1") {
+            if (!empty($imageName)) @unlink($targetDir . $imageName);
+            $imageName = null;
+        }
+
+        if (isset($file['image']) && $file['image']['error'] == 0) {
+            if (!empty($imageName)) @unlink($targetDir . $imageName);
+            if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+            $imageName = time() . "_" . basename($file['image']['name']);
+            move_uploaded_file($file['image']['tmp_name'], $targetDir . $imageName);
+        }
+
+        $stmt = $conn->prepare("UPDATE aepp_announcements SET title=?, content=?, imagePath=? WHERE id=? AND user_year=?");
+        $stmt->bind_param("sssis", $title, $content, $imageName, $id, $userYear);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function deleteAnnouncement($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT imagePath FROM aepp_announcements WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!empty($row['imagePath'])) @unlink("../images/announcements/" . $row['imagePath']);
+
+        $stmt = $conn->prepare("DELETE FROM aepp_announcements WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function getAnnouncementById($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_announcements WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $result;
+    }
+
+    public function getAllAnnouncements($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_announcements WHERE user_year = ? ORDER BY created_at DESC");
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return $result;
+    }
+
+    public function logGroupEmail($groupId, $subject, $message, $userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Δημιουργία του πίνακα αν δεν υπάρχει
+        $conn->query("CREATE TABLE IF NOT EXISTS aepp_group_email_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            group_id INT NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            user_year VARCHAR(50) NOT NULL,
+            sent_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        $stmt = $conn->prepare("INSERT INTO aepp_group_email_history (group_id, subject, message, user_year, sent_at) VALUES (?, ?, ?, ?, NOW())");
+        if ($stmt) {
+            $stmt->bind_param("isss", $groupId, $subject, $message, $userYear);
+            $success = $stmt->execute();
+            $stmt->close();
+        }
+        $conn->close();
+        return $success ?? false;
+    }
+
+    public function getGroupEmailHistory($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        $conn->query("CREATE TABLE IF NOT EXISTS aepp_group_email_history (
+            id INT AUTO_INCREMENT PRIMARY KEY, group_id INT NOT NULL, subject VARCHAR(255) NOT NULL, message TEXT NOT NULL, user_year VARCHAR(50) NOT NULL, sent_at DATETIME NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        $sql = "SELECT h.*, g.group_name 
+                FROM aepp_group_email_history h 
+                LEFT JOIN aepp_groups g ON h.group_id = g.id 
+                WHERE h.user_year = ? 
+                ORDER BY h.sent_at DESC";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        $conn->close();
+        return $res;
     }
 }

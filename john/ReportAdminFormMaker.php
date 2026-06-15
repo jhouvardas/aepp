@@ -102,10 +102,16 @@ class ReportAdminFormMaker extends AdminFormMaker
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 bg-light border rounded text-center h-100">
-                                <h6 class="text-muted mb-1 small text-uppercase">Επικοινωνία</h6>
+                                <h6 class="text-muted mb-1 small text-uppercase">Πληροφορίες</h6>
                                 <div class="small">
-                                    <i class="fa fa-envelope"></i> <?php echo $student['email']; ?><br>
-                                    <i class="fa fa-phone"></i> <?php echo $student['phone']; ?>
+                                    <i class="fa fa-envelope text-secondary"></i> <?php echo htmlspecialchars($student['email'] ?? '-'); ?><br>
+                                    <i class="fa fa-phone text-secondary"></i> <?php echo htmlspecialchars($student['phone'] ?? '-'); ?>
+                                    <?php if (!empty($student['birthday']) && $student['birthday'] !== '0000-00-00' && $student['birthday'] !== '-'): ?>
+                                        <br><i class="fa fa-birthday-cake text-secondary"></i> <?php echo date('d/m/Y', strtotime($student['birthday'])); ?>
+                                    <?php endif; ?>
+                                    <?php if (!empty($student['school']) && $student['school'] !== '-'): ?>
+                                        <br><i class="fa fa-university text-secondary"></i> <?php echo htmlspecialchars($student['school']); ?>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -418,6 +424,166 @@ class ReportAdminFormMaker extends AdminFormMaker
                 }).catch(error => console.error(error));
             });
         </script>
+    <?php
+    }
+
+    public function groupEmailForm($groups)
+    {
+    ?>
+        <div class="container mt-4 border p-4 bg-light shadow mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-primary"><i class="fa fa-envelope"></i> Αποστολή Ομαδικού Email</h3>
+                <a href="index.php?action=group_email_history" class="btn btn-outline-primary shadow-sm"><i class="fa fa-history"></i> Ιστορικό</a>
+            </div>
+            <form action="index.php?action=send_group_email" method="post" onsubmit="return handleGroupEmailSubmit(this);">
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Επιλογή Ομάδας</label>
+                    <select name="group_id" class="form-select form-select-lg" required>
+                        <option value="">-- Επιλέξτε Ομάδα --</option>
+                        <?php foreach ($groups as $g): ?>
+                            <option value="<?php echo $g['id']; ?>"><?php echo htmlspecialchars($g['group_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Θέμα (Subject)</label>
+                    <input type="text" name="subject" class="form-control form-control-lg" required placeholder="π.χ. Ενημέρωση για το επόμενο μάθημα">
+                </div>
+                <div class="form-group mb-4">
+                    <label class="fw-bold mb-2">Κείμενο Μηνύματος</label>
+                    <textarea name="message" id="groupEmailContent" class="form-control" rows="8"></textarea>
+                </div>
+                <button type="submit" id="btnSendGroupEmail" class="btn btn-primary btn-lg w-100 shadow fw-bold">
+                    <i class="fa fa-paper-plane"></i> Αποστολή Email
+                </button>
+            </form>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                if (typeof ClassicEditor !== 'undefined') {
+                    ClassicEditor.create(document.querySelector('#groupEmailContent')).catch(error => console.error(error));
+                }
+            });
+
+            function handleGroupEmailSubmit(form) {
+                if (confirm('Είστε σίγουροι ότι θέλετε να στείλετε το email στην επιλεγμένη ομάδα;')) {
+                    var btn = document.getElementById('btnSendGroupEmail');
+                    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Αποστολή... Παρακαλώ περιμένετε';
+                    btn.classList.add('disabled');
+                    btn.style.pointerEvents = 'none';
+                    return true;
+                }
+                return false;
+            }
+        </script>
+    <?php
+    }
+
+    public function showGroupEmailHistory($history)
+    {
+    ?>
+        <div class="container mt-4 border p-4 bg-light shadow mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-primary"><i class="fa fa-history"></i> Ιστορικό Ομαδικών Emails</h3>
+                <a href="index.php?action=group_email_form" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Επιστροφή</a>
+            </div>
+            <div class="table-responsive bg-white rounded shadow-sm border">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>Ημερομηνία</th>
+                            <th>Ομάδα</th>
+                            <th>Θέμα</th>
+                            <th>Μήνυμα</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($history)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Δεν υπάρχει ιστορικό αποστολής emails.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($history as $h): ?>
+                                <tr>
+                                    <td class="text-center align-middle" style="width: 15%;"><?php echo date('d/m/Y H:i', strtotime($h['sent_at'])); ?></td>
+                                    <td class="text-center align-middle fw-bold text-primary" style="width: 15%;"><?php echo htmlspecialchars($h['group_name'] ?? 'Άγνωστη Ομάδα'); ?></td>
+                                    <td class="align-middle fw-bold" style="width: 25%;"><?php echo htmlspecialchars($h['subject']); ?></td>
+                                    <td class="small" style="width: 45%;">
+                                        <div style="max-height: 100px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6;">
+                                            <?php echo $h['message']; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    public function showGroupEmailResults($groupName, $subject, $successful, $failed)
+    {
+        $successCount = count($successful);
+        $failCount = count($failed);
+    ?>
+        <div class="container mt-4 mb-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0 text-primary"><i class="fa fa-paper-plane-o"></i> Αποτέλεσμα Αποστολής Email</h3>
+                    <a href="index.php?action=group_email_form" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Νέο Email</a>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info shadow-sm">
+                        <h5 class="alert-heading">Σύνοψη Αποστολής</h5>
+                        <p class="mb-1"><strong>Ομάδα:</strong> <?php echo htmlspecialchars($groupName); ?></p>
+                        <p class="mb-1"><strong>Θέμα:</strong> <?php echo htmlspecialchars($subject); ?></p>
+                        <hr>
+                        <p class="mb-0">
+                            <span class="text-success fw-bold"><i class="fa fa-check-circle"></i> Επιτυχής αποστολή σε <?php echo $successCount; ?> παραλήπτες.</span><br>
+                            <span class="text-danger fw-bold"><i class="fa fa-times-circle"></i> Αποτυχία αποστολής σε <?php echo $failCount; ?> παραλήπτες.</span>
+                        </p>
+                    </div>
+
+                    <div class="row mt-4">
+                        <!-- Successful Recipients -->
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <h5 class="text-success"><i class="fa fa-check"></i> Επιτυχείς Αποστολές (<?php echo $successCount; ?>)</h5>
+                            <div class="list-group shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                                <?php if (empty($successful)): ?>
+                                    <div class="list-group-item text-muted">Καμία επιτυχής αποστολή.</div>
+                                <?php else: ?>
+                                    <?php foreach ($successful as $s): ?>
+                                        <div class="list-group-item list-group-item-light small py-2">
+                                            <strong><?php echo htmlspecialchars($s['name']); ?></strong><br>
+                                            <span class="text-muted"><?php echo htmlspecialchars($s['email']); ?></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Failed Recipients -->
+                        <div class="col-md-6">
+                            <h5 class="text-danger"><i class="fa fa-times"></i> Αποτυχημένες Αποστολές (<?php echo $failCount; ?>)</h5>
+                            <div class="list-group shadow-sm" style="max-height: 400px; overflow-y: auto;">
+                                <?php if (empty($failed)): ?>
+                                    <div class="list-group-item text-muted">Καμία αποτυχημένη αποστολή.</div>
+                                <?php else: ?>
+                                    <?php foreach ($failed as $f): ?>
+                                        <div class="list-group-item list-group-item-light small py-2">
+                                            <strong><?php echo htmlspecialchars($f['name']); ?></strong> (<?php echo htmlspecialchars($f['email']); ?>)<br>
+                                            <span class="text-danger" style="font-size: 0.8rem;"><em><?php echo htmlspecialchars($f['error']); ?></em></span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 <?php
     }
 }

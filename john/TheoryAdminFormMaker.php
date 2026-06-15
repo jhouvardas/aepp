@@ -19,8 +19,24 @@ class TheoryAdminFormMaker extends AdminFormMaker
                     <div class="col-md-4 mb-3"><label>Κεφάλαιο</label><input type="text" name="chapter_num" class="form-control" required></div>
                     <div class="col-md-4 mb-3"><label>Σελίδα</label><input type="number" name="page_number" class="form-control" value="0"></div>
                 </div>
-                <div class="mb-3"><label>Ερώτηση</label><textarea name="question_text" id="editor_question_add" class="form-control"></textarea></div>
-                <div class="mb-3"><label>Απάντηση</label><textarea name="answer_text" id="editor_answer_add" class="form-control"></textarea></div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Ερώτηση</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditorTheory('editor_question_add', 'questionEditorAdd', Base64UploadAdapterPluginTheory)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="question_text" id="editor_question_add" class="form-control"></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Απάντηση</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditorTheory('editor_answer_add', 'answerEditorAdd', Base64UploadAdapterPluginTheory)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="answer_text" id="editor_answer_add" class="form-control"></textarea>
+                </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -37,8 +53,88 @@ class TheoryAdminFormMaker extends AdminFormMaker
             </form>
         </div>
         <script>
-            ClassicEditor.create(document.querySelector('#editor_question_add')).catch(e => console.error(e));
-            ClassicEditor.create(document.querySelector('#editor_answer_add')).catch(e => console.error(e));
+            class Base64UploadAdapterTheory {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+                upload() {
+                    return this.loader.file.then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const MAX_WIDTH = 800;
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > MAX_WIDTH) {
+                                    height = Math.round((height * MAX_WIDTH) / width);
+                                    width = MAX_WIDTH;
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve({
+                                    default: canvas.toDataURL('image/jpeg', 0.85)
+                                });
+                            };
+                            img.onerror = () => resolve({
+                                default: e.target.result
+                            });
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    }));
+                }
+                abort() {}
+            }
+
+            function Base64UploadAdapterPluginTheory(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapterTheory(loader);
+            }
+
+            window.questionEditorAdd = null;
+            window.answerEditorAdd = null;
+
+            ClassicEditor.create(document.querySelector('#editor_question_add'), {
+                extraPlugins: [Base64UploadAdapterPluginTheory]
+            }).then(editor => {
+                window.questionEditorAdd = editor;
+                editor.model.document.on('change:data', () => {
+                    document.querySelector('#editor_question_add').value = editor.getData();
+                });
+            }).catch(e => console.error(e));
+
+            ClassicEditor.create(document.querySelector('#editor_answer_add'), {
+                extraPlugins: [Base64UploadAdapterPluginTheory]
+            }).then(editor => {
+                window.answerEditorAdd = editor;
+                editor.model.document.on('change:data', () => {
+                    document.querySelector('#editor_answer_add').value = editor.getData();
+                });
+            }).catch(e => console.error(e));
+
+            function toggleCKEditorTheory(textareaId, editorVar, plugin) {
+                if (window[editorVar]) {
+                    document.querySelector('#' + textareaId).value = window[editorVar].getData();
+                    window[editorVar].destroy().then(() => {
+                        window[editorVar] = null;
+                    });
+                } else {
+                    ClassicEditor.create(document.querySelector('#' + textareaId), {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            document.querySelector('#' + textareaId).value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
         </script>
     <?php
     }
@@ -95,8 +191,24 @@ class TheoryAdminFormMaker extends AdminFormMaker
                     </div>
                 </div>
 
-                <div class="mb-3"><label>Ερώτηση</label><textarea name="question_text" id="editor_question_edit" class="form-control"><?php echo $questionData['question_text']; ?></textarea></div>
-                <div class="mb-3"><label>Απάντηση</label><textarea name="answer_text" id="editor_answer_edit" class="form-control"><?php echo $questionData['answer_text']; ?></textarea></div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Ερώτηση</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditorTheory('editor_question_edit', 'questionEditorEdit', Base64UploadAdapterPluginTheoryEdit)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="question_text" id="editor_question_edit" class="form-control"><?php echo $questionData['question_text']; ?></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Απάντηση</label>
+                        <button type="button" class="btn btn-outline-secondary btn-sm shadow-sm" onclick="toggleCKEditorTheory('editor_answer_edit', 'answerEditorEdit', Base64UploadAdapterPluginTheoryEdit)" title="Εναλλαγή σε προβολή κώδικα HTML">
+                            <i class="fa fa-code"></i> HTML
+                        </button>
+                    </div>
+                    <textarea name="answer_text" id="editor_answer_edit" class="form-control"><?php echo $questionData['answer_text']; ?></textarea>
+                </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -125,8 +237,144 @@ class TheoryAdminFormMaker extends AdminFormMaker
             </form>
         </div>
         <script>
-            ClassicEditor.create(document.querySelector('#editor_question_edit')).catch(e => console.error(e));
-            ClassicEditor.create(document.querySelector('#editor_answer_edit')).catch(e => console.error(e));
+            class Base64UploadAdapterTheoryEdit {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+                upload() {
+                    return this.loader.file.then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const MAX_WIDTH = 800;
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > MAX_WIDTH) {
+                                    height = Math.round((height * MAX_WIDTH) / width);
+                                    width = MAX_WIDTH;
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve({
+                                    default: canvas.toDataURL('image/jpeg', 0.85)
+                                });
+                            };
+                            img.onerror = () => resolve({
+                                default: e.target.result
+                            });
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    }));
+                }
+                abort() {}
+            }
+
+            function Base64UploadAdapterPluginTheoryEdit(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapterTheoryEdit(loader);
+            }
+
+            window.questionEditorEdit = null;
+            window.answerEditorEdit = null;
+
+            function initSmartEditorTheoryEdit(textareaId, editorVar, plugin) {
+                const textarea = document.querySelector('#' + textareaId);
+                if (!textarea) return;
+
+                const val = textarea.value;
+                const cmVar = editorVar + '_cm';
+                const formatBtnId = 'formatBtn_' + textareaId;
+                const formatBtn = document.getElementById(formatBtnId);
+
+                const hasRawHtml = val.includes('<pre') || val.includes('<table') || val.includes('<div');
+
+                if (hasRawHtml) {
+                    window[cmVar] = CodeMirror.fromTextArea(textarea, {
+                        mode: "xml",
+                        htmlMode: true,
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        viewportMargin: Infinity
+                    });
+                    window[cmVar].on('change', function(cm) {
+                        textarea.value = cm.getValue();
+                    });
+                    if (formatBtn) formatBtn.classList.remove('d-none');
+                } else {
+                    ClassicEditor.create(textarea, {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            textarea.value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
+
+            initSmartEditorTheoryEdit('editor_question_edit', 'questionEditorEdit', Base64UploadAdapterPluginTheoryEdit);
+            initSmartEditorTheoryEdit('editor_answer_edit', 'answerEditorEdit', Base64UploadAdapterPluginTheoryEdit);
+
+            function formatCMTheory(cmVar) {
+                if (window[cmVar] && typeof html_beautify !== 'undefined') {
+                    const unformatted = window[cmVar].getValue();
+                    const formatted = html_beautify(unformatted, {
+                        indent_size: 4,
+                        wrap_line_length: 0,
+                        unformatted: ['pre', 'code']
+                    });
+                    window[cmVar].setValue(formatted);
+                }
+            }
+
+            function toggleCKEditorTheory(textareaId, editorVar, plugin) {
+                const cmVar = editorVar + '_cm';
+                const formatBtnId = 'formatBtn_' + textareaId;
+                const formatBtn = document.getElementById(formatBtnId);
+
+                if (window[editorVar]) {
+                    document.querySelector('#' + textareaId).value = window[editorVar].getData();
+                    window[editorVar].destroy().then(() => {
+                        window[editorVar] = null;
+
+                        window[cmVar] = CodeMirror.fromTextArea(document.querySelector('#' + textareaId), {
+                            mode: "xml",
+                            htmlMode: true,
+                            lineNumbers: true,
+                            lineWrapping: true,
+                            viewportMargin: Infinity
+                        });
+                        window[cmVar].on('change', function(cm) {
+                            document.querySelector('#' + textareaId).value = cm.getValue();
+                        });
+
+                        if (formatBtn) formatBtn.classList.remove('d-none');
+                    });
+                } else {
+                    if (window[cmVar]) {
+                        document.querySelector('#' + textareaId).value = window[cmVar].getValue();
+                        window[cmVar].toTextArea();
+                        window[cmVar] = null;
+
+                        if (formatBtn) formatBtn.classList.add('d-none');
+                    }
+                    ClassicEditor.create(document.querySelector('#' + textareaId), {
+                        extraPlugins: [plugin]
+                    }).then(editor => {
+                        window[editorVar] = editor;
+                        editor.model.document.on('change:data', () => {
+                            document.querySelector('#' + textareaId).value = editor.getData();
+                        });
+                    }).catch(error => console.error(error));
+                }
+            }
         </script>
     <?php
     }

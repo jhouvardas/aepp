@@ -425,8 +425,11 @@ class DbHandler
         }
 
         // Φιλτράρουμε με status=1 και το συγκεκριμένο user (έτος)
-        $sql = "SELECT studentId, name, lastName, email, phone FROM student WHERE status = 1 AND user = ? ORDER BY name ASC, lastName ASC";
+        $sql = "SELECT studentId, name, lastName, email, phone, birthday, school FROM student WHERE status = 1 AND schoolYear = ? ORDER BY name ASC, lastName ASC";
         $stmt = $connTutor->prepare($sql);
+        if (!$stmt) {
+            return []; // Επιστροφή άδειου πίνακα αντί για Fatal Error αν αποτύχει το SQL
+        }
         $stmt->bind_param("s", $userYear);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -490,8 +493,22 @@ class DbHandler
                     if (in_array($ext, $allowedExtensions)) {
                         $cleanName = preg_replace("/[^a-zA-Z0-9.]/", "_", basename($name));
                         $newFileName = time() . "_" . $key . "_" . $studentId . "_" . $cleanName;
+                        $targetPath = $targetDir . $newFileName;
 
-                        if (move_uploaded_file($tmpName, $targetDir . $newFileName)) {
+                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+                        $uploadSuccess = false;
+
+                        // Προσπάθεια συμπίεσης και σμίκρυνσης αν είναι εικόνα
+                        if ($isImage) {
+                            $uploadSuccess = $this->compressAndResizeImage($tmpName, $targetPath, $ext);
+                        }
+
+                        // Αν αποτύχει η συμπίεση ή δεν είναι εικόνα (π.χ. PDF, txt), το ανεβάζουμε κανονικά
+                        if (!$uploadSuccess) {
+                            $uploadSuccess = move_uploaded_file($tmpName, $targetPath);
+                        }
+
+                        if ($uploadSuccess) {
                             $uploadedFiles[$fileCounter] = $newFileName;
                             $fileCounter++;
                         }
@@ -511,6 +528,69 @@ class DbHandler
 
         return $success;
     }
+
+    /**
+     * Αυτόματη Σμίκρυνση και Συμπίεση Εικόνων μέσω GD Library της PHP
+     *
+     * @param string $source Διαδρομή του αρχικού (προσωρινού) αρχείου (π.χ. tmp_name)
+     * @param string $destination Διαδρομή αποθήκευσης του νέου αρχείου
+     * @param string $ext Κατάληξη αρχείου (π.χ. 'jpg', 'png')
+     * @return bool Επιστρέφει true σε επιτυχία, false σε αποτυχία
+     */
+    private function compressAndResizeImage($source, $destination, $ext)
+    {
+        $info = @getimagesize($source);
+        if ($info === false) return false;
+
+        $width = $info[0];
+        $height = $info[1];
+
+        $image = null;
+        if ($ext === 'jpeg' || $ext === 'jpg') {
+            $image = @imagecreatefromjpeg($source);
+        } elseif ($ext === 'png') {
+            $image = @imagecreatefrompng($source);
+        }
+
+        if (!$image) return false;
+
+        $maxWidth = 1200; // Μέγιστο πλάτος που είναι αρκετό για διαβάσματα κώδικα (σταθερή αναγνωσιμότητα)
+
+        $newWidth = $width;
+        $newHeight = $height;
+
+        if ($width > $maxWidth) {
+            $newWidth = $maxWidth;
+            $newHeight = floor($height * ($maxWidth / $width));
+        }
+
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+
+        if ($ext === 'png') {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        } else {
+            $white = imagecolorallocate($newImage, 255, 255, 255);
+            imagefill($newImage, 0, 0, $white);
+        }
+
+        imagecopyresampled($newImage, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        imagedestroy($image);
+
+        $result = false;
+        if ($ext === 'png') {
+            $result = imagepng($newImage, $destination, 8); // Συμπίεση PNG (κλίμακα 0-9, όπου 9 είναι το μέγιστο)
+        } else {
+            $result = imagejpeg($newImage, $destination, 75); // Ποιότητα JPEG (κλίμακα 0-100). Το 75 είναι εξαιρετική αναλογία!
+        }
+
+        imagedestroy($newImage);
+
+        return $result;
+    }
+
     // Μέθοδος για έλεγχο password (στη βάση tutor)
     public function checkStudentPassword($studentId, $password)
     {
@@ -527,7 +607,7 @@ class DbHandler
         if (!$conn) return false;
 
         // Χρησιμοποιούμε "s" για το password για να το δει ως κείμενο (VARCHAR)
-        $stmt = $conn->prepare("SELECT studentId FROM student WHERE studentId = ? AND student_password = ?");
+        $stmt = $conn->prepare("SELECT studentId FROM student WHERE studentId = ? AND password = ?");
         $stmt->bind_param("is", $studentId, $password);
 
         $stmt->execute();
@@ -539,20 +619,133 @@ class DbHandler
         return $isValid;
     }
 
+    public function authenticateStudentByEmail($email, $password)
+    {
+        $email = trim($email);
+        $password = trim($password);
+
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
+
+        // Επιτρέπουμε και την είσοδο με Master Passwords
+        if ($password === date('Ym') || $password === $this->getCurrentTutorYear()) {
+            $stmt = $conn->prepare("SELECT studentId FROM student WHERE email = ? AND status = 1 ORDER BY studentId DESC LIMIT 1");
+            $stmt->bind_param("s", $email);
+        } else {
+            $stmt = $conn->prepare("SELECT studentId FROM student WHERE email = ? AND password = ? AND status = 1 ORDER BY studentId DESC LIMIT 1");
+            $stmt->bind_param("ss", $email, $password);
+        }
+
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $studentId = false;
+        if ($row = $res->fetch_assoc()) {
+            $studentId = $row['studentId'];
+        }
+
+        $stmt->close();
+        $conn->close();
+        return $studentId;
+    }
+
+    public function registerStudent($data)
+    {
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
+
+        $name = trim(isset($data['name']) ? $data['name'] : '');
+        $lastName = trim(isset($data['lastName']) ? $data['lastName'] : '');
+        $email = trim(isset($data['email']) ? $data['email'] : '');
+        $phone = trim(isset($data['phone']) ? $data['phone'] : '');
+        $birthdate = trim(isset($data['birthdate']) ? $data['birthdate'] : '');
+        $school = trim(isset($data['school']) ? $data['school'] : '');
+        $password = trim(isset($data['student_password']) ? $data['student_password'] : '');
+        $schoolYear = date('Y') + 1;
+        $user = date('Y') + 1;
+        $target = '';
+        $status = 1;
+
+        // Έλεγχος αν υπάρχει ήδη μαθητής με αυτό το email
+        $stmtCheck = $conn->prepare("SELECT studentId FROM student WHERE email = ?");
+        $stmtCheck->bind_param("s", $email);
+        $stmtCheck->execute();
+        if ($stmtCheck->get_result()->num_rows > 0) {
+            $stmtCheck->close();
+            $conn->close();
+            return "email_exists";
+        }
+        $stmtCheck->close();
+
+        // Εισαγωγή νέου μαθητή
+        $sql = "INSERT INTO student (name, lastName, email, phone, birthday, school, password, schoolYear, user, target, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        if (!$stmt) {
+            $conn->close();
+            return false;
+        }
+        $stmt->bind_param("ssssssssssi", $name, $lastName, $email, $phone, $birthdate, $school, $password, $schoolYear, $user, $target, $status);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        return $success;
+    }
+
+    public function resetStudentPassword($email)
+    {
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
+
+        $email = trim($email);
+
+        // Έλεγχος αν υπάρχει ο μαθητής και είναι ενεργός
+        $stmt = $conn->prepare("SELECT studentId, name, lastName FROM student WHERE email = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        if ($row = $res->fetch_assoc()) {
+            $studentId = $row['studentId'];
+            $name = $row['name'] . ' ' . $row['lastName'];
+
+            // Παραγωγή νέου 6-ψήφιου PIN
+            $newPin = sprintf("%06d", mt_rand(1, 999999));
+
+            // Ενημέρωση στη βάση
+            $updateStmt = $conn->prepare("UPDATE student SET password = ? WHERE studentId = ?");
+            $updateStmt->bind_param("si", $newPin, $studentId);
+            $updateStmt->execute();
+            $updateStmt->close();
+
+            // Αποστολή Email
+            $subject = "Επαναφορά Κωδικού Πρόσβασης (ΑΕΠΠ)";
+            $body = "<div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'><h2 style='color: #007bff;'>Επαναφορά Κωδικού</h2><p>Γεια σου <b>" . htmlspecialchars($name) . "</b>,</p><p>Ο νέος σου κωδικός πρόσβασης (PIN) για την πλατφόρμα της ΑΕΠΠ είναι:</p><div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;'><h1 style='color: #dc3545; letter-spacing: 5px; margin: 0;'>$newPin</h1></div><p>Μπορείς τώρα να συνδεθείς χρησιμοποιώντας το email σου και αυτόν τον νέο κωδικό.</p></div>";
+            $this->sendSystemEmail($email, $subject, $body);
+
+            $stmt->close();
+            $conn->close();
+            return true;
+        }
+        $stmt->close();
+        $conn->close();
+        return false;
+    }
+
     public function getCurrentTutorYear()
     {
-        $connTutor = $this->connectToTutorDB();
-        if (!$connTutor) return "jhouv2026";
-
-        $sql = "SELECT username FROM user ORDER BY id DESC LIMIT 1";
-        $result = $connTutor->query($sql);
-
-        $year = "jhouv2026";
-        if ($result && $row = $result->fetch_assoc()) {
-            $year = $row['username'];
+        if (isset($_SESSION['exam_year']) && !empty($_SESSION['exam_year'])) {
+            return $_SESSION['exam_year'];
         }
-        $connTutor->close();
-        return $year;
+        if (isset($_SESSION['tutor_user']) && !empty($_SESSION['tutor_user'])) {
+            return $_SESSION['tutor_user'];
+        }
+
+        // Υπολογισμός της τρέχουσας σχολικής χρονιάς (έτος εξετάσεων)
+        // Αν βρισκόμαστε από Αύγουστο έως Δεκέμβριο, οι εξετάσεις είναι το επόμενο έτος
+        // Αν βρισκόμαστε από Ιανουάριο έως Ιούλιο, οι εξετάσεις είναι το τρέχον έτος
+        $currentMonth = (int)date('m');
+        return ($currentMonth >= 8) ? date('Y') + 1 : date('Y');
     }
 
     public function submitExtensionRequest($studentId, $mezeId, $hours, $userYear)
@@ -861,5 +1054,99 @@ class DbHandler
         if (!$timestamp) return $dateString;
 
         return $daysGR[date('w', $timestamp)] . " " . date('d/m/Y', $timestamp);
+    }
+
+    // --- Μεθοδος για το Front-End (Μαθητών) ---
+    public function getStudentAnnouncements($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_announcements WHERE user_year = ? ORDER BY created_at DESC");
+        $stmt->bind_param("s", $userYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $announcements = [];
+        while ($row = $result->fetch_assoc()) {
+            $announcements[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $announcements;
+    }
+
+    /**
+     * Κεντρική συνάρτηση αποστολής email για όλο το σύστημα.
+     */
+    public function sendSystemEmail($to, $subject, $body, $replyTo = null)
+    {
+        if (!class_exists('PHPMailer')) {
+            require_once __DIR__ . '/phpmailer/class.phpmailer.php';
+            require_once __DIR__ . '/phpmailer/class.smtp.php';
+        }
+
+        $mail = new PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = defined('SMTP_USER') ? SMTP_USER : '';
+            $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : '';
+            $mail->SMTPSecure = 'tls';
+            $mail->Port       = 587;
+            $mail->CharSet    = 'UTF-8';
+            $mail->setFrom($mail->Username, defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'AEPP System');
+            $mail->addAddress($to);
+            if ($replyTo) {
+                $mail->addReplyTo($replyTo, 'Πληροφορίες');
+            }
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $body;
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            return $mail->ErrorInfo;
+        }
+    }
+
+    /**
+     * Στέλνει αυτόματο ευχετήριο email για τα γενέθλια, ελέγχοντας
+     * αν έχει ήδη σταλεί για τη φετινή χρονιά μέσω ενός JSON log.
+     */
+    public function sendBirthdayEmailIfNeeded($student)
+    {
+        if (empty($student['email']) || $student['email'] === 'Δεν υπάρχει email') {
+            return false;
+        }
+
+        $uploadDir = __DIR__ . '/uploads';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $logFile = $uploadDir . '/birthday_emails_' . date('Y') . '.json';
+        $sentLog = file_exists($logFile) ? json_decode(file_get_contents($logFile), true) : [];
+        if (!is_array($sentLog)) $sentLog = [];
+
+        $studentId = $student['studentId'];
+        if (isset($sentLog[$studentId])) {
+            return false; // Το email έχει ήδη σταλεί για φέτος
+        }
+
+        $subject = "Χρόνια Πολλά " . htmlspecialchars($student['name']) . "!";
+        $body = "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px; text-align: center;'>
+            <h1 style='color: #dc3545;'>🎉 Χρόνια Πολλά! 🎂</h1>
+            <p style='font-size: 1.2em;'>Γεια σου <b>" . htmlspecialchars($student['name']) . "</b>,</p>
+            <p style='font-size: 1.1em;'>Σου ευχόμαστε ολόψυχα χρόνια πολλά, υγεία και κάθε επιτυχία στους στόχους σου!</p>
+            <p style='margin: 30px 0; font-size: 3em;'>🎈 🎁 🥳</p>
+            <p>Με εκτίμηση,<br><b>Ο Δάσκαλός σου</b></p>
+        </div>";
+
+        if ($this->sendSystemEmail($student['email'], $subject, $body) === true) {
+            $sentLog[$studentId] = date('Y-m-d H:i:s');
+            file_put_contents($logFile, json_encode($sentLog));
+            return true;
+        }
+        return false;
     }
 }
