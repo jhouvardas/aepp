@@ -340,18 +340,21 @@ class MezeAdminFormMaker extends AdminFormMaker
         <div class="container mt-4">
             <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3">
                 <h3 class="mb-0 text-center text-xl-start"><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
-                <div class="d-flex flex-column flex-md-row justify-content-xl-end align-items-stretch align-items-md-center gap-2 w-100" style="max-width: 900px;">
-                    <div class="form-check form-switch d-flex align-items-center justify-content-center justify-content-md-start mx-md-2 mb-2 mb-md-0" title="Εμφάνιση/Απόκρυψη προγραμματισμένων (μελλοντικών) μεζεδακίων">
+                <div class="d-flex flex-wrap justify-content-center justify-content-xl-end align-items-center gap-2 w-100" style="max-width: 950px;">
+                    <button type="button" class="btn btn-outline-primary shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="copyRegLink(this)" title="Αντιγραφή συνδέσμου για εγγραφή νέου μαθητή">
+                        <i class="fa fa-link"></i> Link Εγγραφής
+                    </button>
+                    <div class="form-check form-switch d-flex align-items-center justify-content-center mx-md-2 mb-0 flex-grow-1 flex-md-grow-0" title="Εμφάνιση/Απόκρυψη προγραμματισμένων (μελλοντικών) μεζεδακίων">
                         <input class="form-check-input mt-0 me-2" type="checkbox" id="toggleFutureMeze" style="cursor: pointer; transform: scale(1.2);">
                         <label class="form-check-label fw-bold text-primary mb-0" for="toggleFutureMeze" style="cursor: pointer;">Προγραμματισμένα</label>
                     </div>
-                    <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm fw-bold text-nowrap text-center" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
-                        <i class="fa fa-trash"></i> <span class="d-none d-md-inline">Καθαρισμός Υποβολών</span><span class="d-inline d-md-none">Καθ. Υποβολών</span>
+                    <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
+                        <i class="fa fa-trash"></i> <span class="d-none d-sm-inline">Καθαρισμός Υποβολών</span><span class="d-inline d-sm-none">Καθ. Υποβολών</span>
                     </a>
-                    <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm text-dark fw-bold text-nowrap text-center" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
-                        <i class="fa fa-eye-slash"></i> <span class="d-none d-md-inline">Μαζική Απόκρυψη Παλιών</span><span class="d-inline d-md-none">Απόκρυψη Παλιών</span>
+                    <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm text-dark fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
+                        <i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Μαζική Απόκρυψη Παλιών</span><span class="d-inline d-sm-none">Απόκρυψη Παλιών</span>
                     </a>
-                    <input type="text" id="mezeFilter" class="form-control shadow-sm flex-grow-1" style="min-width: 150px; max-width: 100%;" placeholder="Αναζήτηση...">
+                    <input type="text" id="mezeFilter" class="form-control shadow-sm flex-grow-1" style="min-width: 150px; max-width: 250px;" placeholder="Αναζήτηση...">
                 </div>
             </div>
             <style>
@@ -478,8 +481,8 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 // 3. Αφαιρεί τυχόν "ΘΕΜΑ Χ" που έμεινε ακάλυπτο στην αρχή του κειμένου
                                 $cleanText = preg_replace('/^\s*Θ[ΕΈ]ΜΑ\s+[Α-Ωα-ωA-Za-z0-9]+\s*/iu', '', $cleanText);
 
-                                $previewText = mb_substr(trim($cleanText), 0, 80);
-                                if (mb_strlen(trim($cleanText)) > 80) $previewText .= "...";
+                                $previewText = mb_substr(trim($cleanText), 0, 150);
+                                if (mb_strlen(trim($cleanText)) > 150) $previewText .= "...";
 
                                 // Ανάκτηση των Τεχνικών (Tags) για το συγκεκριμένο Μεζεδάκι
                                 $typeIds = $dbHandler->getMezeTypeIds($mezeId);
@@ -508,7 +511,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         ?>
                                     </td>
                                     <td class="small">
-                                        <div class="text-dark fw-bold mb-1" style="line-height: 1.3; font-size: 0.85rem;"><?php echo $previewText; ?></div>
+                                        <div class="text-dark mb-1" style="line-height: 1.5; font-size: 0.95rem; font-weight: 500;"><?php echo $previewText; ?></div>
                                         <?php echo $tagsHtml; ?>
                                         <?php echo $badgeHtml; ?>
                                     </td>
@@ -541,9 +544,12 @@ class MezeAdminFormMaker extends AdminFormMaker
                         <i class="fa fa-arrow-down"></i> Εμφάνιση παλαιότερων (<?php echo $hiddenTotal; ?>)
                     </button>
                 </div>
-                <script>
-                    // Διακόπτης εμφάνισης/απόκρυψης προγραμματισμένων
-                    document.getElementById('toggleFutureMeze').addEventListener('change', function() {
+            <?php endif; ?>
+            <script>
+                // Διακόπτης εμφάνισης/απόκρυψης προγραμματισμένων
+                var toggleFutureBtn = document.getElementById('toggleFutureMeze');
+                if (toggleFutureBtn) {
+                    toggleFutureBtn.addEventListener('change', function() {
                         var table = document.getElementById('mezeTable');
                         if (this.checked) {
                             table.classList.remove('hide-future');
@@ -551,26 +557,60 @@ class MezeAdminFormMaker extends AdminFormMaker
                             table.classList.add('hide-future');
                         }
                     });
+                }
 
-                    function loadMoreAdminMezedakia() {
-                        document.querySelectorAll(".hidden-admin-meze-item").forEach(function(el) {
-                            el.classList.remove("d-none");
-                        });
-                        var container = document.getElementById("loadMoreAdminMezeContainer");
-                        if (container) container.style.display = "none";
-                    }
+                function loadMoreAdminMezedakia() {
+                    document.querySelectorAll(".hidden-admin-meze-item").forEach(function(el) {
+                        el.classList.remove("d-none");
+                    });
+                    var container = document.getElementById("loadMoreAdminMezeContainer");
+                    if (container) container.style.display = "none";
+                }
 
-                    // Αν ο χρήστης ξεκινήσει να γράφει στην αναζήτηση, εμφανίζουμε όλα τα παλιά μεζεδάκια 
-                    var filterInput = document.getElementById('mezeFilter');
-                    if (filterInput) {
-                        filterInput.addEventListener('input', function() {
-                            if (this.value.trim() !== '') {
-                                loadMoreAdminMezedakia();
-                            }
-                        });
+                // Αν ο χρήστης ξεκινήσει να γράφει στην αναζήτηση, εμφανίζουμε όλα τα παλιά μεζεδάκια 
+                var filterInput = document.getElementById('mezeFilter');
+                if (filterInput) {
+                    filterInput.addEventListener('input', function() {
+                        if (this.value.trim() !== '') {
+                            loadMoreAdminMezedakia();
+                        }
+                    });
+                }
+
+                // Αντιγραφή του link εγγραφής
+                function copyRegLink(btn) {
+                    var link = 'http://jhouv.eu/aepp/index.php?action=register';
+                    var fallbackFn = function() {
+                        var textArea = document.createElement("textarea");
+                        textArea.value = link;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                        } catch (err) {}
+                        document.body.removeChild(textArea);
+                    };
+
+                    var successFn = function() {
+                        var originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+                        btn.classList.add('btn-success', 'text-white');
+                        btn.classList.remove('btn-outline-primary');
+                        setTimeout(function() {
+                            btn.innerHTML = originalHtml;
+                            btn.classList.remove('btn-success', 'text-white');
+                            btn.classList.add('btn-outline-primary');
+                        }, 2000);
+                    };
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(link).then(successFn).catch(fallbackFn);
+                    } else {
+                        fallbackFn();
+                        successFn();
                     }
-                </script>
-            <?php endif; ?>
+                }
+            </script>
         </div>
     <?php
     }

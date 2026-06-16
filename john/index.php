@@ -360,6 +360,7 @@
 
                 <head>
                     <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <base href="../">
                     <title>Μεζεδάκι #<?php echo $meze['mezeNumber']; ?></title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -403,7 +404,7 @@
                     </style>
                 </head>
 
-                <body class="p-2 p-md-4 bg-light">
+                <body class="p-0 p-md-4 bg-light">
                     <!-- Control Panel Εκτύπωσης -->
                     <div class="container d-print-none mb-4">
                         <div class="card shadow border-info">
@@ -432,7 +433,7 @@
                         </div>
                     </div>
 
-                    <div class="container">
+                    <div class="container px-0 px-sm-3">
                         <div class="preview-box">
                             <h2 class="border-bottom pb-2 mb-4 text-dark font-weight-bold">
                                 Μεζεδάκι #<?php echo $meze['mezeNumber']; ?>

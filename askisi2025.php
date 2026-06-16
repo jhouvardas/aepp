@@ -25,7 +25,7 @@ $page->displayMenu();
 
     <div class="col-lg-6">
       <h4>Λύση</h4>
-      <pre>
+      <pre class="aepp-code">
 ΠΡΟΓΡΑΜΜΑ τελευταία2025
 ΜΕΤΑΒΛΗΤΕΣ
   ΑΚΕΡΑΙΕΣ:τιμή  

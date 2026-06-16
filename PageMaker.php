@@ -43,10 +43,6 @@ class PageMaker
                                 <i class="fa fa-users"></i> Μαθητές
                             </a>
                             <div class="dropdown-menu shadow border-warning">
-                                <a class="dropdown-item fw-bold text-primary" href="index.php?action=register">
-                                    <i class="fa fa-user-plus"></i> Εγγραφή
-                                </a>
-                                <div class="dropdown-divider"></div>
                                 <a class="dropdown-item fw-bold text-warning" href="index.php?action=viewMezedakia">
                                     <i class="fa fa-star"></i> Μεζεδάκια
                                 </a>
@@ -436,7 +432,7 @@ class PageMaker
             <div class="row mx-n2"> <?php if ($result && $result->num_rows > 0): ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4 px-2">
-                            <div class="card h-100 shadow-sm border-0 exercise-card">
+                            <div class="card h-100 shadow-sm border-0 exercise-gallery-card">
                                 <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
                                     <span class="badge bg-warning text-dark ms-0 me-0"><?php echo $row['exerciseYear']; ?></span>
                                     <small class="fw-bold"><?php echo $row['examType']; ?></small>
@@ -484,91 +480,6 @@ class PageMaker
                 <?php endif; ?>
             </div>
         </div>
-
-        <style>
-            .exercise-card {
-                transition: transform 0.2s ease-in-out;
-            }
-
-            .exercise-card:hover {
-                transform: translateY(-5px);
-            }
-
-            .hover-zoom:hover {
-                cursor: zoom-in;
-                opacity: 0.9;
-            }
-
-            .italic {
-                font-style: italic;
-            }
-
-            /* Default ρυθμίσεις */
-            .exercise-body {
-                padding: 0;
-            }
-
-            /* Μηδενίζουμε το padding της κάρτας */
-
-            .html-content-wrapper {
-                font-size: 0.85rem;
-                max-width: 100%;
-                overflow-x: hidden;
-            }
-
-            .html-content-wrapper pre {
-                white-space: pre-wrap !important;
-                word-wrap: break-word !important;
-                background-color: #f8f9fa !important;
-                border-top: 1px solid #dee2e6 !important;
-                border-bottom: 1px solid #dee2e6 !important;
-                border-left: none !important;
-                border-right: none !important;
-                padding: 15px !important;
-                margin: 0 !important;
-                font-family: 'Courier New', Courier, monospace !important;
-                width: 100% !important;
-            }
-
-            /* ΕΙΔΙΚΕΣ ΡΥΘΜΙΣΕΙΣ ΓΙΑ ΚΙΝΗΤΑ (max 576px) */
-            @media (max-width: 576px) {
-                .container-fluid {
-                    padding-left: 5px !important;
-                    padding-right: 5px !important;
-                }
-
-                .row.mx-n2 {
-                    margin-left: -5px !important;
-                    margin-right: -5px !important;
-                }
-
-                .px-2 {
-                    padding-left: 5px !important;
-                    padding-right: 5px !important;
-                }
-
-                .html-content-wrapper pre {
-                    padding: 8px 5px !important;
-                    /* Πολύ μικρό padding μέσα στον κώδικα */
-                    font-size: 0.78rem !important;
-                    border-radius: 0 !important;
-                    /* Κατάργηση γωνιών για να πιάνει όλο το πλάτος */
-                }
-
-                .card-header {
-                    padding: 8px 10px !important;
-                }
-            }
-
-            /* Καθαρισμός εσωτερικών Bootstrap στοιχείων από το paste */
-            .html-content-wrapper .container-fluid,
-            .html-content-wrapper .row,
-            .html-content-wrapper .col-sm {
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-            }
-        </style>
         <?php
     }
 
@@ -666,13 +577,13 @@ class PageMaker
                 $collapsedClass = $isFirst ? '' : 'collapsed'; // Το πρώτο δεν είναι collapsed
             ?>
                 <div class="container-fluid p-0 mt-2 mb-2 <?php echo $hiddenClass; ?>">
-                    <div class="card shadow-sm border-warning meze-card border-0">
+                    <div class="card shadow-sm meze-card border-0" style="border-top: 4px solid #ffc107;">
                         <!-- Η κεφαλίδα λειτουργεί πλέον ως Toggle για το Accordion -->
-                        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center meze-header <?php echo $collapsedClass; ?>"
+                        <div class="card-header bg-white text-dark d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center meze-header <?php echo $collapsedClass; ?>"
                             style="cursor: pointer;"
                             data-bs-toggle="collapse"
                             data-bs-target="#mezeCollapse<?php echo $mId; ?>">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center w-100 w-sm-auto mb-2 mb-sm-0">
                                 <!-- Εικονίδιο ένδειξης accordion -->
                                 <i class="fa fa-chevron-down me-3 accordion-icon" style="transition: transform 0.3s;"></i>
                                 <h6 class="mb-0 me-3">
@@ -685,7 +596,7 @@ class PageMaker
                                     <span class="badge bg-secondary shadow-sm"><i class="fa fa-book"></i> <?php echo htmlspecialchars($row['sourceBook']) . (!empty($row['sourceExercise']) ? ' (' . htmlspecialchars($row['sourceExercise']) . ')' : ''); ?></span>
                                 <?php endif; ?>
                             </div>
-                            <div class="text-end">
+                            <div class="text-end w-100 w-sm-auto">
                                 <span class="badge <?php echo $deadlineClass; ?> py-2 px-3 shadow-sm border border-white">
                                     <i class="fa fa-clock-o"></i> <?php echo $db->formatGreekDate($row['solutionDate']) . " " . $solDate->format('H:i'); ?>
                                 </span>
