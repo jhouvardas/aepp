@@ -19,7 +19,7 @@
         .preview-box {
             background: white;
             padding: 20px;
-            border-left: 5px solid #17a2b8;
+            border-left: 5px solid #0d6efd;
             border-bottom: 1px solid #dee2e6;
             width: 100%;
             min-height: 100vh;
@@ -82,55 +82,73 @@
 
         <div class="preview-box" id="mezePreview">
             <div class="html-content-wrapper container bg-white p-4 shadow-sm rounded">
-                <h3 class="text-danger border-bottom pb-2 mb-4"><i class="fa fa-bug"></i> ΕΝΤΟΠΙΣΜΟΣ ΛΑΘΩΝ (ΜΑΘΗΤΕΣ ΚΑΙ
-                    ΒΑΘΜΟΛΟΓΙΕΣ)
+                <h3 class="text-primary border-bottom pb-2 mb-4"><i class="fa fa-calculator"></i> ΠΡΑΞΕΙΣ DIV ΚΑΙ MOD
                 </h3>
 
-                <p>Δίνεται το παρακάτω πρόγραμμα το οποίο διαβάζει τα ονόματα των μαθητών και τους βαθμούς τους στα
-                    Μαθηματικά, στις ΑΟΘ και στη Γλώσσα. Υπολογίζει τον μεγαλύτερο βαθμό κάθε μαθητή, τον μέσο όρο του
-                    και στο τέλος τον γενικό μέσο όρο της τάξης.</p>
-                <p>Ωστόσο, το πρόγραμμα περιέχει <strong>συντακτικά λάθη, λογικά λάθη, καθώς και λάθη κατά την
-                        εκτέλεση</strong>.</p>
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-body bg-light rounded border">
+                        <p class="fw-bold mb-3 text-dark" style="line-height: 1.6;">
+                            Να υπολογίσετε το αποτέλεσμα των παρακάτω 15 αριθμητικών πράξεων και να συμπληρώσετε τα
+                            κενά.
+                        </p>
 
-                <pre class="aepp-code mb-4" style="font-size: 0.95rem;">1.  ΠΡΟΓΡΑΜΜΑ last2026bug
-2.  ΜΕΤΑΒΛΗΤΕΣ
-3.    ΑΚΕΡΑΙΕΣ: πληθοςΜαθητών, σ, συνολοΤάξης
-4.    ΠΡΑΓΜΑΤΙΚΕΣ: μαθ, αοθ, γλωσ, μαξ, μεσοςΟροςΤαξης
-5.    ΧΑΡΑΚΤΗΡΕΣ: ον
-6.  ΑΡΧΗ
-7.    πληθοςΜαθητών &lt;- 1
-8.    ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
-9.      ΓΡΑΨΕ 'Δώστε όνομα ή τέλος'
-10.     ΔΙΑΒΑΣΕ ον
-11.     ΓΡΑΨΕ 'Δώστε στα μαθηματικά, αοθ, γλώσσα'
-12.     ΔΙΑΒΑΣΕ μαθ, αοθ, γλωσ
-13.     μαξ &lt;- μαθ
-14.     μαξΜαθ &lt;- 'μαθηματικά'
-15.     ΑΝ αοθ &gt; μαξ ΤΟΤΕ
-16.       μαξ &lt;- αοθ
-17.       μαξΜαθ &lt;- 'αοθ'
-18.     ΑΛΛΙΩΣ γλωσ &gt; μαξ ΤΟΤΕ
-19.       μαξ &lt;- αοθ
-20.       μαξΜαθ &lt;- 'αοθ'
-21.     ΤΕΛΟΣ_ΑΝ
-22.     ΓΡΑΨΕ 'Ο μεγαλύτερος βαθμός ήταν στο ', μαξΜαθ
-23.     μο &lt;- μαθ + αοθ + γλωσ/ 3
-24.     ΓΡΑΨΕ 'Ο μέσος όρος του ', ον, ' είναι ', μο
-25.     πληθοςΜαθητών &lt;- πληθοςΜαθητών + μο
-26.     συνολοΤάξης &lt;- συνολοΤάξης + 1
-27.   ΜΕΧΡΙΣ_ΟΤΟΥ ον = 'τέλος'
-28.   μεσοςΟροςΤαξης &lt;- συνολοΤάξης/ πληθοςΜαθητών
-29.   ΓΡΑΨΕ 'Ο μέσος όρος της τάξης είναι ', μεσοςΟροςΤαξης
-30. ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</pre>
-
-                <p>Να εντοπίσετε τα λάθη αναφέροντας τον αριθμό της γραμμής, να τα διορθώσετε και να τα κατατάξετε σε
-                    μία από τις παρακάτω κατηγορίες:</p>
-                <ul>
-                    <li>Συντακτικό λάθος</li>
-                    <li>Λογικό λάθος</li>
-                    <li>Λάθος κατά την εκτέλεση</li>
-                </ul>
-                <p class="mt-3 fw-bold">Στη συνέχεια, να γράψετε ολόκληρο το πρόγραμμα στη σωστή του μορφή.</p>
+                        <div class="row fw-normal ms-1" style="line-height: 1.8;">
+                            <div class="col-md-6">
+                                <ol>
+                                    <li class="mb-3"><code>23 div 5 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="1" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>23 mod 5 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="2" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>10 div 3 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="3" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>10 mod 3 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="4" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>14 div 2 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="5" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>14 mod 2 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="6" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>3 div 5 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="7" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>3 mod 5 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="8" autocomplete="off" value=""></li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <ol start="9">
+                                    <li class="mb-3"><code>100 div 10 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="9" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>100 mod 10 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="10" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>45 div 8 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="11" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>45 mod 8 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="12" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>17 div 17 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="13" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>17 mod 17 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="14" autocomplete="off" value=""></li>
+                                    <li class="mb-3"><code>0 div 4 =</code> <input type="text"
+                                            class="aepp-interactive-blank text-center fw-bold" placeholder="..."
+                                            maxlength="3" data-ex="1" data-blank="15" autocomplete="off" value=""></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

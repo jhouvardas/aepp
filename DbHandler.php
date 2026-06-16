@@ -439,6 +439,17 @@ class DbHandler
             $students[] = $row;
         }
 
+        // --- ΠΡΟΣΘΗΚΗ ΕΙΚΟΝΙΚΟΥ ΜΑΘΗΤΗ ΓΙΑ ΔΟΚΙΜΕΣ ---
+        $students[] = [
+            'studentId' => 999999,
+            'name' => 'Δοκιμαστικός',
+            'lastName' => 'Μαθητής',
+            'email' => 'test@test.com',
+            'phone' => '-',
+            'birthday' => '0000-00-00',
+            'school' => 'Test School'
+        ];
+
         $stmt->close();
         $connTutor->close();
         return $students;
@@ -597,6 +608,10 @@ class DbHandler
         // Προσθέτουμε το trim για ασφάλεια
         $password = trim($password);
 
+        if ($studentId == 999999 && $password === '123456') {
+            return true;
+        }
+
         // Δυνατότητα εισόδου με Master Password
         // Ελέγχουμε τόσο το YYYYMM (π.χ. 202405) όσο και το παλιό master key
         if ($password === date('Ym') || $password === $this->getCurrentTutorYear()) {
@@ -623,6 +638,10 @@ class DbHandler
     {
         $email = trim($email);
         $password = trim($password);
+
+        if ($email === 'test@test.com' && $password === '123456') {
+            return 999999;
+        }
 
         $conn = $this->connectToTutorDB();
         if (!$conn) return false;
@@ -1078,6 +1097,10 @@ class DbHandler
      */
     public function sendSystemEmail($to, $subject, $body, $replyTo = null)
     {
+        if ($to === 'test@test.com') {
+            return true; // Fake επιτυχία για να μην προσπαθεί να στείλει αληθινό email στον δοκιμαστικό μαθητή
+        }
+
         if (!class_exists('PHPMailer')) {
             require_once __DIR__ . '/phpmailer/class.phpmailer.php';
             require_once __DIR__ . '/phpmailer/class.smtp.php';

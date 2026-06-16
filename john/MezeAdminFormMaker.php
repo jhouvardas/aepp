@@ -338,18 +338,27 @@ class MezeAdminFormMaker extends AdminFormMaker
     {
 ?>
         <div class="container mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
-                <div class="d-flex w-75 justify-content-end">
-                    <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm me-2 fw-bold" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
-                        <i class="fa fa-trash"></i> Καθαρισμός Υποβολών
+            <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3">
+                <h3 class="mb-0 text-center text-xl-start"><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
+                <div class="d-flex flex-column flex-md-row justify-content-xl-end align-items-stretch align-items-md-center gap-2 w-100" style="max-width: 900px;">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-center justify-content-md-start mx-md-2 mb-2 mb-md-0" title="Εμφάνιση/Απόκρυψη προγραμματισμένων (μελλοντικών) μεζεδακίων">
+                        <input class="form-check-input mt-0 me-2" type="checkbox" id="toggleFutureMeze" style="cursor: pointer; transform: scale(1.2);">
+                        <label class="form-check-label fw-bold text-primary mb-0" for="toggleFutureMeze" style="cursor: pointer;">Προγραμματισμένα</label>
+                    </div>
+                    <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm fw-bold text-nowrap text-center" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
+                        <i class="fa fa-trash"></i> <span class="d-none d-md-inline">Καθαρισμός Υποβολών</span><span class="d-inline d-md-none">Καθ. Υποβολών</span>
                     </a>
-                    <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm me-3 text-dark fw-bold" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
-                        <i class="fa fa-eye-slash"></i> Μαζική Απόκρυψη Παλιών
+                    <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm text-dark fw-bold text-nowrap text-center" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
+                        <i class="fa fa-eye-slash"></i> <span class="d-none d-md-inline">Μαζική Απόκρυψη Παλιών</span><span class="d-inline d-md-none">Απόκρυψη Παλιών</span>
                     </a>
-                    <input type="text" id="mezeFilter" class="form-control w-25 shadow-sm" placeholder="Αναζήτηση...">
+                    <input type="text" id="mezeFilter" class="form-control shadow-sm flex-grow-1" style="min-width: 150px; max-width: 100%;" placeholder="Αναζήτηση...">
                 </div>
             </div>
+            <style>
+                .hide-future .future-meze-row {
+                    display: none !important;
+                }
+            </style>
 
             <?php
             // Προετοιμασία των Τεχνικών (Tags) για να μπορούμε να τα εμφανίζουμε στη λίστα
@@ -360,7 +369,7 @@ class MezeAdminFormMaker extends AdminFormMaker
             }
             ?>
             <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
-                <table class="table table-bordered table-striped align-middle mb-0" id="mezeTable">
+                <table class="table table-bordered table-striped align-middle mb-0 hide-future" id="mezeTable">
                     <thead class="table-dark text-center" style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 5%">#</th>
@@ -374,10 +383,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                         <?php
                         if ($result && $result->num_rows > 0) {
                             $result->data_seek(0);
-                            $mezeCount = 0;
+                            $visibleCount = 0;
+                            $futureCount = 0;
                             while ($row = $result->fetch_assoc()):
-                                $mezeCount++;
-                                $hiddenClass = ($mezeCount > 15) ? 'd-none hidden-admin-meze-item' : '';
                                 $mezeId = $row['mezeId'];
                                 $mTimestamp = strtotime($row['mezeDate']);
                                 $solTimestamp = strtotime($row['solutionDate'] ?? '');
@@ -385,6 +393,19 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : '';
 
                                 $isFuture = ($mTimestamp > $currentTimestamp);
+
+                                $hiddenClass = '';
+                                if ($isFuture) {
+                                    $futureCount++;
+                                    if ($futureCount > 15) {
+                                        $hiddenClass = 'd-none hidden-admin-meze-item';
+                                    }
+                                } else {
+                                    $visibleCount++;
+                                    if ($visibleCount > 15) {
+                                        $hiddenClass = 'd-none hidden-admin-meze-item';
+                                    }
+                                }
                                 $isLocked = (isset($row['isLocked']) && $row['isLocked'] == 1);
                                 $isExpired = ($solTimestamp > 0 && $solTimestamp < $currentTimestamp);
                                 $hasExtensions = (!empty($userYear)) ? $dbHandler->hasAnyExtension($mezeId, $userYear) : false;
@@ -472,7 +493,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $tagsHtml = '<div class="mt-1">' . $tagsHtml . '</div>';
                                 }
                         ?>
-                                <tr <?php echo $rowStyle; ?> class="align-middle <?php echo $hiddenClass; ?>">
+                                <tr <?php echo $rowStyle; ?> class="align-middle <?php echo $hiddenClass; ?> <?php echo $isFuture ? 'future-meze-row' : ''; ?>">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
                                     <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
                                     <td class="text-center small">
@@ -509,13 +530,28 @@ class MezeAdminFormMaker extends AdminFormMaker
                 </table>
             </div>
 
-            <?php if (isset($mezeCount) && $mezeCount > 15): ?>
+            <?php
+            $hiddenTotal = 0;
+            if (isset($visibleCount)) $hiddenTotal += max(0, $visibleCount - 15);
+            if (isset($futureCount)) $hiddenTotal += max(0, $futureCount - 15);
+            if ($hiddenTotal > 0):
+            ?>
                 <div class="text-center my-4" id="loadMoreAdminMezeContainer">
                     <button class="btn btn-outline-primary shadow-sm font-weight-bold px-4" onclick="loadMoreAdminMezedakia()">
-                        <i class="fa fa-arrow-down"></i> Εμφάνιση παλαιότερων (<?php echo ($mezeCount - 15); ?>)
+                        <i class="fa fa-arrow-down"></i> Εμφάνιση παλαιότερων (<?php echo $hiddenTotal; ?>)
                     </button>
                 </div>
                 <script>
+                    // Διακόπτης εμφάνισης/απόκρυψης προγραμματισμένων
+                    document.getElementById('toggleFutureMeze').addEventListener('change', function() {
+                        var table = document.getElementById('mezeTable');
+                        if (this.checked) {
+                            table.classList.remove('hide-future');
+                        } else {
+                            table.classList.add('hide-future');
+                        }
+                    });
+
                     function loadMoreAdminMezedakia() {
                         document.querySelectorAll(".hidden-admin-meze-item").forEach(function(el) {
                             el.classList.remove("d-none");
@@ -561,7 +597,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </div>
                     <div class="form-group col-md-6">
                         <label>Ημερομηνία Εμφάνισης</label>
-                        <input type="date" name="mezeDate" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
+                        <input type="date" name="mezeDate" id="mezeDateAdd" class="form-control" value="<?php echo date('Y-m-d'); ?>" required onchange="autoSetDeadline('mezeDateAdd', 'solutionDateAdd')">
                     </div>
                 </div>
                 <div class="form-group">
@@ -662,7 +698,7 @@ class MezeAdminFormMaker extends AdminFormMaker
 
                 <div class="form-group">
                     <label>Ημερομηνία & Ώρα Λύσης (Deadline)</label>
-                    <input type="datetime-local" name="solutionDate" class="form-control" required>
+                    <input type="datetime-local" name="solutionDate" id="solutionDateAdd" class="form-control" value="<?php echo date('Y-m-d\T03:00', strtotime('+1 day')); ?>" required>
                 </div>
                 <div class="form-group">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -961,6 +997,20 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });
+
+            if (typeof autoSetDeadline === 'undefined') {
+                window.autoSetDeadline = function(dateInputId, deadlineInputId) {
+                    var dateVal = document.getElementById(dateInputId).value;
+                    if (dateVal) {
+                        var d = new Date(dateVal);
+                        d.setDate(d.getDate() + 1); // +1 Ημέρα
+                        var year = d.getFullYear();
+                        var month = ('0' + (d.getMonth() + 1)).slice(-2);
+                        var day = ('0' + d.getDate()).slice(-2);
+                        document.getElementById(deadlineInputId).value = year + '-' + month + '-' + day + 'T03:00';
+                    }
+                }
+            }
         </script>
     <?php
     }
@@ -990,7 +1040,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </div>
                     <div class="form-group col-md-4">
                         <label>Ημερομηνία Εμφάνισης</label>
-                        <input type="date" name="mezeDate" class="form-control" value="<?php echo $row['mezeDate']; ?>" required>
+                        <input type="date" name="mezeDate" id="mezeDateEdit" class="form-control" value="<?php echo $row['mezeDate']; ?>" required onchange="autoSetDeadline('mezeDateEdit', 'solutionDateEdit')">
                     </div>
                     <div class="form-group col-md-4">
                         <label>Deadline Λύσης</label>
@@ -1002,7 +1052,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                             $currentVal = date('Y-m-d\TH:i', $timestamp);
                         }
                         ?>
-                        <input type="datetime-local" name="solutionDate" class="form-control" value="<?php echo $currentVal; ?>" required>
+                        <input type="datetime-local" name="solutionDate" id="solutionDateEdit" class="form-control" value="<?php echo $currentVal; ?>" required>
                     </div>
                 </div>
 
@@ -1409,6 +1459,20 @@ class MezeAdminFormMaker extends AdminFormMaker
                             console.log('Builder iframe cross-origin error:', e);
                         }
                     });
+                }
+            }
+
+            if (typeof autoSetDeadline === 'undefined') {
+                window.autoSetDeadline = function(dateInputId, deadlineInputId) {
+                    var dateVal = document.getElementById(dateInputId).value;
+                    if (dateVal) {
+                        var d = new Date(dateVal);
+                        d.setDate(d.getDate() + 1); // +1 Ημέρα
+                        var year = d.getFullYear();
+                        var month = ('0' + (d.getMonth() + 1)).slice(-2);
+                        var day = ('0' + d.getDate()).slice(-2);
+                        document.getElementById(deadlineInputId).value = year + '-' + month + '-' + day + 'T03:00';
+                    }
                 }
             }
         </script>
@@ -2082,10 +2146,10 @@ class MezeAdminFormMaker extends AdminFormMaker
         }
     ?>
         <div class="container mt-4 mb-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="mb-0 text-dark fw-bold"><i class="fa fa-archive text-warning"></i> Τράπεζα Μεζεδακίων (Κατάλογος)</h3>
-                <div class="w-50">
-                    <input type="text" id="bankFilter" class="form-control form-control-lg shadow-sm" placeholder="Αναζήτηση (λέξη-κλειδί, έτος, θέμα)...">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <h3 class="mb-0 text-dark fw-bold text-center text-md-start"><i class="fa fa-archive text-warning"></i> Τράπεζα Μεζεδακίων (Κατάλογος)</h3>
+                <div class="w-100" style="max-width: 400px;">
+                    <input type="text" id="bankFilter" class="form-control form-control-lg shadow-sm w-100" placeholder="Αναζήτηση (λέξη-κλειδί, έτος, θέμα)...">
                 </div>
             </div>
 
@@ -2204,9 +2268,9 @@ class MezeAdminFormMaker extends AdminFormMaker
     {
     ?>
         <div class="container mt-4 mb-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="mb-0"><i class="fa fa-bullhorn text-primary"></i> Πίνακας Ανακοινώσεων</h3>
-                <a href="index.php?action=add_announcement" class="btn btn-success shadow-sm">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+                <h3 class="mb-0 text-center text-sm-start"><i class="fa fa-bullhorn text-primary"></i> Πίνακας Ανακοινώσεων</h3>
+                <a href="index.php?action=add_announcement" class="btn btn-success shadow-sm align-self-center align-self-sm-auto text-nowrap">
                     <i class="fa fa-plus"></i> Νέα Ανακοίνωση
                 </a>
             </div>

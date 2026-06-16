@@ -59,7 +59,21 @@ class AdminDbHandler extends DbHandler
         $stmtT->bind_param($types, ...$params);
         $stmtT->execute();
 
-        return $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+        $results = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        if (in_array(999999, $studentIds)) {
+            $results[] = [
+                'studentId' => 999999,
+                'name' => 'Δοκιμαστικός',
+                'lastName' => 'Μαθητής',
+                'email' => 'test@test.com',
+                'phone' => '-',
+                'birthday' => '0000-00-00',
+                'school' => 'Test School'
+            ];
+        }
+
+        return $results;
     }
 
     public function getTaskGrades($taskId)
@@ -769,6 +783,17 @@ class AdminDbHandler extends DbHandler
             $students[] = $row;
         }
 
+        // --- ΠΡΟΣΘΗΚΗ ΕΙΚΟΝΙΚΟΥ ΜΑΘΗΤΗ ΓΙΑ ΔΟΚΙΜΕΣ ΣΤΟ ADMIN ---
+        $students[] = [
+            'studentId' => 999999,
+            'name' => 'Δοκιμαστικός',
+            'lastName' => 'Μαθητής',
+            'email' => 'test@test.com',
+            'phone' => '-',
+            'birthday' => '0000-00-00',
+            'school' => 'Test School'
+        ];
+
         $stmt->close();
         $connTutor->close();
 
@@ -1039,8 +1064,14 @@ class AdminDbHandler extends DbHandler
     {
         $conn = $this->connectToFamilyDB();
 
-        // Φέρνουμε τα πάντα, ταξινομημένα από το πιο πρόσφατο
-        $sql = "SELECT * FROM aepp_mezedakia ORDER BY mezeDate DESC, mezeNumber DESC";
+        // Τα μελλοντικά (προγραμματισμένα) ταξινομούνται σε ΑΥΞΟΥΣΑ σειρά (για να φαίνονται τα πιο κοντινά πρώτα)
+        // Τα τρέχοντα και παλιά παραμένουν σε ΦΘΙΝΟΥΣΑ σειρά (για να βλέπεις τα πιο πρόσφατα πρώτα)
+        $sql = "SELECT * FROM aepp_mezedakia 
+                ORDER BY 
+                    CASE WHEN mezeDate > NOW() THEN 0 ELSE 1 END ASC,
+                    CASE WHEN mezeDate > NOW() THEN mezeDate END ASC,
+                    CASE WHEN mezeDate <= NOW() THEN mezeDate END DESC,
+                    mezeNumber DESC";
         $result = $conn->query($sql);
 
         $conn->close();

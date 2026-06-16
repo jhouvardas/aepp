@@ -58,128 +58,40 @@
     <div class="preview-box" id="mezePreview">
       <div class="html-content-wrapper container bg-white p-4 shadow-sm rounded">
 
-        <h3 class="text-success border-bottom pb-2 mb-4"><i class="fa fa-check-circle"></i> ΕΝΔΕΙΚΤΙΚΗ ΑΠΑΝΤΗΣΗ</h3>
+        <h3 class="text-success border-bottom pb-2 mb-4"><i class="fa fa-check-circle"></i> Ενδεικτική Απάντηση</h3>
 
-        <p>Η σωστή ομαδοποίηση των λαθών (Συντακτικά, Κατά την εκτέλεση, Λογικά) είναι εξαιρετικά σημαντική. Τα λάθη του
-          προγράμματος κατατάσσονται ως εξής:</p>
+        <p>Τα σωστά αποτελέσματα των πράξεων είναι:</p>
 
-        <!-- ΣΥΝΤΑΚΤΙΚΑ ΛΑΘΗ -->
-        <h5 class="text-danger mt-4 mb-3"><i class="fa fa-times-circle"></i> 1. Συντακτικά Λάθη</h5>
+        <!-- Απαντήσεις σε Grid -->
+        <div class="group-header">Απαντήσεις</div>
+        <div class="answer-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
+          <div class="answer-item"><span class="ans-true">4</span></div>
+          <div class="answer-item"><span class="ans-true">3</span></div>
+          <div class="answer-item"><span class="ans-true">3</span></div>
+          <div class="answer-item"><span class="ans-true">1</span></div>
+          <div class="answer-item"><span class="ans-true">7</span></div>
+          <div class="answer-item"><span class="ans-true">0</span></div>
+          <div class="answer-item"><span class="ans-true">0</span></div>
+          <div class="answer-item"><span class="ans-true">3</span></div>
+          <div class="answer-item"><span class="ans-true">10</span></div>
+          <div class="answer-item"><span class="ans-true">0</span></div>
+          <div class="answer-item"><span class="ans-true">5</span></div>
+          <div class="answer-item"><span class="ans-true">5</span></div>
+          <div class="answer-item"><span class="ans-true">1</span></div>
+          <div class="answer-item"><span class="ans-true">0</span></div>
+          <div class="answer-item"><span class="ans-true">0</span></div>
+        </div>
+
+        <!-- Αιτιολόγηση -->
+        <h5 class="text-primary mt-4 mb-3"><i class="fa fa-info-circle"></i> Υπενθύμιση</h5>
         <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
-          <li class="list-group-item">
-            <strong>Δηλώσεις μεταβλητών:</strong> Απουσία δήλωσης των μεταβλητών <code>μαξΜαθ</code> (Γραμμή 14) και
-            <code>μο</code> (Γραμμή 23). Επίσης, το <code>συνολοΤάξης</code> δηλώθηκε στις <code>ΑΚΕΡΑΙΕΣ</code> ενώ
-            δέχεται πραγματικούς αριθμούς.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 18:</strong> <code>ΑΛΛΙΩΣ γλωσ &gt; μαξ ΤΟΤΕ</code>. Η δεσμευμένη λέξη <code>ΑΛΛΙΩΣ</code>
-            δεν δέχεται ποτέ συνθήκη, έπρεπε να χρησιμοποιηθεί <code>ΑΛΛΙΩΣ_ΑΝ</code> (αν και λογικά απαιτείται κάτι
-            διαφορετικό).
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 25:</strong> <code>πληθοςΜαθητών &lt;- πληθοςΜαθητών + μο</code>. Ασυμβατότητα τύπων.
-            Προσπάθεια εκχώρησης πραγματικής τιμής (μο) σε ακέραια μεταβλητή (πληθοςΜαθητών). Το συντακτικό αυτό παύει
-            να ισχύει αν διορθωθεί το λογικό λάθος.
-          </li>
+          <li class="list-group-item">Το <strong>div</strong> μας δίνει το <i>πηλίκο</i> της ακέραιας διαίρεσης (πόσες
+            φορές χωράει ακριβώς ο ένας αριθμός στον άλλο).</li>
+          <li class="list-group-item">Το <strong>mod</strong> μας δίνει το <i>υπόλοιπο</i> της ακέραιας διαίρεσης.</li>
+          <li class="list-group-item text-danger"><strong>Η Μεγάλη Παγίδα:</strong> Όταν ο διαιρετέος (αριστερά) είναι
+            μικρότερος από τον διαιρέτη (δεξιά), όπως στο <code>3 div 5</code>, το <strong>div</strong> είναι πάντα
+            <b>0</b> και το <strong>mod</strong> είναι ο ίδιος ο διαιρετέος, δηλαδή <b>3</b>.</li>
         </ul>
-
-        <!-- ΛΟΓΙΚΑ ΛΑΘΗ -->
-        <h5 class="text-primary mt-4 mb-3"><i class="fa fa-puzzle-piece"></i> 2. Λογικά Λάθη</h5>
-        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
-          <li class="list-group-item">
-            <strong>Γραμμή 7:</strong> Ο μετρητής <code>πληθοςΜαθητών</code> πρέπει να αρχικοποιηθεί στο 0, και όχι στο
-            1.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 11:</strong> Επειδή χρησιμοποιείται δομή επανάληψης <code>ΜΕΧΡΙΣ_ΟΤΟΥ</code>, πρέπει να
-            υπάρχει εσωτερικός έλεγχος <code>ΑΝ ον &lt;&gt; 'τέλος' ΤΟΤΕ</code>, ώστε αν ο χρήστης δώσει 'τέλος' εξ
-            αρχής, να μην του ζητηθούν βαθμοί (δείχνοντας την πολυπλοκότητα αυτής της δομής σε τέτοια προβλήματα).
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 18:</strong> Αν παραμείνει ως <code>ΑΛΛΙΩΣ_ΑΝ</code>, προκύπτει λογικό λάθος: Αν ο βαθμός των
-            ΑΟΘ είναι μεγαλύτερος, το πρόγραμμα δεν θα εξετάσει <strong>ποτέ</strong> τον βαθμό της Γλώσσας! Απαιτούνται
-            ανεξάρτητες δομές <code>ΑΝ</code>.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμές 19 & 20:</strong> Αντεστραμμένες μεταβλητές. Έπρεπε να ενημερωθούν ως:
-            <code>μαξ &lt;- γλωσ</code> και <code>μαξΜαθ &lt;- 'γλώσσα'</code>.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 23:</strong> <code>μο &lt;- μαθ + αοθ + γλωσ/ 3</code>. Λόγω ιεραρχίας πράξεων, διαιρείται
-            μόνο η γλώσσα δια το 3. Χρειάζονται παρενθέσεις.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμές 25 & 26:</strong> Έγινε αντιστροφή των ρόλων. Στον μετρητή πλήθους πρέπει να προσθέτουμε 1
-            και στον αθροιστή συνόλου πρέπει να προσθέτουμε τον μέσο όρο.
-          </li>
-        </ul>
-
-        <!-- ΛΑΘΗ ΚΑΤΑ ΤΗΝ ΕΚΤΕΛΕΣΗ -->
-        <h5 class="text-warning text-dark mt-4 mb-3"><i class="fa fa-bolt"></i> 2. Λάθη Κατά Την Εκτέλεση (Runtime
-          Errors)</h5>
-        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
-          <li class="list-group-item">
-            <strong>Γραμμή 26:</strong> Δεν έχει γίνει αρχικοποίηση της μεταβλητής <code>συνολοΤάξης</code> στην αρχή
-            του προγράμματος. Η προσπάθεια αύξησης μιας άγνωστης τιμής θα προκαλέσει διακοπή.
-          </li>
-          <li class="list-group-item">
-            <strong>Γραμμή 28:</strong> Κατά τον υπολογισμό του τελικού μέσου όρου της τάξης, δεν υπάρχει έλεγχος
-            <code>ΑΝ πληθοςΜαθητών &gt; 0</code>. Αν δοθεί 'τέλος' με την πρώτη, το πλήθος θα είναι 0 και θα προκληθεί
-            διαίρεση με το μηδέν.
-          </li>
-        </ul>
-
-        <h5 class="text-success mt-5 mb-3"><i class="fa fa-code"></i> Το Σωστό Πρόγραμμα</h5>
-        <pre class="aepp-code shadow-sm" style="font-size: 0.95rem;">ΠΡΟΓΡΑΜΜΑ last2026_Corrected
-ΜΕΤΑΒΛΗΤΕΣ
-  ΑΚΕΡΑΙΕΣ: πληθοςΜαθητών
-  ΠΡΑΓΜΑΤΙΚΕΣ: μαθ, αοθ, γλωσ, μαξ, μο, μεσοςΟροςΤαξης, συνολοΤάξης
-  ΧΑΡΑΚΤΗΡΕΣ: ον, μαξΜαθ
-ΑΡΧΗ
-  συνολοΤάξης &lt;- 0
-  πληθοςΜαθητών &lt;- 0
-
-  ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ
-    ΓΡΑΨΕ 'Δώστε όνομα ή τέλος'
-    ΔΙΑΒΑΣΕ ον
-    
-    ΑΝ ον &lt;&gt; 'τέλος' ΤΟΤΕ
-      ΓΡΑΨΕ 'Δώστε βαθμούς στα μαθηματικά, αοθ, γλώσσα'
-      ΔΙΑΒΑΣΕ μαθ, αοθ, γλωσ
-
-      ! Εύρεση μεγίστου με ανεξάρτητες δομές ΑΝ
-      μαξ &lt;- μαθ
-      μαξΜαθ &lt;- 'μαθηματικά'
-
-      ΑΝ αοθ &gt; μαξ ΤΟΤΕ
-        μαξ &lt;- αοθ
-        μαξΜαθ &lt;- 'αοθ'
-      ΤΕΛΟΣ_ΑΝ
-
-      ΑΝ γλωσ &gt; μαξ ΤΟΤΕ
-        μαξ &lt;- γλωσ
-        μαξΜαθ &lt;- 'γλώσσα'
-      ΤΕΛΟΣ_ΑΝ
-
-      ΓΡΑΨΕ 'Ο μεγαλύτερος βαθμός ήταν στο ', μαξΜαθ
-
-      μο &lt;- (μαθ + αοθ + γλωσ) / 3
-      ΓΡΑΨΕ 'Ο μέσος όρος του ', ον, ' είναι ', μο
-
-      πληθοςΜαθητών &lt;- πληθοςΜαθητών + 1
-      συνολοΤάξης &lt;- συνολοΤάξης + μο
-    ΤΕΛΟΣ_ΑΝ
-
-  ΜΕΧΡΙΣ_ΟΤΟΥ ον = 'τέλος'
-
-  ! Προστασία από διαίρεση με το μηδέν
-  ΑΝ πληθοςΜαθητών &gt; 0 ΤΟΤΕ
-    μεσοςΟροςΤαξης &lt;- συνολοΤάξης / πληθοςΜαθητών
-    ΓΡΑΨΕ 'Ο μέσος όρος της τάξης είναι ', μεσοςΟροςΤαξης
-  ΑΛΛΙΩΣ
-    ΓΡΑΨΕ 'Δεν δόθηκαν μαθητές.'
-  ΤΕΛΟΣ_ΑΝ
-ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</pre>
       </div>
     </div>
 

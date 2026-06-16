@@ -59,74 +59,75 @@
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-body bg-light rounded border">
                         <p class="fw-bold mb-3 text-dark" style="line-height: 1.6;">
-                            Να χαρακτηρίσετε τις προτάσεις που ακολουθούν, γράφοντας δίπλα στο γράμμα που αντιστοιχεί σε
-                            κάθε πρόταση τη λέξη <strong class="text-success">Σωστό</strong>, αν η πρόταση είναι σωστή,
-                            ή τη λέξη <strong class="text-danger">Λάθος</strong>, αν η πρόταση είναι λανθασμένη. <i
-                                class="text-muted">(Μονάδες 10)</i>
+                            Άσκηση 2.24: Ποιες από τις παρακάτω δηλώσεις μεταβλητών έχουν νόημα (δηλαδή είναι συντακτικά
+                            σωστές στη ΓΛΩΣΣΑ);<br><br>
+                            Να γράψετε στο τετράδιό σας δίπλα στο γράμμα που αντιστοιχεί σε κάθε πρόταση τη λέξη <strong
+                                class="text-success">Σωστό</strong>,
+                            αν η δήλωση είναι συντακτικά σωστή, ή τη λέξη <strong class="text-danger">Λάθος</strong>, αν
+                            είναι λανθασμένη.
                         </p>
 
                         <ol type="a" class="fw-normal mb-0 ms-3" style="line-height: 1.8;">
-                            <li class="mb-3">Ο μεταγλωττιστής (compiler) διαβάζει, μεταφράζει και εκτελεί το πηγαίο
-                                πρόγραμμα εντολή προς εντολή.</li>
-                            <li class="mb-3">Σε μια δομή επανάληψης <code>ΟΣΟ...ΕΠΑΝΑΛΑΒΕ</code>, είναι πιθανό ο βρόχος
-                                να μην εκτελεστεί καμία φορά.</li>
-                            <li class="mb-3">Στοίβα ονομάζεται μια δομή δεδομένων, όπου τα στοιχεία εξάγονται με τη
-                                μέθοδο LIFO.</li>
-                            <li class="mb-3">Ο πίνακας είναι μια δυναμική δομή δεδομένων, το μέγεθος της οποίας μπορεί
-                                να αλλάξει κατά την εκτέλεση του προγράμματος.</li>
-                            <li class="mb-3">Μια συνάρτηση μπορεί να επιστρέψει στο κύριο πρόγραμμα περισσότερες από μία
-                                τιμές.</li>
+                            <li class="mb-3"><code>ΑΚΕΡΑΙΕΣ: ακέραιος1</code> ((Σ))</li>
+                            <li class="mb-3"><code>ΛΟΓΙΚΕΣ: ναι_όχι</code> ((Σ))</li>
+                            <li class="mb-3"><code>ΠΡΑΓΜΑΤΙΚΕΣ: α - β</code> ((Λ))</li>
+                            <li class="mb-3"><code>ΑΚΕΡΑΙΕΣ: 4.7</code> ((Λ))</li>
+                            <li class="mb-3"><code>ΧΑΡΑΚΤΗΡΕΣ: δέκα10πουλάκια</code> ((Σ))</li>
+                            <li class="mb-3"><code>ΑΚΕΡΑΙΕΣ: 8</code> ((Λ))</li>
+                            <li class="mb-3"><code>ΑΚΕΡΑΙΕΣ: Αρχή</code> ((Λ))</li>
+                            <li class="mb-3"><code>ΧΑΡΑΚΤΗΡΕΣ: αριθμός</code> ((Σ))</li>
                         </ol>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            function copyMezeHTML() {
-                const wrapper = document.querySelector('.html-content-wrapper');
-                if (!wrapper) return;
+    <script>
+        function copyMezeHTML() {
+            const wrapper = document.querySelector('.html-content-wrapper');
+            if (!wrapper) return;
 
-                const finalHtml = wrapper.outerHTML;
+            const finalHtml = wrapper.outerHTML;
 
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(finalHtml).then(() => {
-                        showSuccess();
-                    }).catch(() => {
-                        fallbackCopy(finalHtml);
-                    });
-                } else {
-                    fallbackCopy(finalHtml);
-                }
-            }
-
-            function fallbackCopy(text) {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(finalHtml).then(() => {
                     showSuccess();
-                } catch (err) {
-                    alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
-                }
-                document.body.removeChild(textArea);
+                }).catch(() => {
+                    fallbackCopy(finalHtml);
+                });
+            } else {
+                fallbackCopy(finalHtml);
             }
+        }
 
-            function showSuccess() {
-                const btn = document.querySelector('.sticky-top button');
-                const originalContent = btn.innerHTML;
-
-                btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-                btn.classList.replace('btn-success', 'btn-light');
-
-                setTimeout(() => {
-                    btn.innerHTML = originalContent;
-                    btn.classList.replace('btn-light', 'btn-success');
-                }, 2000);
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                alert('Η αντιγραφή απέτυχε. Παρακαλώ αντιγράψτε το κείμενο χειροκίνητα.');
             }
-        </script>
+            document.body.removeChild(textArea);
+        }
+
+        function showSuccess() {
+            const btn = document.querySelector('.sticky-top button');
+            const originalContent = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
+            btn.classList.replace('btn-success', 'btn-light');
+
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.replace('btn-light', 'btn-success');
+            }, 2000);
+        }
+    </script>
 
 </body>
 

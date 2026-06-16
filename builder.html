@@ -234,80 +234,39 @@
             }
 
             const exNum = document.getElementById('exNum').value || "1";
-
             let studentHtml = rawText;
             let teacherHtml = `<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">\n`;
             teacherHtml += `<h5 style="color: #0d6efd; margin-top: 0; border-bottom: 2px solid #b6d4fe; padding-bottom: 8px; font-weight: bold; font-family: sans-serif;">Αλγόριθμος ${exNum}</h5>\n`;
             teacherHtml += `<ol style="margin-bottom: 0; padding-left: 25px; font-family: monospace; font-size: 1.1rem; line-height: 1.8;">\n`;
             let blankCounter = 1;
 
-            // 1. Επεξεργασία Ερωτήσεων Πολλαπλής Επιλογής (MCQ)
-            let lines = studentHtml.split('\n');
-            let processedLines = [];
-            let inMcq = false;
-            let mcqCounter = 1;
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                let tLine = line.trim();
-                let isCorrect = tLine.startsWith('(*)');
-                let isWrong = tLine.startsWith('( )');
-
-                if (isCorrect || isWrong) {
-                    if (!inMcq) {
-                        inMcq = true;
-                        teacherHtml += `  <li style="margin-bottom: 10px; padding-left: 5px;"><strong style="color:#0d6efd;">Πολλαπλής Επιλογής:</strong><ul style="list-style:none; padding-left:15px; font-weight:normal; margin-top:5px; line-height:1.4;">\n`;
-                    }
-                    let optText = tLine.substring(3).trim();
-                    let safeVal = optText.replace(/"/g, '&quot;');
-
-                    if (isCorrect) {
-                        teacherHtml += `    <li style="color: #198754; font-weight: bold;">☑ ${optText}</li>\n`;
-                    } else {
-                        teacherHtml += `    <li style="color: #6c757d;">☐ ${optText}</li>\n`;
-                    }
-
-                    // Παραγωγή HTML Μαθητή (Radio Buttons)
-                    processedLines.push(`<div class="form-check ms-4 my-1" style="font-family: inherit;"><input class="form-check-input aepp-interactive-mcq" style="cursor: pointer;" type="radio" name="mcq_${exNum}_${mcqCounter}" id="mcq_${exNum}_${mcqCounter}_${i}" value="${safeVal}"><label class="form-check-label" style="cursor: pointer;" for="mcq_${exNum}_${mcqCounter}_${i}">${optText}</label></div>`);
-                } else {
-                    if (inMcq) {
-                        inMcq = false;
-                        teacherHtml += `  </ul></li>\n`;
-                        mcqCounter++;
-                    }
-                    processedLines.push(line);
-                }
-            }
-            if (inMcq) {
-                teacherHtml += `  </ul></li>\n`;
-                mcqCounter++;
-            }
-            studentHtml = processedLines.join('\n');
-
-            // Regex που πιάνει ΚΑΙ τα [[κενά]] ΚΑΙ τα ((Σ)) / ((Λ))
+            // Διορθωμένη λογική: Ενιαίο Regex που πιάνει ΚΑΙ τα [[κενά]] ΚΑΙ τα ((Σ))/((Λ))
             const regex = /\[\[(.*?)\]\]|\(\(([ΣΛσλSlsL])\)\)/g;
 
             studentHtml = studentHtml.replace(regex, (match, blankAnswer, tfAnswer) => {
                 let inputHtml = '';
 
                 if (match.startsWith('[[')) {
-                    // Περίπτωση: Συμπλήρωση Κενού
+                    // Περίπτωση 1: Συμπλήρωση Κενού [[...]]
                     const answer = (blankAnswer || '').trim();
                     teacherHtml += `  <li style="margin-bottom: 5px; padding-left: 5px;"><strong style="color: #d63384; background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px;">${answer}</strong></li>\n`;
-                    inputHtml = `<input type="text" class="aepp-interactive-blank" data-ex="${exNum}" data-blank="${blankCounter}">`;
+                    inputHtml = `<input type="text" class="aepp-interactive-blank" data-ex="${exNum}" data-blank="${blankCounter}" autocomplete="off" value="">`;
+
                 } else if (match.startsWith('((')) {
-                    // Περίπτωση: Σωστό / Λάθος
+                    // Περίπτωση 2: Σωστό / Λάθος ((...))
                     let answer = (tfAnswer || '').trim().toUpperCase();
-                    if (answer === 'S') answer = 'Σ'; // Αγγλικό S -> Ελληνικό Σ
-                    if (answer === 'L') answer = 'Λ'; // Αγγλικό L -> Ελληνικό Λ
+                    if (answer === 'S') answer = 'Σ';
+                    if (answer === 'L') answer = 'Λ';
 
                     let color = answer === 'Σ' ? '#198754' : '#dc3545';
                     teacherHtml += `  <li style="margin-bottom: 5px; padding-left: 5px;"><strong style="color: ${color}; background: #fff; padding: 2px 8px; border: 1px solid #ccc; border-radius: 4px;">${answer}</strong></li>\n`;
-                    inputHtml = `<input type="text" class="aepp-interactive-blank text-center fw-bold" placeholder="Σ/Λ" maxlength="1" data-ex="${exNum}" data-blank="${blankCounter}">`;
+                    inputHtml = `<input type="text" class="aepp-interactive-blank text-center fw-bold" placeholder="Σ/Λ" maxlength="1" data-ex="${exNum}" data-blank="${blankCounter}" autocomplete="off" value="">`;
                 }
+
                 blankCounter++;
                 return inputHtml;
             });
+
             teacherHtml += '</ol>\n</div>';
 
             const wrapType = document.getElementById('wrapType').value;
