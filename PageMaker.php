@@ -679,7 +679,10 @@ class PageMaker
                                     <strong>Μεζεδάκι #<?php echo $row['mezeNumber']; ?></strong>
                                 </h6>
                                 <?php if (isset($row['isSos']) && $row['isSos'] == 1): ?>
-                                    <span class="badge bg-danger pulse-sos shadow-sm"><i class="fa fa-fire"></i> SOS</span>
+                                    <span class="badge bg-danger pulse-sos shadow-sm me-2"><i class="fa fa-fire"></i> SOS</span>
+                                <?php endif; ?>
+                                <?php if (!empty($row['sourceBook'])): ?>
+                                    <span class="badge bg-secondary shadow-sm"><i class="fa fa-book"></i> <?php echo htmlspecialchars($row['sourceBook']) . (!empty($row['sourceExercise']) ? ' (' . htmlspecialchars($row['sourceExercise']) . ')' : ''); ?></span>
                                 <?php endif; ?>
                             </div>
                             <div class="text-end">

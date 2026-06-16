@@ -557,6 +557,9 @@ class AdminDbHandler extends DbHandler
         $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
         $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
 
+        $sourceBook = !empty($data['sourceBook']) ? $data['sourceBook'] : null;
+        $sourceExercise = !empty($data['sourceExercise']) ? $data['sourceExercise'] : null;
+
         $selectedTypes = (isset($data['exercise_types']) && is_array($data['exercise_types'])) ? $data['exercise_types'] : [];
 
         // Εικόνα Εκφώνησης
@@ -571,9 +574,9 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $solImageName);
         }
 
-        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage, isSos, isPanhellenic, panYear, panThema, panExamType, panSchoolType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage, isSos, isPanhellenic, panYear, panThema, panExamType, panSchoolType, sourceBook, sourceExercise) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
-            "isssssssiiisss",
+            "isssssssiiisssss",
             $data['mezeNumber'],
             $data['mezeDate'],
             $data['solutionDate'],
@@ -587,7 +590,9 @@ class AdminDbHandler extends DbHandler
             $panYear,
             $panThema,
             $panExamType,
-            $panSchoolType
+            $panSchoolType,
+            $sourceBook,
+            $sourceExercise
         );
         $success = $stmt->execute();
 
@@ -661,6 +666,9 @@ class AdminDbHandler extends DbHandler
         $panExamType = !empty($data['panExamType']) ? $data['panExamType'] : null;
         $panSchoolType = !empty($data['panSchoolType']) ? $data['panSchoolType'] : null;
 
+        $sourceBook = !empty($data['sourceBook']) ? $data['sourceBook'] : null;
+        $sourceExercise = !empty($data['sourceExercise']) ? $data['sourceExercise'] : null;
+
         $selectedTypes = (isset($data['exercise_types']) && is_array($data['exercise_types'])) ? $data['exercise_types'] : [];
 
         // 4. Εκτέλεση του Update (Εδώ μπαίνει το mezeHints)
@@ -678,13 +686,15 @@ class AdminDbHandler extends DbHandler
             panYear = ?,
             panThema = ?,
             panExamType = ?,
-            panSchoolType = ?
+            panSchoolType = ?,
+            sourceBook = ?,
+            sourceExercise = ?
             WHERE mezeId = ?";
 
         $stmt = $conn->prepare($sql);
 
         $stmt->bind_param(
-            "isssssssiiisssi",
+            "isssssssiiisssssi",
             $data['mezeNumber'],
             $data['mezeDate'],
             $data['solutionDate'],
@@ -699,6 +709,8 @@ class AdminDbHandler extends DbHandler
             $panThema,
             $panExamType,
             $panSchoolType,
+            $sourceBook,
+            $sourceExercise,
             $mezeId
         );
 

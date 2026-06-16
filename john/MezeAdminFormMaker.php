@@ -434,6 +434,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $badgeHtml .= '<br><span class="badge bg-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-fire"></i> SOS</span>';
                                 }
 
+                                if (!empty($row['sourceBook'])) {
+                                    $badgeHtml .= '<br><span class="badge bg-secondary mt-1" style="font-size: 0.75rem;"><i class="fa fa-book"></i> ' . htmlspecialchars($row['sourceBook']) . (!empty($row['sourceExercise']) ? ' - Άσκ. ' . htmlspecialchars($row['sourceExercise']) : '') . '</span>';
+                                }
+
                                 if ($isFuture) {
                                     $badgeHtml .= '<br><span class="badge bg-primary text-white mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-calendar-check-o"></i> Προγραμματισμένο</span>';
                                     $rowStyle = 'style="background-color: #e9f2fd; color: #495057;"';
@@ -606,6 +610,26 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         <option value="Esperino">Εσπερινό</option>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm border-info">
+                        <label class="font-weight-bold text-info mb-2"><i class="fa fa-book"></i> Πηγή Άσκησης (Βοήθημα)</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Βιβλίο / Συγγραφέας</label>
+                                <select name="sourceBook" class="form-control">
+                                    <option value="">-- Καμία / Άλλη --</option>
+                                    <option value="Κοψίνης 1">Κοψίνης Τεύχος 1</option>
+                                    <option value="Κοψίνης 2">Κοψίνης Τεύχος 2</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Κεφάλαιο.Άσκηση (π.χ. 4.13)</label>
+                                <input type="text" name="sourceExercise" class="form-control" placeholder="π.χ. 4.13">
                             </div>
                         </div>
                     </div>
@@ -1027,6 +1051,26 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         <option value="Esperino" <?php echo ($row['panSchoolType'] == 'Esperino') ? 'selected' : ''; ?>>Εσπερινό</option>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="bg-white border p-3 rounded shadow-sm border-info">
+                        <label class="font-weight-bold text-info mb-2"><i class="fa fa-book"></i> Πηγή Άσκησης (Βοήθημα)</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Βιβλίο / Συγγραφέας</label>
+                                <select name="sourceBook" class="form-control">
+                                    <option value="">-- Καμία / Άλλη --</option>
+                                    <option value="Κοψίνης 1" <?php echo (isset($row['sourceBook']) && $row['sourceBook'] == 'Κοψίνης 1') ? 'selected' : ''; ?>>Κοψίνης Τεύχος 1</option>
+                                    <option value="Κοψίνης 2" <?php echo (isset($row['sourceBook']) && $row['sourceBook'] == 'Κοψίνης 2') ? 'selected' : ''; ?>>Κοψίνης Τεύχος 2</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label>Κεφάλαιο.Άσκηση (π.χ. 4.13)</label>
+                                <input type="text" name="sourceExercise" class="form-control" placeholder="π.χ. 4.13" value="<?php echo isset($row['sourceExercise']) ? htmlspecialchars($row['sourceExercise']) : ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -2091,6 +2135,11 @@ class MezeAdminFormMaker extends AdminFormMaker
                         if (isset($row['isSos']) && $row['isSos'] == 1) {
                             $panHtml .= '<span class="badge bg-danger me-1 mb-1 shadow-sm" style="font-size: 0.8rem;"><i class="fa fa-fire"></i> SOS</span>';
                         }
+
+                        $sourceHtml = '';
+                        if (!empty($row['sourceBook'])) {
+                            $sourceHtml = '<span class="badge bg-secondary me-1 mb-1 shadow-sm" style="font-size: 0.8rem;"><i class="fa fa-book"></i> ' . htmlspecialchars($row['sourceBook']) . (!empty($row['sourceExercise']) ? ' - Άσκ. ' . htmlspecialchars($row['sourceExercise']) : '') . '</span>';
+                        }
                 ?>
                         <div class="col-md-6 col-lg-4 mb-4 bank-item">
                             <div class="card h-100 shadow-sm border-0" style="border-top: 5px solid #ffc107 !important; transition: transform 0.2s;">
@@ -2101,6 +2150,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 <div class="card-body pt-2">
                                     <div class="mb-3">
                                         <?php echo $panHtml; ?>
+                                        <?php echo $sourceHtml; ?>
                                         <?php echo $tagsHtml; ?>
                                     </div>
                                     <p class="card-text text-dark" style="font-size: 0.95rem; line-height: 1.5;">
