@@ -557,6 +557,46 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function setMezeDateToday($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $solutionDate = date('Y-m-d 03:00:00', strtotime('+1 day'));
+        $stmt = $conn->prepare("UPDATE aepp_mezedakia SET mezeDate = CURDATE(), solutionDate = ? WHERE mezeId = ?");
+        $stmt->bind_param("si", $solutionDate, $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
+    public function toggleGroupDeadline($mezeId, $groupId)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Check if a deadline already exists
+        $stmtCheck = $conn->prepare("SELECT id FROM aepp_meze_group_deadlines WHERE meze_id = ? AND group_id = ?");
+        $stmtCheck->bind_param("ii", $mezeId, $groupId);
+        $stmtCheck->execute();
+        $exists = $stmtCheck->get_result()->num_rows > 0;
+        $stmtCheck->close();
+
+        if ($exists) {
+            // If it exists, delete it
+            $stmt = $conn->prepare("DELETE FROM aepp_meze_group_deadlines WHERE meze_id = ? AND group_id = ?");
+            $stmt->bind_param("ii", $mezeId, $groupId);
+        } else {
+            // If it doesn't exist, create it for tomorrow at 3 AM
+            $deadline = date('Y-m-d 03:00:00', strtotime('+1 day'));
+            $stmt = $conn->prepare("INSERT INTO aepp_meze_group_deadlines (meze_id, group_id, deadline_at) VALUES (?, ?, ?)");
+            $stmt->bind_param("iis", $mezeId, $groupId, $deadline);
+        }
+
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
     public function insertMezedaki($data, $file)
     {
         $conn = $this->connectToFamilyDB();
@@ -588,12 +628,15 @@ class AdminDbHandler extends DbHandler
             move_uploaded_file($file['mezeSolutionImage']['tmp_name'], "../images/mezedakia/" . $solImageName);
         }
 
+        $mezeDate = !empty($data['mezeDate']) ? $data['mezeDate'] : '2099-01-01';
+        $solutionDate = !empty($data['solutionDate']) ? $data['solutionDate'] : '2099-01-02 03:00:00';
+
         $stmt = $conn->prepare("INSERT INTO aepp_mezedakia (mezeNumber, mezeDate, solutionDate, mezeImage, mezeText, mezeHints, mezeSolution, mezeSolutionImage, isSos, isPanhellenic, panYear, panThema, panExamType, panSchoolType, sourceBook, sourceExercise) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param(
             "isssssssiiisssss",
             $data['mezeNumber'],
-            $data['mezeDate'],
-            $data['solutionDate'],
+            $mezeDate,
+            $solutionDate,
             $imageName,
             $data['mezeText'],
             $data['mezeHints'],
@@ -708,7 +751,7 @@ class AdminDbHandler extends DbHandler
         $stmt = $conn->prepare($sql);
 
         $stmt->bind_param(
-            "isssssssiiisssssi",
+            "ssssssssiiisssssi",
             $data['mezeNumber'],
             $data['mezeDate'],
             $data['solutionDate'],
@@ -1625,5 +1668,21 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return $res;
+    }
+
+    public function getGroupDeadlinesForMeze($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT group_id, deadline_at FROM aepp_meze_group_deadlines WHERE meze_id = ?");
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $deadlines = [];
+        while ($row = $res->fetch_assoc()) {
+            $deadlines[$row['group_id']] = $row['deadline_at'];
+        }
+        $stmt->close();
+        $conn->close();
+        return $deadlines;
     }
 }

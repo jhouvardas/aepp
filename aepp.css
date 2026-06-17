@@ -214,14 +214,6 @@
     }
 }
 
-/* Διόρθωση για τις μονάδες στα κινητά (για τα υπάρχοντα μεζεδάκια στη βάση) */
-@media (max-width: 576px) {
-
-    .meze-text .d-flex,
-    .meze-text .justify-content-between {
-        display: block !important;
-    }
-}
 
 /* SOS Badge Pulse Effect */
 @keyframes pulse-sos {
@@ -545,7 +537,7 @@
 .group-header::before {
     content: "\f022";
     /* Προσθέτει ένα εικονίδιο 'αρχείου' (FontAwesome) δίπλα στον τίτλο */
-    font-family: FontAwesome;
+    font-family: "FontAwesome";
     margin-right: 10px;
 }
 

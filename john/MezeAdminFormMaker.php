@@ -3,6 +3,10 @@ include_once 'AdminFormMaker.php';
 
 class MezeAdminFormMaker extends AdminFormMaker
 {
+    /**
+     * @param string $str
+     * @return string
+     */
     private function normalizeString($str)
     {
         $str = (string)$str;
@@ -76,6 +80,11 @@ class MezeAdminFormMaker extends AdminFormMaker
         return strtr($str, $homoglyphs);
     }
 
+    /**
+     * @param string $studentText
+     * @param string $solutionHtml
+     * @return array
+     */
     private function getHighlightedStudentAnswer($studentText, $solutionHtml)
     {
         // 1. Extract correct answers from solution HTML
@@ -334,16 +343,77 @@ class MezeAdminFormMaker extends AdminFormMaker
         ];
     }
 
+    /**
+     * @param mysqli_result|bool|array $result
+     * @param AdminDbHandler $dbHandler
+     */
     public function listMezedakia($result, $dbHandler)
     {
+        $allGroups = $dbHandler->getGroups(isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "");
+        $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
+
+        // Υπολογισμός Στατιστικών
+        $totalMezedakia = $result ? $result->num_rows : 0;
+        $allStudents = $dbHandler->getTutorStudents($userYear);
+        $realStudentsCount = 0;
+        foreach ($allStudents as $s) {
+            if ($s['studentId'] != 999999) $realStudentsCount++;
+        }
+        $totalGroups = count($allGroups);
+        $pendingRequests = $dbHandler->getPendingExtensionRequestsCount($userYear);
 ?>
         <div class="container mt-4">
+            <!-- Κάρτες Στατιστικών Dashboard -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                    <div class="card bg-primary text-white shadow-sm h-100 border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold small mb-1">Μαθητές</div>
+                                <h2 class="mb-0 fw-bold"><?php echo $realStudentsCount; ?></h2>
+                            </div>
+                            <i class="fa fa-users fa-3x" style="opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                    <div class="card bg-warning text-dark shadow-sm h-100 border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold small mb-1">Μεζεδάκια</div>
+                                <h2 class="mb-0 fw-bold"><?php echo $totalMezedakia; ?></h2>
+                            </div>
+                            <i class="fa fa-coffee fa-3x" style="opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3 mb-md-0">
+                    <div class="card bg-success text-white shadow-sm h-100 border-0">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold small mb-1">Ομάδες</div>
+                                <h2 class="mb-0 fw-bold"><?php echo $totalGroups; ?></h2>
+                            </div>
+                            <i class="fa fa-sitemap fa-3x" style="opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card <?php echo $pendingRequests > 0 ? 'bg-danger' : 'bg-secondary'; ?> text-white shadow-sm h-100 border-0" style="<?php echo $pendingRequests > 0 ? 'cursor: pointer; transition: transform 0.2s;' : ''; ?>" <?php echo $pendingRequests > 0 ? 'onclick="window.location.href=\'index.php?action=view_extension_requests\'" onmouseover="this.style.transform=\'translateY(-5px)\'" onmouseout="this.style.transform=\'translateY(0)\'"' : ''; ?>>
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold small mb-1">Εκκρεμή Αιτήματα</div>
+                                <h2 class="mb-0 fw-bold"><?php echo $pendingRequests; ?></h2>
+                            </div>
+                            <i class="fa fa-clock-o fa-3x" style="opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3">
                 <h3 class="mb-0 text-center text-xl-start"><i class="fa fa-list text-primary"></i> Διαχείριση Μεζεδακίων</h3>
                 <div class="d-flex flex-wrap justify-content-center justify-content-xl-end align-items-center gap-2 w-100" style="max-width: 950px;">
-                    <button type="button" class="btn btn-outline-primary shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="copyRegLink(this)" title="Αντιγραφή συνδέσμου για εγγραφή νέου μαθητή">
-                        <i class="fa fa-link"></i> Link Εγγραφής
-                    </button>
                     <div class="form-check form-switch d-flex align-items-center justify-content-center mx-md-2 mb-0 flex-grow-1 flex-md-grow-0" title="Εμφάνιση/Απόκρυψη προγραμματισμένων (μελλοντικών) μεζεδακίων">
                         <input class="form-check-input mt-0 me-2" type="checkbox" id="toggleFutureMeze" style="cursor: pointer; transform: scale(1.2);">
                         <label class="form-check-label fw-bold text-primary mb-0" for="toggleFutureMeze" style="cursor: pointer;">Προγραμματισμένα</label>
@@ -388,6 +458,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                             $result->data_seek(0);
                             $visibleCount = 0;
                             $futureCount = 0;
+
                             while ($row = $result->fetch_assoc()):
                                 $mezeId = $row['mezeId'];
                                 $mTimestamp = strtotime($row['mezeDate']);
@@ -413,6 +484,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $isExpired = ($solTimestamp > 0 && $solTimestamp < $currentTimestamp);
                                 $hasExtensions = (!empty($userYear)) ? $dbHandler->hasAnyExtension($mezeId, $userYear) : false;
                                 $isClosed = $isLocked || ($isExpired && !$hasExtensions);
+                                $groupDeadlines = $dbHandler->getGroupDeadlinesForMeze($mezeId);
 
                                 $rowStyle = '';
                                 $badgeHtml = '';
@@ -460,6 +532,15 @@ class MezeAdminFormMaker extends AdminFormMaker
 
                                 if (!empty($row['sourceBook'])) {
                                     $badgeHtml .= '<br><span class="badge bg-secondary mt-1" style="font-size: 0.75rem;"><i class="fa fa-book"></i> ' . htmlspecialchars($row['sourceBook']) . (!empty($row['sourceExercise']) ? ' - Άσκ. ' . htmlspecialchars($row['sourceExercise']) : '') . '</span>';
+                                }
+
+                                if (!empty($groupDeadlines)) {
+                                    foreach ($allGroups as $grp) {
+                                        if (isset($groupDeadlines[$grp['id']])) {
+                                            $dDate = date('d/m H:i', strtotime($groupDeadlines[$grp['id']]));
+                                            $badgeHtml .= '<br><span class="badge bg-info text-dark mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-users"></i> ' . htmlspecialchars($grp['group_name']) . ' &rarr; <i class="fa fa-clock-o text-danger"></i> ' . $dDate . '</span>';
+                                        }
+                                    }
                                 }
 
                                 if ($isFuture) {
@@ -516,14 +597,38 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         <?php echo $badgeHtml; ?>
                                     </td>
                                     <td>
-                                        <div class="d-flex flex-wrap justify-content-center">
-                                            <a href="index.php?action=toggleMezeLock&id=<?php echo $mezeId; ?>&status=<?php echo $isLocked ? 0 : 1; ?>" class="btn btn-outline-<?php echo $isLocked ? 'success' : 'secondary'; ?> btn-sm m-1"><i class="fa fa-<?php echo $isLocked ? 'unlock' : 'lock'; ?>"></i></a>
-                                            <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-dark btn-sm m-1" title="Προεπισκόπηση"><i class="fa fa-search"></i></a>
-                                            <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>&autoprint=1" target="_blank" class="btn btn-outline-info btn-sm m-1" title="Εκτύπωση (Επιλογή Εκφώνησης/Λύσης)"><i class="fa fa-print"></i></a>
-                                            <a href="index.php?action=viewSubmissions&id=<?php echo $mezeId; ?>" class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm m-1"><i class="fa fa-eye"></i></a>
-                                            <a href="index.php?action=manageGrades&id=<?php echo $mezeId; ?>" class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-primary'; ?> btn-sm m-1"><i class="fa fa-graduation-cap"></i></a>
-                                            <a href="index.php?action=editMezedaki&id=<?php echo $mezeId; ?>" class="btn btn-warning btn-sm m-1"><i class="fa fa-edit"></i></a>
-                                            <a href="index.php?action=deleteMezedaki&id=<?php echo $mezeId; ?>" class="btn btn-danger btn-sm m-1" onclick="return confirm('Διαγραφή;')"><i class="fa fa-trash"></i></a>
+                                        <div class="d-flex flex-wrap justify-content-center gap-1">
+                                            <a href="index.php?action=toggleMezeLock&amp;id=<?php echo $mezeId; ?>&amp;status=<?php echo $isLocked ? 0 : 1; ?>" class="btn btn-outline-<?php echo $isLocked ? 'success' : 'secondary'; ?> btn-sm" title="<?php echo $isLocked ? 'Ξεκλείδωμα' : 'Κλείδωμα'; ?>"><i class="fa fa-<?php echo $isLocked ? 'unlock' : 'lock'; ?>"></i></a>
+                                            <a href="index.php?action=previewMeze&amp;id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-dark btn-sm" title="Προεπισκόπηση"><i class="fa fa-search"></i></a>
+                                            <a href="index.php?action=editMezedaki&amp;id=<?php echo $mezeId; ?>" class="btn btn-warning btn-sm" title="Επεξεργασία"><i class="fa fa-edit"></i></a>
+                                            <a href="index.php?action=viewSubmissions&amp;id=<?php echo $mezeId; ?>" class="btn <?php echo $isFuture ? 'btn-outline-secondary' : 'btn-info'; ?> btn-sm" title="Απαντήσεις"><i class="fa fa-eye"></i></a>
+                                            <a href="index.php?action=deleteMezedaki&amp;id=<?php echo $mezeId; ?>" class="btn btn-danger btn-sm" title="Διαγραφή" onclick="return confirm('Διαγραφή;')"><i class="fa fa-trash"></i></a>
+
+                                            <a href="index.php?action=setMezeToday&id=<?php echo $mezeId; ?>" class="btn btn-success btn-sm" title="Ορισμός ημερομηνίας εμφάνισης για Σήμερα"><i class="fa fa-calendar-check-o"></i> Σήμερα</a>
+
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-users"></i> Deadlines
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 320px;">
+                                                    <?php foreach ($allGroups as $g):
+                                                        $hasDeadline = isset($groupDeadlines[$g['id']]);
+                                                        $deadlineDate = $hasDeadline ? date('d/m H:i', strtotime($groupDeadlines[$g['id']])) : '';
+                                                    ?>
+                                                        <li>
+                                                            <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+                                                                <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                                                <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
+                                                                <span class="fw-bold me-auto text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
+                                                                <?php if ($hasDeadline): ?>
+                                                                    <span class="badge bg-success me-2 shadow-sm"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
+                                                                <?php endif; ?>
+                                                                <button type="submit" class="btn btn-sm <?php echo $hasDeadline ? 'btn-danger' : 'btn-success'; ?>"><?php echo $hasDeadline ? 'Ακύρωση' : 'Set'; ?></button>
+                                                            </form>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -576,40 +681,6 @@ class MezeAdminFormMaker extends AdminFormMaker
                         }
                     });
                 }
-
-                // Αντιγραφή του link εγγραφής
-                function copyRegLink(btn) {
-                    var link = 'http://jhouv.eu/aepp/index.php?action=register';
-                    var fallbackFn = function() {
-                        var textArea = document.createElement("textarea");
-                        textArea.value = link;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {
-                            document.execCommand('copy');
-                        } catch (err) {}
-                        document.body.removeChild(textArea);
-                    };
-
-                    var successFn = function() {
-                        var originalHtml = btn.innerHTML;
-                        btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
-                        btn.classList.add('btn-success', 'text-white');
-                        btn.classList.remove('btn-outline-primary');
-                        setTimeout(function() {
-                            btn.innerHTML = originalHtml;
-                            btn.classList.remove('btn-success', 'text-white');
-                            btn.classList.add('btn-outline-primary');
-                        }, 2000);
-                    };
-
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(link).then(successFn).catch(fallbackFn);
-                    } else {
-                        fallbackFn();
-                        successFn();
-                    }
-                }
             </script>
         </div>
     <?php
@@ -631,19 +702,27 @@ class MezeAdminFormMaker extends AdminFormMaker
             </div>
             <form action="index.php?action=saveMezedaki" method="post" enctype="multipart/form-data">
                 <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label>Αριθμός Μεζεδακίου</label>
+                    <div class="form-group col-md-4">
+                        <label>Αριθμός</label>
                         <input type="number" name="mezeNumber" class="form-control" value="<?php echo $nextNumber; ?>" required>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-4">
                         <label>Ημερομηνία Εμφάνισης</label>
-                        <input type="date" name="mezeDate" id="mezeDateAdd" class="form-control" value="<?php echo date('Y-m-d'); ?>" required onchange="autoSetDeadline('mezeDateAdd', 'solutionDateAdd')">
+                        <div class="input-group">
+                            <input type="date" name="mezeDate" id="mezeDateAdd" class="form-control" value="<?php echo date('Y-m-d'); ?>" required onchange="autoSetDeadline('mezeDateAdd', 'solutionDateAdd')">
+                            <button class="btn btn-success px-2" type="button" onclick="setToday('mezeDateAdd', 'solutionDateAdd')" title="Ορισμός ημερομηνίας εμφάνισης για Σήμερα"><i class="fa fa-calendar-check-o"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Deadline Λύσης</label>
+                        <input type="datetime-local" name="solutionDate" id="solutionDateAdd" class="form-control" value="<?php echo date('Y-m-d\T03:00', strtotime('+1 day')); ?>" required>
                     </div>
                 </div>
+
                 <div class="form-group">
-                    <div class="bg-white border p-3 rounded shadow-sm">
+                    <div class="bg-white border p-3 rounded shadow-sm border-danger">
                         <label class="switch-container text-danger font-weight-bold mb-0" style="cursor: pointer;">
-                            <input type="checkbox" name="isSos" value="1" id="isSosCheck">
+                            <input type="checkbox" name="isSos" value="1" id="isSosCheckAdd">
                             <span><i class="fa fa-fire"></i> Χαρακτηρισμός ως SOS (Τεχνική Πανελληνίων)</span>
                         </label>
                     </div>
@@ -681,7 +760,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label>Σχολείο</label>
-                                    <select name="panSchoolType" class="form-group form-control">
+                                    <select name="panSchoolType" class="form-control">
                                         <option value="Hmerisio">Ημερήσιο</option>
                                         <option value="Esperino">Εσπερινό</option>
                                     </select>
@@ -736,10 +815,6 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Ημερομηνία & Ώρα Λύσης (Deadline)</label>
-                    <input type="datetime-local" name="solutionDate" id="solutionDateAdd" class="form-control" value="<?php echo date('Y-m-d\T03:00', strtotime('+1 day')); ?>" required>
-                </div>
                 <div class="form-group">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="mb-0">Κείμενο / Κώδικας (HTML/Bootstrap)</label>
@@ -809,7 +884,23 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <label>Φωτογραφία Λύσης (Προαιρετικά)</label>
                     <input type="file" name="mezeSolutionImage" class="form-control-file">
                 </div>
-                <button type="submit" class="btn btn-warning btn-block font-weight-bold">Αποθήκευση Μεζεδακίου</button>
+                <div class="mt-4 row gap-2 gap-md-0">
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-warning btn-block font-weight-bold shadow w-100">
+                            <i class="fa fa-save"></i> Αποθήκευση & Νέο
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" name="return_to_list" value="1" class="btn btn-success btn-block font-weight-bold shadow w-100">
+                            <i class="fa fa-list"></i> Αποθήκευση & Επιστροφή
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="index.php?action=listMezedakia" class="btn btn-secondary btn-block shadow w-100">
+                            <i class="fa fa-times"></i> Ακύρωση
+                        </a>
+                    </div>
+                </div>
             </form>
         </div>
         <script>
@@ -1051,23 +1142,77 @@ class MezeAdminFormMaker extends AdminFormMaker
                     }
                 }
             }
+
+            if (typeof setToday === 'undefined') {
+                window.setToday = function(dateInputId, deadlineInputId) {
+                    var d = new Date();
+                    var year = d.getFullYear();
+                    var month = ('0' + (d.getMonth() + 1)).slice(-2);
+                    var day = ('0' + d.getDate()).slice(-2);
+                    document.getElementById(dateInputId).value = year + '-' + month + '-' + day;
+                    autoSetDeadline(dateInputId, deadlineInputId);
+                }
+            }
         </script>
     <?php
     }
 
+    /**
+     * @param array $row
+     */
     public function editMezedakiForm($row)
     {
         $db = new AdminDbHandler();
         $exerciseTypes = $db->getExerciseTypes();
         $selectedTypeIds = $db->getMezeTypeIds($row['mezeId']);
+        $allGroups = $db->getGroups(isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "");
+        $groupDeadlines = $db->getGroupDeadlinesForMeze($row['mezeId']);
+
+        $mezeId = $row['mezeId'];
+        $isLocked = (isset($row['isLocked']) && $row['isLocked'] == 1);
 
     ?>
         <div class="container mt-4 border p-4 bg-light shadow">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="mb-0"><i class="fa fa-edit"></i> Επεξεργασία Μεζεδακίου #<?php echo $row['mezeNumber']; ?></h3>
-                <a href="index.php?action=listMezedakia" class="btn btn-secondary shadow-sm">
-                    <i class="fa fa-arrow-left"></i> Επιστροφή στη Λίστα
-                </a>
+            <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-3 gap-3">
+                <h3 class="mb-0 text-center text-xl-start"><i class="fa fa-edit"></i> Επεξεργασία #<?php echo $row['mezeNumber']; ?></h3>
+
+                <div class="d-flex flex-wrap justify-content-center justify-content-xl-end gap-1">
+                    <a href="index.php?action=toggleMezeLock&amp;id=<?php echo $mezeId; ?>&amp;status=<?php echo $isLocked ? 0 : 1; ?>" class="btn btn-outline-<?php echo $isLocked ? 'success' : 'secondary'; ?> btn-sm" title="<?php echo $isLocked ? 'Ξεκλείδωμα' : 'Κλείδωμα'; ?>"><i class="fa fa-<?php echo $isLocked ? 'unlock' : 'lock'; ?>"></i></a>
+                    <a href="index.php?action=previewMeze&amp;id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-dark btn-sm" title="Προεπισκόπηση"><i class="fa fa-search"></i></a>
+                    <a href="index.php?action=viewSubmissions&amp;id=<?php echo $mezeId; ?>" class="btn btn-info btn-sm" title="Απαντήσεις"><i class="fa fa-eye"></i></a>
+                    <a href="index.php?action=deleteMezedaki&amp;id=<?php echo $mezeId; ?>" class="btn btn-danger btn-sm" title="Διαγραφή" onclick="return confirm('Διαγραφή;')"><i class="fa fa-trash"></i></a>
+
+                    <a href="index.php?action=setMezeToday&id=<?php echo $mezeId; ?>&source=edit_page" class="btn btn-success btn-sm" title="Ορισμός ημερομηνίας εμφάνισης για Σήμερα (Προσοχή: Αποθηκεύεται κατευθείαν)"><i class="fa fa-calendar-check-o"></i> Σήμερα</a>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-users"></i> Deadlines
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 320px;">
+                            <?php foreach ($allGroups as $g):
+                                $hasDeadline = isset($groupDeadlines[$g['id']]);
+                                $deadlineDate = $hasDeadline ? date('d/m H:i', strtotime($groupDeadlines[$g['id']])) : '';
+                            ?>
+                                <li>
+                                    <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+                                        <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
+                                        <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
+                                        <input type="hidden" name="source" value="edit_page">
+                                        <span class="fw-bold me-auto text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
+                                        <?php if ($hasDeadline): ?>
+                                            <span class="badge bg-success me-2 shadow-sm"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
+                                        <?php endif; ?>
+                                        <button type="submit" class="btn btn-sm <?php echo $hasDeadline ? 'btn-danger' : 'btn-success'; ?>" title="Προσοχή: Η αλλαγή αποθηκεύεται κατευθείαν"><?php echo $hasDeadline ? 'Ακύρωση' : 'Set'; ?></button>
+                                    </form>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+
+                    <a href="index.php?action=listMezedakia" class="btn btn-secondary btn-sm shadow-sm ms-2">
+                        <i class="fa fa-arrow-left"></i> Λίστα
+                    </a>
+                </div>
             </div>
             <hr class="mt-0">
             <form action="index.php?action=updateMezedaki" method="post" enctype="multipart/form-data">
@@ -1080,7 +1225,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </div>
                     <div class="form-group col-md-4">
                         <label>Ημερομηνία Εμφάνισης</label>
-                        <input type="date" name="mezeDate" id="mezeDateEdit" class="form-control" value="<?php echo $row['mezeDate']; ?>" required onchange="autoSetDeadline('mezeDateEdit', 'solutionDateEdit')">
+                        <div class="input-group">
+                            <input type="date" name="mezeDate" id="mezeDateEdit" class="form-control" value="<?php echo $row['mezeDate']; ?>" required onchange="autoSetDeadline('mezeDateEdit', 'solutionDateEdit')">
+                            <button class="btn btn-success px-2" type="button" onclick="setToday('mezeDateEdit', 'solutionDateEdit')" title="Ορισμός ημερομηνίας εμφάνισης για Σήμερα"><i class="fa fa-calendar-check-o"></i></button>
+                        </div>
                     </div>
                     <div class="form-group col-md-4">
                         <label>Deadline Λύσης</label>
@@ -1241,7 +1389,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <?php if (!empty($row['mezeImage'])): ?>
                         <div class="mb-3 p-2 border rounded bg-light" style="max-width: 250px;">
                             <small class="text-muted">Τρέχουσα εικόνα:</small><br>
-                            <img src="../images/mezedakia/<?php echo $row['mezeImage']; ?>" width="150" class="img-thumbnail mb-2">
+                            <img src="../images/mezedakia/<?php echo $row['mezeImage']; ?>" width="150" class="img-thumbnail mb-2" alt="Εικόνα Εκφώνησης">
                             <div class="mt-1">
                                 <input type="checkbox" name="deleteMezeImage" value="1" id="delImgQ">
                                 <label for="delImgQ" class="text-danger font-weight-bold" style="cursor:pointer; margin-left: 5px;">
@@ -1267,7 +1415,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <?php if (!empty($row['mezeSolutionImage'])): ?>
                         <div class="mb-3 p-2 border rounded bg-light" style="max-width: 250px;">
                             <small class="text-muted">Τρέχουσα εικόνα λύσης:</small><br>
-                            <img src="../images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" width="150" class="img-thumbnail border-success mb-2">
+                            <img src="../images/mezedakia/<?php echo $row['mezeSolutionImage']; ?>" width="150" class="img-thumbnail border-success mb-2" alt="Εικόνα Λύσης">
                             <div class="mt-1">
                                 <input type="checkbox" name="deleteMezeSolutionImage" value="1" id="delImgA">
                                 <label for="delImgA" class="text-danger font-weight-bold" style="cursor:pointer; margin-left: 5px;">
@@ -1280,14 +1428,19 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <small class="form-text text-muted">Επιλέξτε αρχείο μόνο αν θέλετε να αλλάξετε την εικόνα λύσης.</small>
                 </div>
 
-                <div class="mt-4 row">
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-primary btn-block font-weight-bold shadow">
-                            <i class="fa fa-save"></i> Ενημέρωση Μεζεδακίου
+                <div class="mt-4 row gap-2 gap-md-0">
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary btn-block font-weight-bold shadow w-100">
+                            <i class="fa fa-save"></i> Ενημέρωση
                         </button>
                     </div>
-                    <div class="col-md-6">
-                        <a href="index.php?action=listMezedakia" class="btn btn-secondary btn-block shadow">
+                    <div class="col-md-4">
+                        <button type="submit" name="return_to_list" value="1" class="btn btn-success btn-block font-weight-bold shadow w-100">
+                            <i class="fa fa-list"></i> Ενημέρωση & Επιστροφή
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="index.php?action=listMezedakia" class="btn btn-secondary btn-block shadow w-100">
                             <i class="fa fa-times"></i> Ακύρωση
                         </a>
                     </div>
@@ -1515,10 +1668,27 @@ class MezeAdminFormMaker extends AdminFormMaker
                     }
                 }
             }
+
+            if (typeof setToday === 'undefined') {
+                window.setToday = function(dateInputId, deadlineInputId) {
+                    var d = new Date();
+                    var year = d.getFullYear();
+                    var month = ('0' + (d.getMonth() + 1)).slice(-2);
+                    var day = ('0' + d.getDate()).slice(-2);
+                    document.getElementById(dateInputId).value = year + '-' + month + '-' + day;
+                    autoSetDeadline(dateInputId, deadlineInputId);
+                }
+            }
         </script>
     <?php
     }
 
+    /**
+     * @param array $students
+     * @param int|string $mezeId
+     * @param int|string $displayNumber
+     * @param array $existingGrades
+     */
     public function showGradesForm($students, $mezeId, $displayNumber, $existingGrades = [])
     {
     ?>
@@ -1556,6 +1726,13 @@ class MezeAdminFormMaker extends AdminFormMaker
     <?php
     }
 
+    /**
+     * @param array $submissions
+     * @param array $students
+     * @param array $mezeData
+     * @param array|mysqli_result $allMezedakia
+     * @param array $existingGrades
+     */
     public function showSubmissionsForGrading($submissions, $students, $mezeData, $allMezedakia, $existingGrades = [])
     {
         $dbHandler = new AdminDbHandler(); // Για έλεγχο αδειών και μαζική βαθμολόγηση
@@ -1970,6 +2147,15 @@ class MezeAdminFormMaker extends AdminFormMaker
     <?php
     }
 
+    /**
+     * @param string $studentName
+     * @param int|string $mezeNumber
+     * @param float|string $grade
+     * @param string $comments
+     * @param float|string $average
+     * @param int|string $mezeId
+     * @param array|null $studentData
+     */
     public function showPrintableReport($studentName, $mezeNumber, $grade, $comments, $average, $mezeId, $studentData = null)
     {
         $email = $studentData['email'] ?? '';
@@ -2117,6 +2303,9 @@ class MezeAdminFormMaker extends AdminFormMaker
     <?php
     }
 
+    /**
+     * @param array $types
+     */
     public function manageExerciseTypesForm($types)
     {
     ?>
@@ -2130,7 +2319,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                 <?php foreach ($types as $t): ?>
                     <tr>
                         <td><?php echo $t['name']; ?></td>
-                        <td><a href="index.php?action=delete_exercise_type&id=<?php echo $t['id']; ?>" class="btn btn-danger btn-sm">Διαγραφή</a></td>
+                        <td><a href="index.php?action=delete_exercise_type&amp;id=<?php echo $t['id']; ?>" class="btn btn-danger btn-sm">Διαγραφή</a></td>
                     </tr>
                 <?php endforeach; ?>
             </table>
@@ -2138,6 +2327,10 @@ class MezeAdminFormMaker extends AdminFormMaker
     <?php
     }
 
+    /**
+     * @param array $requests
+     * @param array $students
+     */
     public function listExtensionRequests($requests, $students)
     {
     ?>
@@ -2177,6 +2370,10 @@ class MezeAdminFormMaker extends AdminFormMaker
     <?php
     }
 
+    /**
+     * @param mysqli_result|bool|array $result
+     * @param AdminDbHandler $dbHandler
+     */
     public function mezeBank($result, $dbHandler)
     {
         $allTypes = $dbHandler->getExerciseTypes();
@@ -2265,9 +2462,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <?php endif; ?>
                                 </div>
                                 <div class="card-footer bg-light border-0 d-flex justify-content-between">
-                                    <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-dark btn-sm flex-fill me-1" title="Προβολή"><i class="fa fa-eye"></i></a>
-                                    <a href="index.php?action=previewMeze&id=<?php echo $mezeId; ?>&autoprint=1" target="_blank" class="btn btn-outline-info btn-sm flex-fill mx-1" title="Εκτύπωση"><i class="fa fa-print"></i></a>
-                                    <a href="index.php?action=editMezedaki&id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-primary btn-sm flex-fill ms-1" title="Επεξεργασία"><i class="fa fa-edit"></i></a>
+                                    <a href="index.php?action=previewMeze&amp;id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-dark btn-sm flex-fill me-1" title="Προβολή"><i class="fa fa-eye"></i></a>
+                                    <a href="index.php?action=previewMeze&amp;id=<?php echo $mezeId; ?>&amp;autoprint=1" target="_blank" class="btn btn-outline-info btn-sm flex-fill mx-1" title="Εκτύπωση"><i class="fa fa-print"></i></a>
+                                    <a href="index.php?action=editMezedaki&amp;id=<?php echo $mezeId; ?>" target="_blank" class="btn btn-outline-primary btn-sm flex-fill ms-1" title="Επεξεργασία"><i class="fa fa-edit"></i></a>
                                 </div>
                             </div>
                         </div>
@@ -2304,6 +2501,9 @@ class MezeAdminFormMaker extends AdminFormMaker
 
     // --- ΠΙΝΑΚΑΣ ΑΝΑΚΟΙΝΩΣΕΩΝ ---
 
+    /**
+     * @param array $announcements
+     */
     public function listAnnouncements($announcements)
     {
     ?>
@@ -2338,15 +2538,15 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     </td>
                                     <td class="text-center">
                                         <?php if (!empty($ann['imagePath'])): ?>
-                                            <img src="../images/announcements/<?php echo $ann['imagePath']; ?>" height="50" class="rounded shadow-sm border">
+                                            <img src="../images/announcements/<?php echo $ann['imagePath']; ?>" height="50" class="rounded shadow-sm border" alt="Εικόνα Ανακοίνωσης">
                                         <?php else: ?>
                                             <span class="text-muted small">-</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <a href="index.php?action=notify_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-info btn-sm m-1 text-white shadow-sm" onclick="return confirm('Θα σταλεί email σε όλους τους ενεργούς μαθητές. Είστε σίγουροι;')"><i class="fa fa-envelope"></i> Email</a>
-                                        <a href="index.php?action=edit_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-warning btn-sm m-1 shadow-sm"><i class="fa fa-edit"></i></a>
-                                        <a href="index.php?action=delete_announcement&id=<?php echo $ann['id']; ?>" class="btn btn-danger btn-sm m-1 shadow-sm" onclick="return confirm('Οριστική διαγραφή ανακοίνωσης;')"><i class="fa fa-trash"></i></a>
+                                        <a href="index.php?action=notify_announcement&amp;id=<?php echo $ann['id']; ?>" class="btn btn-info btn-sm m-1 text-white shadow-sm" onclick="return confirm('Θα σταλεί email σε όλους τους ενεργούς μαθητές. Είστε σίγουροι;')"><i class="fa fa-envelope"></i> Email</a>
+                                        <a href="index.php?action=edit_announcement&amp;id=<?php echo $ann['id']; ?>" class="btn btn-warning btn-sm m-1 shadow-sm"><i class="fa fa-edit"></i></a>
+                                        <a href="index.php?action=delete_announcement&amp;id=<?php echo $ann['id']; ?>" class="btn btn-danger btn-sm m-1 shadow-sm" onclick="return confirm('Οριστική διαγραφή ανακοίνωσης;')"><i class="fa fa-trash"></i></a>
                                     </td>
                                 </tr>
                         <?php endforeach;
@@ -2388,7 +2588,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                     <label class="font-weight-bold text-info"><i class="fa fa-image"></i> Εικόνα / Αφίσα (Προαιρετικά)</label>
                     <?php if ($isEdit && !empty($image)): ?>
                         <div class="mb-3 p-2 border rounded bg-light" style="max-width: 250px;">
-                            <img src="../images/announcements/<?php echo $image; ?>" class="img-fluid mb-2 rounded shadow-sm border">
+                            <img src="../images/announcements/<?php echo $image; ?>" class="img-fluid mb-2 rounded shadow-sm border" alt="Τρέχουσα εικόνα">
                             <div class="mt-1">
                                 <input type="checkbox" name="deleteImage" value="1" id="delAnnImg">
                                 <label for="delAnnImg" class="text-danger font-weight-bold" style="cursor:pointer; margin-left: 5px;">Διαγραφή υπάρχουσας εικόνας</label>

@@ -851,67 +851,105 @@ class DbHandler
     public function isSubmissionAllowed($studentId, $mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
-        $nowStr = (new DateTime())->format('Y-m-d H:i:s');
 
-        $sql = "SELECT m.mezeId FROM aepp_mezedakia m 
-                LEFT JOIN aepp_meze_extensions e ON m.mezeId = e.meze_id AND (e.student_id = ? OR e.student_id = 0)
-                WHERE m.mezeId = ? AND m.isLocked = 0 
-                AND (m.solutionDate > ? OR (e.expires_at IS NOT NULL AND e.expires_at > ?))";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
+        // 1. Check if mezedaki is locked globally
+        $stmtLock = $conn->prepare("SELECT isLocked FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmtLock->bind_param("i", $mezeId);
+        $stmtLock->execute();
+        $lockRes = $stmtLock->get_result()->fetch_assoc();
+        $stmtLock->close();
+        if ($lockRes && $lockRes['isLocked'] == 1) {
             $conn->close();
             return false;
         }
-        $stmt->bind_param("iiss", $studentId, $mezeId, $nowStr, $nowStr);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $allowed = ($result->num_rows > 0);
-        $stmt->close();
+
+        // 2. Get student's group
+        $stmtGroup = $conn->prepare("SELECT group_id FROM aepp_student_groups WHERE student_id = ?");
+        $stmtGroup->bind_param("i", $studentId);
+        $stmtGroup->execute();
+        $groupRes = $stmtGroup->get_result()->fetch_assoc();
+        $stmtGroup->close();
+
+        if ($groupRes) {
+            $groupId = $groupRes['group_id'];
+            // 3. Check for a specific group deadline
+            $stmtDeadline = $conn->prepare("SELECT deadline_at FROM aepp_meze_group_deadlines WHERE meze_id = ? AND group_id = ?");
+            $stmtDeadline->bind_param("ii", $mezeId, $groupId);
+            $stmtDeadline->execute();
+            $deadlineRes = $stmtDeadline->get_result()->fetch_assoc();
+            $stmtDeadline->close();
+
+            if ($deadlineRes && strtotime($deadlineRes['deadline_at']) > time()) {
+                $conn->close();
+                return true; // Deadline exists for this group and has not passed
+            }
+        }
+
+        // Fallback: Check for individual or global extensions (for backward compatibility)
+        $extensionInfo = $this->getExtensionInfo($studentId, $mezeId, $userYear);
+        if ($extensionInfo && !empty($extensionInfo['expires_at'])) {
+            $conn->close();
+            return strtotime($extensionInfo['expires_at']) > time();
+        }
+
         $conn->close();
-        return $allowed;
+        return false;
     }
 
     public function canShowMezeSolution($mezeId, $userYear)
     {
         $conn = $this->connectToFamilyDB();
 
-        // Get the solution deadline
-        $sql = "SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?";
-        $stmt = $conn->prepare($sql);
+        // 1. Get all group deadlines for this meze
+        $stmt = $conn->prepare("SELECT deadline_at FROM aepp_meze_group_deadlines WHERE meze_id = ?");
         $stmt->bind_param("i", $mezeId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $mezeData = $result->fetch_assoc();
+        $res = $stmt->get_result();
+
+        $deadlines = [];
+        while ($row = $res->fetch_assoc()) {
+            $deadlines[] = $row['deadline_at'];
+        }
         $stmt->close();
 
-        if (!$mezeData || empty($mezeData['solutionDate'])) {
+        if (empty($deadlines)) {
+            // No group deadlines set. Fallback to old logic.
+            $sql = "SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?";
+            $stmtOld = $conn->prepare($sql);
+            $stmtOld->bind_param("i", $mezeId);
+            $stmtOld->execute();
+            $mezeData = $stmtOld->get_result()->fetch_assoc();
+            $stmtOld->close();
+
+            if (!$mezeData || empty($mezeData['solutionDate']) || strtotime($mezeData['solutionDate']) > time()) {
+                $conn->close();
+                return false;
+            }
+
+            // Check for active extensions (old system)
+            $extSql = "SELECT COUNT(*) as extCount FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())";
+            $extStmt = $conn->prepare($extSql);
+            $extStmt->bind_param("i", $mezeId);
+            $extStmt->execute();
+            $extRow = $extStmt->get_result()->fetch_assoc();
+            $hasActiveExtensions = ($extRow['extCount'] > 0);
+            $extStmt->close();
             $conn->close();
-            return false;
+            return !$hasActiveExtensions;
         }
 
-        $now = new DateTime();
-        $solDate = new DateTime($mezeData['solutionDate']);
-        if ($now <= $solDate) {
-            $conn->close();
-            return false;
+        // New logic: Find the latest deadline among all groups
+        $latestTimestamp = 0;
+        foreach ($deadlines as $d) {
+            $ts = strtotime($d);
+            if ($ts > $latestTimestamp) {
+                $latestTimestamp = $ts;
+            }
         }
-
-        // Έλεγχος αν υπάρχουν ΕΝΕΡΓΕΣ παρατάσεις
-        // Χρησιμοποιούμε την τρέχουσα ώρα από την PHP για να αποφύγουμε προβλήματα Timezone της MySQL
-        $currentDateStr = $now->format('Y-m-d H:i:s');
-
-        $extensionSql = "SELECT COUNT(*) as extCount FROM aepp_meze_extensions 
-                         WHERE meze_id = ? AND user_year = ? 
-                         AND (expires_at IS NULL OR expires_at > ?)";
-        $extStmt = $conn->prepare($extensionSql);
-        $extStmt->bind_param("iss", $mezeId, $userYear, $currentDateStr);
-        $extStmt->execute();
-        $extRow = $extStmt->get_result()->fetch_assoc();
-        $hasActiveExtensions = ($extRow['extCount'] > 0);
-        $extStmt->close();
 
         $conn->close();
-        return !$hasActiveExtensions;
+        // Show solution only if the current time is past the latest deadline of all assigned groups
+        return time() > $latestTimestamp;
     }
 
     public function getStudentGradesForStudent($studentId, $userYear)

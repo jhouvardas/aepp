@@ -52,7 +52,7 @@ class AdminPageMaker extends PageMaker
             $pendingRequestsCount = $dbHandler->getPendingExtensionRequestsCount($userYear);
         }
         ?>
-            <nav class="navbar navbar-dark bg-danger shadow mb-4">
+            <nav class="navbar navbar-dark bg-dark shadow mb-4">
                 <a class="navbar-brand font-weight-bold" href="index.php">ADMIN PANEL</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
@@ -62,30 +62,31 @@ class AdminPageMaker extends PageMaker
                 <div class="collapse navbar-collapse" id="adminNavbar">
                     <ul class="navbar-nav">
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-success font-weight-bold" href="#" id="studentsDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-users"></i> Μαθητές
+                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="studentsDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-users text-success"></i> Μαθητές
                             </a>
                             <div class="dropdown-menu shadow border-success">
                                 <a class="dropdown-item text-success fw-bold" href="index.php?action=viewStudentProfile"><i class="fa fa-address-card"></i> Καρτέλες Μαθητών</a>
                                 <a class="dropdown-item" href="index.php?action=manage_groups"><i class="fa fa-sitemap"></i> Διαχείριση Ομάδων</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-primary fw-bold" href="#" onclick="copyRegLink(this, event)"><i class="fa fa-link"></i> Link Εγγραφής (Αντιγραφή)</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a>
                             </div>
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-info font-weight-bold" href="#" id="tasksDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-tasks"></i> Εργασίες
+                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="tasksDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-tasks text-info"></i> Εργασίες
                             </a>
                             <div class="dropdown-menu shadow border-info">
                                 <a class="dropdown-item" href="index.php?action=assign_tasks"><i class="fa fa-plus"></i> Ανάθεση Εργασιών</a>
                                 <a class="dropdown-item" href="index.php?action=list_all_tasks"><i class="fa fa-history"></i> Ιστορικό Εργασιών</a>
                             </div>
                         </li>
-
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="theoryDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-book"></i> Θεωρία & Τεστ
+                                <i class="fa fa-book text-light"></i> Θεωρία & Τεστ
                             </a>
                             <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="index.php?action=add_theory"><i class="fa fa-plus-circle"></i> Νέα Ερώτηση</a>
@@ -96,14 +97,14 @@ class AdminPageMaker extends PageMaker
                             </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-primary font-weight-bold" href="index.php?action=manage_announcements">
-                                <i class="fa fa-bullhorn"></i> Ανακοινώσεις
+                            <a class="nav-link font-weight-bold" href="index.php?action=manage_announcements">
+                                <i class="fa fa-bullhorn text-primary"></i> Ανακοινώσεις
                             </a>
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-warning" href="#" id="mezedakiaDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-coffee"></i> Μεζεδάκια
+                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="mezedakiaDrop" data-bs-toggle="dropdown">
+                                <i class="fa fa-coffee text-warning"></i> Μεζεδάκια
                             </a>
                             <div class="dropdown-menu shadow border-danger">
                                 <a class="dropdown-item" href="index.php?action=addMezedaki">
@@ -133,7 +134,7 @@ class AdminPageMaker extends PageMaker
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-bs-toggle="dropdown">
-                                Πανελλήνιες
+                                <i class="fa fa-graduation-cap text-light"></i> Πανελλήνιες
                             </a>
                             <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="index.php?action=addKena">Αλγόριθμοι για συμπλήρωση κενών</a>
@@ -148,6 +149,11 @@ class AdminPageMaker extends PageMaker
                                 <i class="fa fa-external-link"></i> Site Μαθητών
                             </a>
                         </li>
+                        <li class="nav-item ms-md-2 mt-2 mt-md-0">
+                            <a class="nav-link text-white border border-danger bg-danger rounded px-2" href="index.php?action=logout">
+                                <i class="fa fa-sign-out"></i> Έξοδος
+                            </a>
+                        </li>
                     </ul>
 
                     <hr class="border-secondary">
@@ -158,8 +164,8 @@ class AdminPageMaker extends PageMaker
                                 <span class="input-group-text bg-dark text-white border-0"><i class="fa fa-calendar"></i> Σχολ. Έτος:</span>
                             </div>
                             <input type="number" name="exam_year" class="form-control border-0 text-center fw-bold"
-                                placeholder="π.χ. <?php echo date('Y') + 1; ?>"
-                                value="<?php echo isset($_SESSION['exam_year']) ? $_SESSION['exam_year'] : (isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : (date('Y') + 1)); ?>"
+                                placeholder="π.χ. <?php echo (date('m') >= 8 ? date('Y') + 1 : date('Y')); ?>"
+                                value="<?php echo htmlspecialchars($userYear); ?>"
                                 style="width: 100px;"
                                 autocomplete="off">
                             <div>
@@ -169,7 +175,83 @@ class AdminPageMaker extends PageMaker
                     </form>
                 </div>
             </nav>
+            <script>
+                // Αντιγραφή του link εγγραφής (Διαθέσιμο σε όλο το Admin Panel)
+                function copyRegLink(btn, event) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation(); // Κρατάει το dropdown ανοιχτό για να δεις το μήνυμα "Αντιγράφηκε!"
+                    }
+                    var link = 'http://jhouv.eu/aepp/index.php?action=register';
+                    var fallbackFn = function() {
+                        var textArea = document.createElement("textarea");
+                        textArea.value = link;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                        } catch (err) {}
+                        document.body.removeChild(textArea);
+                    };
+                    var successFn = function() {
+                        var originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa fa-check text-success"></i> <span class="text-success">Αντιγράφηκε!</span>';
+                        setTimeout(function() {
+                            btn.innerHTML = originalHtml;
+                        }, 2000);
+                    };
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(link).then(successFn).catch(fallbackFn);
+                    } else {
+                        fallbackFn();
+                        successFn();
+                    }
+                }
+            </script>
         <?php
+    }
+
+    public function displayLoginForm($error = '')
+    {
+        $this->displayHeadMatter();
+        ?>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <div class="card shadow-lg border-0 rounded-lg mt-5">
+                            <div class="card-header bg-dark text-white text-center py-4">
+                                <h3 class="font-weight-light my-2"><i class="fa fa-lock text-warning"></i> Admin Panel</h3>
+                            </div>
+                            <div class="card-body p-4">
+                                <?php if (!empty($error)): ?>
+                                    <div class="alert alert-danger shadow-sm"><i class="fa fa-exclamation-triangle"></i> <?php echo $error; ?></div>
+                                <?php endif; ?>
+                                <form action="index.php?action=process_login" method="POST">
+                                    <div class="form-group mb-3">
+                                        <label class="fw-bold mb-1">Όνομα Χρήστη</label>
+                                        <input class="form-control py-2" name="username" type="text" placeholder="Username" required autofocus />
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label class="fw-bold mb-1">Κωδικός</label>
+                                        <input class="form-control py-2" name="password" type="password" placeholder="Password" required />
+                                    </div>
+                                    <div class="form-check mb-4 text-start">
+                                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" value="1">
+                                        <label class="form-check-label user-select-none" for="rememberMe" style="cursor: pointer;">
+                                            Να με θυμάσαι σε αυτόν τον υπολογιστή
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-primary w-100 py-2 fw-bold shadow-sm" type="submit"><i class="fa fa-sign-in"></i> Σύνδεση</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+
+        </html>
+    <?php
     }
 
     /**
@@ -192,37 +274,52 @@ class AdminPageMaker extends PageMaker
                 $bgClass = "bg-danger";
                 $icon = "fa-times-circle";
                 break;
+            case 'meze_set_today':
+                $message = "Ενημερώθηκε! Εμφανίζεται από σήμερα και λήγει αύριο στις 03:00.";
+                $bgClass = "bg-success";
+                $icon = "fa-check-circle";
+                break;
+            case 'update_success':
+                $message = "Το μεζεδάκι ενημερώθηκε επιτυχώς!";
+                $bgClass = "bg-success";
+                $icon = "fa-save";
+                break;
+            case 'group_deadline_toggled':
+                $message = "Η προθεσμία της ομάδας ενημερώθηκε!";
+                $bgClass = "bg-info";
+                $icon = "fa-users";
+                break;
         }
 
         if (empty($message)) return;
-        ?>
-            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-                <div id="liveToast" class="toast align-items-center text-white <?php echo $bgClass; ?> border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <i class="fa <?php echo $icon; ?> me-2"></i> <?php echo $message; ?>
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    ?>
+        <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+            <div id="liveToast" class="toast align-items-center text-white <?php echo $bgClass; ?> border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fa <?php echo $icon; ?> me-2"></i> <?php echo $message; ?>
                     </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
             </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var toastEl = document.getElementById('liveToast');
-                    if (toastEl) {
-                        var toast = new bootstrap.Toast(toastEl, {
-                            delay: 5000
-                        });
-                        toast.show();
-                        // Καθαρισμός του URL από το status χωρίς reload
-                        if (window.history.replaceState) {
-                            var url = new URL(window.location.href);
-                            url.searchParams.delete('status');
-                            window.history.replaceState({}, document.title, url.toString());
-                        }
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var toastEl = document.getElementById('liveToast');
+                if (toastEl) {
+                    var toast = new bootstrap.Toast(toastEl, {
+                        delay: 5000
+                    });
+                    toast.show();
+                    // Καθαρισμός του URL από το status χωρίς reload
+                    if (window.history.replaceState) {
+                        var url = new URL(window.location.href);
+                        url.searchParams.delete('status');
+                        window.history.replaceState({}, document.title, url.toString());
                     }
-                });
-            </script>
-    <?php
+                }
+            });
+        </script>
+<?php
     }
 }

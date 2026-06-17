@@ -25,11 +25,67 @@
 
     $userYear = $db->getCurrentTutorYear();
 
+    // --- ΑΥΤΟΜΑΤΗ ΑΡΧΙΚΟΠΟΙΗΣΗ ΣΧΟΛΙΚΗΣ ΧΡΟΝΙΑΣ ---
+    // Αν δεν υπάρχει στο Session, την αποθηκεύουμε αμέσως για να μη χρειάζεται πληκτρολόγηση
+    if (!isset($_SESSION['exam_year']) || empty($_SESSION['exam_year'])) {
+        $_SESSION['exam_year'] = $userYear;
+        $_SESSION['tutor_user'] = $userYear;
+    }
+
     // Sanitization της παραμέτρου action
     $action = isset($_GET['action']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_GET['action']) : 'dashboard';
 
+    // --- ΕΛΕΓΧΟΣ LOGIN ---
+    $login_error = '';
+    if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+        // Έλεγχος αν υπάρχει το "Remember me" cookie
+        if (isset($_COOKIE['admin_remember'])) {
+            $cookie_parts = explode('::', base64_decode($_COOKIE['admin_remember']));
+            if (count($cookie_parts) === 2) {
+                try {
+                    if ($db->login($cookie_parts[0], $cookie_parts[1])) {
+                        $_SESSION['admin_logged_in'] = true;
+                        header("Location: index.php");
+                        exit();
+                    }
+                } catch (Exception $e) {
+                    // Αν το cookie δεν είναι έγκυρο (πχ άλλαξε ο κωδικός), το διαγράφουμε
+                    setcookie('admin_remember', '', time() - 3600, "/");
+                }
+            }
+        }
+
+        if ($action === 'process_login' && isset($_POST['username']) && isset($_POST['password'])) {
+            try {
+                if ($db->login($_POST['username'], $_POST['password'])) {
+                    $_SESSION['admin_logged_in'] = true;
+
+                    // Δημιουργία Cookie αν τσεκαρίστηκε το "Να με θυμάσαι" (Διάρκεια: 30 ημέρες)
+                    if (isset($_POST['remember']) && $_POST['remember'] == '1') {
+                        $cookie_val = base64_encode($_POST['username'] . '::' . $_POST['password']);
+                        setcookie('admin_remember', $cookie_val, time() + (86400 * 30), "/");
+                    }
+
+                    header("Location: index.php");
+                    exit();
+                }
+            } catch (Exception $e) {
+                $login_error = "Λάθος όνομα χρήστη ή κωδικός.";
+            }
+        }
+        $action = 'login';
+    }
+
+    if ($action === 'logout') {
+        unset($_SESSION['admin_logged_in']);
+        // Διαγραφή του "Remember me" cookie κατά την αποσύνδεση
+        setcookie('admin_remember', '', time() - 3600, "/");
+        header("Location: index.php");
+        exit();
+    }
+
     // Λίστα ενεργειών που δεν πρέπει να εκτυπώνουν το κοινό μενού/header (π.χ. εξαγωγή αρχείων)
-    $noLayoutActions = ['export_word_exam', 'previewMeze'];
+    $noLayoutActions = ['export_word_exam', 'previewMeze', 'login', 'process_login'];
 
     if (!in_array($action, $noLayoutActions)) {
         $page->displayHeadMatter(); // Καλείται πρώτα το head
@@ -59,6 +115,10 @@
     }
 
     switch ($action) {
+        case 'login':
+            $page->displayLoginForm($login_error);
+            break;
+
         case 'save_theory':
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $success = $db->insertTheoryItem(
@@ -276,7 +336,12 @@
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $success = $db->insertMezedaki($_POST, $_FILES);
                 if ($success) {
-                    echo "<div class='container mt-2'><div class='alert alert-success shadow'>Το Μεζεδάκι #" . $_POST['mezeNumber'] . " αποθηκεύτηκε επιτυχώς!</div></div>";
+                    if (isset($_POST['return_to_list']) && $_POST['return_to_list'] == '1') {
+                        echo "<script>window.location.href='index.php?action=listMezedakia&status=update_success';</script>";
+                        exit();
+                    } else {
+                        echo "<div class='container mt-2'><div class='alert alert-success shadow'>Το Μεζεδάκι #" . $_POST['mezeNumber'] . " αποθηκεύτηκε επιτυχώς!</div></div>";
+                    }
                 }
             }
             $nextNum = $db->getNextMezeNumber();
@@ -342,8 +407,13 @@
                 $success = $db->updateMezedaki($_POST, $_FILES);
 
                 if ($success) {
-                    // Χρήση JavaScript αντί για header για να αποφύγουμε το Warning
-                    echo "<script>window.location.href='index.php?action=listMezedakia';</script>";
+                    if (isset($_POST['return_to_list']) && $_POST['return_to_list'] == '1') {
+                        // Επιστροφή στη λίστα
+                        echo "<script>window.location.href='index.php?action=listMezedakia&status=update_success';</script>";
+                    } else {
+                        // Επιστροφή στη φόρμα επεξεργασίας
+                        echo "<script>window.location.href='index.php?action=editMezedaki&id=" . (int)$_POST['mezeId'] . "&status=update_success';</script>";
+                    }
                     exit();
                 }
                 // Αν αποτύχει, θα βγει από το switch και θα συνεχίσει η ροή της σελίδας
@@ -818,6 +888,36 @@
                 exit();
             }
             break;
+
+        case 'setMezeToday':
+            if (isset($_GET['id'])) {
+                $db->setMezeDateToday($_GET['id']);
+                $mezeId = (int)$_GET['id'];
+                if (isset($_GET['source']) && $_GET['source'] === 'edit_page') {
+                    echo "<script>window.location.href='index.php?action=editMezedaki&id=$mezeId&status=meze_set_today';</script>";
+                } else {
+                    echo "<script>window.location.href='index.php?action=listMezedakia&status=meze_set_today';</script>";
+                }
+            }
+            exit();
+            break;
+
+        case 'toggleGroupDeadline':
+            if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['meze_id']) && isset($_POST['group_id'])) {
+                $db->toggleGroupDeadline($_POST['meze_id'], $_POST['group_id']);
+                $mezeId = (int)$_POST['meze_id'];
+                if (isset($_POST['source']) && $_POST['source'] === 'edit_page') {
+                    echo "<script>window.location.href='index.php?action=editMezedaki&id=$mezeId&status=group_deadline_toggled';</script>";
+                } else {
+                    echo "<script>window.location.href='index.php?action=listMezedakia';</script>";
+                }
+            }
+            exit();
+            break;
+
+
+
+
 
         case 'view_extension_requests':
             $requests = $db->getPendingExtensionRequests($userYear);
