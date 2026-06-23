@@ -85,7 +85,6 @@ class PageMaker
                             </a>
                             <div class="dropdown-menu shadow">
                                 <a class="dropdown-item" href="instructions.php">Οδηγίες</a>
-                                <a class="dropdown-item" href="epanalipsi.php">Ασκήσεις Επανάληψης</a>
                                 <a class="dropdown-item" href="askisi2025.php">Η τελευταία μας άσκηση</a>
                             </div>
                         </li>
@@ -94,33 +93,10 @@ class PageMaker
                             <a class="nav-link" href="index.php#diagrammata">Διαγράμματα</a>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropPanell" data-bs-toggle="dropdown">
-                                Πανελλήνιες
-                            </a>
-                            <div class="dropdown-menu shadow">
-                                <a class="dropdown-item" href="kena.php">Αλγόριθμοι (Κενά Α-Β)</a>
-                                <a class="dropdown-item" href="c.php">Γ θέματα (2008-2022)</a>
-                                <a class="dropdown-item" href="a_a.php">Σωστό - Λάθός</a>
-                                <a class="dropdown-item" href="a_anaptyxis.php">Ερωτήσεις ανάπτυξης</a>
-                                <a class="dropdown-item" href="index.php?action=listKenaDynamic">Συμπλήρωση κενών 2</a>
-                                <a class="dropdown-item" href="index.php?action=showThemaGDForm">Θέματα Γ & Δ</a>
-                            </div>
-                        </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="index.php#theoria">Θεωρία</a>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardropExercises" data-bs-toggle="dropdown">
-                                Ασκήσεις
-                            </a>
-                            <div class="dropdown-menu shadow">
-                                <a class="dropdown-item" href="askisisKopsinis1.php">Κοψίνης Τεύχος 1</a>
-                                <a class="dropdown-item" href="askisisKopsinis2.php">Κοψίνης Τεύχος 2</a>
-                            </div>
-                        </li>
 
                         <li class="nav-item">
                             <a class="nav-link" href="books.php">Ύλη - Βιβλία</a>
@@ -240,12 +216,12 @@ class PageMaker
                 function toggleMask(inputId, iconId) {
                     var input = document.getElementById(inputId);
                     var icon = document.getElementById(iconId);
-                    if (input.classList.contains('mask-input')) {
-                        input.classList.remove('mask-input');
+                    if (input.type === 'password') {
+                        input.type = 'text';
                         icon.classList.remove('fa-eye');
                         icon.classList.add('fa-eye-slash');
                     } else {
-                        input.classList.add('mask-input');
+                        input.type = 'password';
                         icon.classList.remove('fa-eye-slash');
                         icon.classList.add('fa-eye');
                     }
@@ -263,7 +239,15 @@ class PageMaker
                                 var blanks = card.querySelectorAll('.aepp-interactive-blank');
                                 if (blanks.length > 0) {
                                     var groupedAnswers = {};
+                                    // Για radio buttons (πολλαπλής επιλογής) κρατάμε μόνο την επιλεγμένη
+                                    var radioSeen = {};
                                     blanks.forEach(function(input) {
+                                        if (input.type === 'radio') {
+                                            var rKey = (input.getAttribute('data-ex') || '1') + '_' + (input.getAttribute('data-blank') || '*');
+                                            if (!input.checked) return;
+                                            if (radioSeen[rKey]) return;
+                                            radioSeen[rKey] = true;
+                                        }
                                         var ex = input.getAttribute('data-ex') || '1';
                                         var num = input.getAttribute('data-blank') || '*';
                                         var val = input.value.trim();
@@ -530,22 +514,17 @@ class PageMaker
         }
     }
 
-    public function displayMezedakiaList($result)
+    public function displayMezedakiaList($result, $studentId = null)
     {
         if ($result && $result->num_rows > 0) {
             $db = new DbHandler();
             $fm = new FormMaker();
 
             $userYear = $db->getCurrentTutorYear();
-            $studentsArray = $db->getTutorStudents($userYear);
-
-            if (!$studentsArray) {
-                $studentsArray = [];
-            }
 
             echo '<div class="accordion" id="mezedakiaAccordion">';
-            $isFirst = true; // Flag για να ανοίξουμε μόνο το πρώτο
-            $mezeCount = 0; // Μετρητής για τα μεζεδάκια
+            $isFirst = true;
+            $mezeCount = 0;
 
             while ($row = $result->fetch_assoc()) {
                 $mezeCount++;
@@ -555,21 +534,19 @@ class PageMaker
                 $solDate = new DateTime($row['solutionDate']);
                 $isPastDeadline = ($now > $solDate);
 
-                // 1. Έλεγχος για το ποιοι μαθητές έχουν παράταση
-                $allowedStudents = [];
-                $allowedNames = [];
+                $canSubmit    = false;
+                $hasExtension = false;
 
-                if ($isPastDeadline) {
-                    foreach ($studentsArray as $st) {
-                        if ($db->isSubmissionAllowed($st['studentId'], $mId, $userYear)) {
-                            $allowedStudents[] = $st;
-                        }
+                if ($studentId) {
+                    if (!$isPastDeadline) {
+                        $canSubmit = true;
+                    } else {
+                        $hasExtension = (bool)$db->isSubmissionAllowed($studentId, $mId, $userYear);
+                        $canSubmit    = $hasExtension;
                     }
-                } else {
-                    $allowedStudents = $studentsArray;
                 }
 
-                $showButton = (!$isPastDeadline || !empty($allowedStudents));
+                $showButton = $canSubmit;
 
                 // Χρωματική σήμανση για το deadline
                 $deadlineClass = $isPastDeadline ? 'bg-danger' : 'bg-success';
@@ -647,19 +624,19 @@ class PageMaker
                                         </button>
 
                                         <div class="collapse mt-3 text-left" id="formMeze<?php echo $mId; ?>">
-                                            <?php if ($isPastDeadline && !empty($allowedStudents)): ?>
-                                                <div class="alert alert-danger py-2 mb-3 small shadow-sm border-danger">
-                                                    <i class="fa fa-unlock-alt fa-lg mr-2"></i>
-                                                    <strong>Ειδική Παράταση:</strong> Η υποβολή είναι ανοιχτή μόνο για όσους έχουν λάβει παράταση.
+                                            <?php if ($hasExtension): ?>
+                                                <div class="alert alert-warning py-2 mb-3 small shadow-sm">
+                                                    <i class="fa fa-unlock-alt fa-lg me-2"></i>
+                                                    <strong>Ειδική Παράταση:</strong> Υποβάλλεις εκπρόθεσμα με παράταση.
                                                 </div>
                                             <?php endif; ?>
 
-                                            <?php $fm->studentSubmissionForm($allowedStudents, $mId); ?>
+                                            <?php $fm->studentSubmissionForm($studentId, $mId); ?>
                                         </div>
                                     </div>
                                 <?php else: ?>
                                     <div class="alert alert-secondary py-2 small text-center">
-                                        <i class="fa fa-lock mr-1"></i> Η προθεσμία υποβολής έληξε.
+                                        <i class="fa fa-lock me-1"></i> Η προθεσμία υποβολής έληξε.
                                     </div>
                                 <?php endif; ?>
 

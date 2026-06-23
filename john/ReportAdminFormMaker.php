@@ -347,7 +347,10 @@ class ReportAdminFormMaker extends AdminFormMaker
                                 <td class="align-middle">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <strong id="group-name-<?php echo $g['id']; ?>"><?php echo htmlspecialchars($g['group_name']); ?></strong>
-                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="showRenameForm(<?php echo $g['id']; ?>)" title="Μετονομασία"><i class="fa fa-edit"></i></button>
+                                        <div>
+                                            <a href="index.php?action=print_group&group_id=<?php echo $g['id']; ?>" class="btn btn-sm btn-outline-primary" title="Προβολή / Εκτύπωση Μαθητών"><i class="fa fa-print"></i></a>
+                                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="showRenameForm(<?php echo $g['id']; ?>)" title="Μετονομασία"><i class="fa fa-edit"></i></button>
+                                        </div>
                                     </div>
                                     <form action="index.php?action=rename_group" method="POST" id="rename-form-<?php echo $g['id']; ?>" class="d-none mt-2">
                                         <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
@@ -483,9 +486,55 @@ class ReportAdminFormMaker extends AdminFormMaker
             </form>
         </div>
         <script>
+            class Base64UploadAdapterGroupEmail {
+                constructor(loader) {
+                    this.loader = loader;
+                }
+                upload() {
+                    return this.loader.file.then(file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                const MAX_WIDTH = 800; // Μέγιστο πλάτος για βέλτιστη εμφάνιση
+                                let width = img.width;
+                                let height = img.height;
+                                if (width > MAX_WIDTH) {
+                                    height = Math.round((height * MAX_WIDTH) / width);
+                                    width = MAX_WIDTH;
+                                }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillRect(0, 0, width, height);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                resolve({
+                                    default: canvas.toDataURL('image/jpeg', 0.85)
+                                });
+                            };
+                            img.onerror = () => resolve({
+                                default: e.target.result
+                            });
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    }));
+                }
+                abort() {}
+            }
+
+            function Base64UploadAdapterPluginGroupEmail(editor) {
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new Base64UploadAdapterGroupEmail(loader);
+            }
+
             document.addEventListener("DOMContentLoaded", function() {
                 if (typeof ClassicEditor !== 'undefined') {
-                    ClassicEditor.create(document.querySelector('#groupEmailContent')).catch(error => console.error(error));
+                    ClassicEditor.create(document.querySelector('#groupEmailContent'), {
+                        extraPlugins: [Base64UploadAdapterPluginGroupEmail]
+                    }).catch(error => console.error(error));
                 }
             });
 
@@ -549,8 +598,10 @@ class ReportAdminFormMaker extends AdminFormMaker
 
     public function showGroupEmailResults($groupName, $subject, $successful, $failed)
     {
-        $successCount = is_array($successful) ? count($successful) : 0;
-        $failCount = is_array($failed) ? count($failed) : 0;
+        $successful = is_array($successful) ? $successful : [];
+        $failed = is_array($failed) ? $failed : [];
+        $successCount = count($successful);
+        $failCount = count($failed);
     ?>
         <div class="container mt-4 mb-5">
             <div class="card shadow-sm border-0">
@@ -580,8 +631,8 @@ class ReportAdminFormMaker extends AdminFormMaker
                                 <?php else: ?>
                                     <?php foreach ($successful as $s): ?>
                                         <div class="list-group-item list-group-item-light small py-2">
-                                            <strong><?php echo htmlspecialchars($s['name']); ?></strong><br>
-                                            <span class="text-muted"><?php echo htmlspecialchars($s['email']); ?></span>
+                                            <strong><?php echo htmlspecialchars($s['name'] ?? 'Άγνωστο Όνομα'); ?></strong><br>
+                                            <span class="text-muted"><?php echo htmlspecialchars($s['email'] ?? '-'); ?></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -598,7 +649,7 @@ class ReportAdminFormMaker extends AdminFormMaker
                                     <?php foreach ($failed as $f): ?>
                                         <div class="list-group-item list-group-item-light small py-2">
                                             <strong><?php echo htmlspecialchars($f['name'] ?? 'Άγνωστο Όνομα'); ?></strong> (<?php echo htmlspecialchars($f['email'] ?? '-'); ?>)<br>
-                                            <span class="text-danger" style="font-size: 0.8rem;"><em><?php echo htmlspecialchars($f['error'] ?? 'Άγνωστο Σφάλμα / Πιθανή Καθυστέρηση του Διακομιστή (Το email ίσως εστάλη)'); ?></em></span>
+                                            <span class="text-danger" style="font-size: 0.8rem;"><em><?php echo htmlspecialchars(!empty($f['error']) ? $f['error'] : 'Άγνωστο Σφάλμα / Πιθανή Καθυστέρηση του Διακομιστή (Το email ίσως εστάλη)'); ?></em></span>
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -608,6 +659,95 @@ class ReportAdminFormMaker extends AdminFormMaker
                 </div>
             </div>
         </div>
+    <?php
+    }
+
+    public function printGroupStudents($group, $students)
+    {
+    ?>
+        <div class="container mt-4 bg-white p-4 shadow-sm border rounded">
+            <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+                <h3 class="mb-0 text-primary"><i class="fa fa-users"></i> Μαθητές: <?php echo htmlspecialchars($group['group_name']); ?></h3>
+                <div>
+                    <button onclick="window.print();" class="btn btn-success shadow-sm me-2"><i class="fa fa-print"></i> Εκτύπωση</button>
+                    <a href="index.php?action=manage_groups" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Επιστροφή</a>
+                </div>
+            </div>
+
+            <!-- Printable Header (Αυτό εμφανίζεται μόνο στην εκτύπωση) -->
+            <div class="d-none d-print-block text-center mb-4">
+                <h3 style="border-bottom: 2px solid #000; padding-bottom: 10px;">Ομάδα: <?php echo htmlspecialchars($group['group_name']); ?></h3>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Ονοματεπώνυμο</th>
+                            <th>Email</th>
+                            <th>Τηλέφωνο</th>
+                            <th>Σχολείο</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($students)): ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Δεν υπάρχουν μαθητές σε αυτή την ομάδα.</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php $i = 1;
+                            foreach ($students as $student): ?>
+                                <tr>
+                                    <td><?php echo $i++; ?></td>
+                                    <td class="fw-bold"><?php echo htmlspecialchars($student['lastName'] . ' ' . $student['name']); ?></td>
+                                    <td><?php echo htmlspecialchars($student['email'] ?? '-'); ?></td>
+                                    <td><?php echo htmlspecialchars($student['phone'] ?? '-'); ?></td>
+                                    <td><?php echo htmlspecialchars($student['school'] ?? '-'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php
+    }
+
+    public function massSmsForm($groups)
+    {
+    ?>
+        <div class="container mt-4 border p-4 bg-light shadow mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 text-primary"><i class="fa fa-mobile-phone"></i> Μαζική Αποστολή SMS</h3>
+            </div>
+            <form action="index.php?action=send_mass_sms" method="post" onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να στείλετε SMS σε αυτούς τους μαθητές;');">
+                <div class="form-group mb-3">
+                    <label class="fw-bold">Παραλήπτες</label>
+                    <select name="group_id" class="form-select form-select-lg" required>
+                        <option value="">-- Επιλέξτε Παραλήπτες --</option>
+                        <option value="all">Όλοι οι ενεργοί μαθητές (Επιλεγμένο Έτος)</option>
+                        <?php foreach ($groups as $g): ?>
+                            <option value="<?php echo $g['id']; ?>">Ομάδα: <?php echo htmlspecialchars($g['group_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group mb-4">
+                    <label class="fw-bold mb-2">Μήνυμα (έως 160 χαρακτήρες για 1 SMS)</label>
+                    <div class="small text-muted mb-2"><i class="fa fa-info-circle"></i> Αν γράψετε <b>[ΟΝΟΜΑ]</b>, θα αντικατασταθεί αυτόματα με το μικρό όνομα του μαθητή! (Σε αυτή την περίπτωση, η δωρεάν αποστολή μέσω κινητού θα βγάλει ξεχωριστό κουμπάκι για τον κάθε μαθητή).</div>
+                    <textarea name="message" id="smsContent" class="form-control" rows="4" maxlength="160" required placeholder="Γράψτε το μήνυμά σας εδώ..."></textarea>
+                    <div class="text-end mt-1"><small class="text-muted fw-bold">Χαρακτήρες: <span id="charCount">0</span> / 160</small></div>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100 shadow fw-bold" title="Ανοίγει την εφαρμογή SMS του κινητού σας (π.χ. Google Messages)">
+                    <i class="fa fa-mobile-phone fa-lg"></i> Αποστολή μέσω Κινητού (Δωρεάν)
+                </button>
+            </form>
+        </div>
+        <script>
+            document.getElementById('smsContent').addEventListener('input', function() {
+                document.getElementById('charCount').textContent = this.value.length;
+            });
+        </script>
 <?php
     }
 }

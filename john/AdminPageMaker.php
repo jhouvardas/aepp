@@ -72,6 +72,8 @@ class AdminPageMaker extends PageMaker
                                 <a class="dropdown-item text-primary fw-bold" href="#" onclick="copyRegLink(this, event)"><i class="fa fa-link"></i> Link Εγγραφής (Αντιγραφή)</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a>
+                                <a class="dropdown-item text-secondary fw-bold" href="index.php?action=mass_sms_form"><i class="fa fa-mobile-phone"></i> Μαζικό SMS</a>
+                                <a class="dropdown-item text-info fw-bold" href="index.php?action=export_google_contacts"><i class="fa fa-address-book"></i> Εξαγωγή Google Contacts</a>
                             </div>
                         </li>
 
@@ -132,18 +134,6 @@ class AdminPageMaker extends PageMaker
                             </div>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-graduation-cap text-light"></i> Πανελλήνιες
-                            </a>
-                            <div class="dropdown-menu shadow">
-                                <a class="dropdown-item" href="index.php?action=addKena">Αλγόριθμοι για συμπλήρωση κενών</a>
-                                <a class="dropdown-item" href="index.php?action=listKena">Λίστα Ασκήσεων (Κενά)</a>
-                                <a class="dropdown-item" href="index.php?action=addThemaG">Θέμα Γ (Προγράμματα)</a>
-                                <a class="dropdown-item" href="index.php?action=listThemaG">Λίστα Θεμάτων Γ</a>
-                            </div>
-                        </li>
-
                         <li class="nav-item ml-md-4">
                             <a class="nav-link text-white border border-white rounded px-2" href="../index.php" target="_blank">
                                 <i class="fa fa-external-link"></i> Site Μαθητών
@@ -164,7 +154,7 @@ class AdminPageMaker extends PageMaker
                                 <span class="input-group-text bg-dark text-white border-0"><i class="fa fa-calendar"></i> Σχολ. Έτος:</span>
                             </div>
                             <input type="number" name="exam_year" class="form-control border-0 text-center fw-bold"
-                                placeholder="π.χ. <?php echo (date('m') >= 8 ? date('Y') + 1 : date('Y')); ?>"
+                                placeholder="π.χ. <?php echo (date('m') >= 6 ? date('Y') + 1 : date('Y')); ?>"
                                 value="<?php echo htmlspecialchars($userYear); ?>"
                                 style="width: 100px;"
                                 autocomplete="off">

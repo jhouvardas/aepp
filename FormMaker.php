@@ -266,7 +266,7 @@ class FormMaker
     <?php
     }
 
-    public function studentSubmissionForm($studentsArray, $mezeId)
+    public function studentSubmissionForm($studentId, $mezeId)
     {
     ?>
         <div class="card mt-4 shadow border-primary">
@@ -274,29 +274,8 @@ class FormMaker
                 <h5 class="mb-0"><i class="fa fa-upload"></i> Υποβολή Λύσης</h5>
             </div>
             <div class="card-body">
-                <form action="index.php?action=submitMezeAnswer" method="post" enctype="multipart/form-data" autocomplete="off">
+                <form action="index.php?action=submitMezeAnswer" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label>Το Email σου:</label>
-                            <input type="email" name="student_email" class="form-control" placeholder="name@example.com" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label>6-ψήφιος Κωδικός:</label>
-                            <div class="position-relative">
-                                <input type="text" name="st_access" id="pass_<?php echo $mezeId; ?>"
-                                    class="form-control mask-input" maxlength="15"
-                                    placeholder="******" required
-                                    autocomplete="off"
-                                    inputmode="numeric" pattern="[0-9]*"
-                                    style="background-color: white; padding-right: 40px;">
-                                <i class="fa fa-eye position-absolute top-50 translate-middle-y end-0 me-3"
-                                    id="eye_<?php echo $mezeId; ?>" style="cursor: pointer; color: #6c757d; z-index: 10;"
-                                    onclick="toggleMask('pass_<?php echo $mezeId; ?>', 'eye_<?php echo $mezeId; ?>')"></i>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="mb-3">
                         <label>Σχόλια ή Απάντηση (αν θέλεις):</label>

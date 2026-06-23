@@ -4,50 +4,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Πρόχειρο Λύσης</title>
-  <!-- Bootstrap 5 CDN -->
+  <title>4.36 Συνέδριο - Λύση</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="aepp.css">
   <style>
     body {
-      padding: 50px;
-      background-color: #f8f9fa;
+      padding: 0 !important;
+      margin: 0;
     }
 
     .preview-box {
       background: white;
       padding: 20px;
       border-left: 5px solid #28a745;
-      /* Πράσινο χρώμα για να ξεχωρίζει ότι είναι Λύση */
-      border-bottom: 1px solid #dee2e6;
-      width: 100%;
       min-height: 100vh;
-      margin: 0;
-      border-radius: 0;
-    }
-
-    body {
-      padding: 0 !important;
-      margin: 0;
-    }
-
-    /* Επιπλέον στυλ για το κείμενο του θέματος */
-    .html-content-wrapper code {
-      color: #d63384;
-      font-weight: bold;
-      background-color: #f8f9fa;
-      padding: 0 4px;
-      border-radius: 3px;
     }
   </style>
 </head>
 
 <body>
-
   <div class="container-fluid px-0">
-    <!-- Sticky Header με κουμπί Αντιγραφής -->
     <div class="sticky-top bg-dark p-2 d-flex justify-content-between align-items-center shadow">
       <span class="text-white ms-3 fw-bold small"><i class="fa fa-eye text-success"></i> ΠΡΟΕΠΙΣΚΟΠΗΣΗ ΛΥΣΗΣ</span>
       <button onclick="copyMezeHTML()" class="btn btn-success btn-sm me-3 fw-bold">
@@ -55,54 +32,35 @@
       </button>
     </div>
 
-    <div class="preview-box" id="mezePreview">
+    <div class="preview-box">
       <div class="html-content-wrapper container bg-white p-4 shadow-sm rounded">
 
-        <h3 class="text-success border-bottom pb-2 mb-4"><i class="fa fa-check-circle"></i> Ενδεικτική Απάντηση</h3>
+        <h5 class="text-success border-bottom pb-2 mb-3">
+          <i class="fa fa-check-circle"></i> Ενδεικτική Λύση — Άσκηση 4.36
+        </h5>
 
-        <p>Τα σωστά αποτελέσματα των πράξεων είναι:</p>
+        <pre class="aepp-code shadow-sm">ΠΡΟΓΡΑΜΜΑ Συνέδριο
+ΜΕΤΑΒΛΗΤΕΣ
+  ΑΚΕΡΑΙΕΣ: άνδρες, γυναίκες, σύνολο
+  ΠΡΑΓΜΑΤΙΚΕΣ: ποσΑνδρ, ποσΓυν
+ΑΡΧΗ
+  ΔΙΑΒΑΣΕ άνδρες, γυναίκες
+  σύνολο ← άνδρες + γυναίκες
+  ποσΑνδρ ← (άνδρες / σύνολο) * 100
+  ποσΓυν ← (γυναίκες / σύνολο) * 100
+  ΓΡΑΨΕ 'Σύνολο συμμετεχόντων: ', σύνολο
+  ΓΡΑΨΕ 'Ποσοστό αρρένων: ', ποσΑνδρ, '%'
+  ΓΡΑΨΕ 'Ποσοστό γυναικών: ', ποσΓυν, '%'
+ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</pre>
 
-        <!-- Απαντήσεις σε Grid -->
-        <div class="group-header">Απαντήσεις</div>
-        <div class="answer-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-          <div class="answer-item"><span class="ans-true">4</span></div>
-          <div class="answer-item"><span class="ans-true">3</span></div>
-          <div class="answer-item"><span class="ans-true">3</span></div>
-          <div class="answer-item"><span class="ans-true">1</span></div>
-          <div class="answer-item"><span class="ans-true">7</span></div>
-          <div class="answer-item"><span class="ans-true">0</span></div>
-          <div class="answer-item"><span class="ans-true">0</span></div>
-          <div class="answer-item"><span class="ans-true">3</span></div>
-          <div class="answer-item"><span class="ans-true">10</span></div>
-          <div class="answer-item"><span class="ans-true">0</span></div>
-          <div class="answer-item"><span class="ans-true">5</span></div>
-          <div class="answer-item"><span class="ans-true">5</span></div>
-          <div class="answer-item"><span class="ans-true">1</span></div>
-          <div class="answer-item"><span class="ans-true">0</span></div>
-          <div class="answer-item"><span class="ans-true">0</span></div>
-        </div>
-
-        <!-- Αιτιολόγηση -->
-        <h5 class="text-primary mt-4 mb-3"><i class="fa fa-info-circle"></i> Υπενθύμιση</h5>
-        <ul class="list-group list-group-flush mb-4 shadow-sm rounded border" style="font-size: 0.9rem;">
-          <li class="list-group-item">Το <strong>div</strong> μας δίνει το <i>πηλίκο</i> της ακέραιας διαίρεσης (πόσες
-            φορές χωράει ακριβώς ο ένας αριθμός στον άλλο).</li>
-          <li class="list-group-item">Το <strong>mod</strong> μας δίνει το <i>υπόλοιπο</i> της ακέραιας διαίρεσης.</li>
-          <li class="list-group-item text-danger"><strong>Η Μεγάλη Παγίδα:</strong> Όταν ο διαιρετέος (αριστερά) είναι
-            μικρότερος από τον διαιρέτη (δεξιά), όπως στο <code>3 div 5</code>, το <strong>div</strong> είναι πάντα
-            <b>0</b> και το <strong>mod</strong> είναι ο ίδιος ο διαιρετέος, δηλαδή <b>3</b>.</li>
-        </ul>
       </div>
     </div>
 
     <script>
-      // Script αντιγραφής όπως στο editor.html
       function copyMezeHTML() {
         const wrapper = document.querySelector('.html-content-wrapper');
         if (!wrapper) return;
-
         const finalHtml = wrapper.outerHTML;
-
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(finalHtml).then(() => {
             showSuccess();
@@ -131,17 +89,14 @@
       function showSuccess() {
         const btn = document.querySelector('.sticky-top button');
         const originalContent = btn.innerHTML;
-
         btn.innerHTML = '<i class="fa fa-check"></i> Αντιγράφηκε!';
         btn.classList.replace('btn-success', 'btn-light');
-
         setTimeout(() => {
           btn.innerHTML = originalContent;
           btn.classList.replace('btn-light', 'btn-success');
         }, 2000);
       }
     </script>
-
   </div>
 </body>
 

@@ -679,8 +679,8 @@ class DbHandler
         $birthdate = trim(isset($data['birthdate']) ? $data['birthdate'] : '');
         $school = trim(isset($data['school']) ? $data['school'] : '');
         $password = trim(isset($data['student_password']) ? $data['student_password'] : '');
-        $schoolYear = date('Y') + 1;
-        $user = date('Y') + 1;
+        $schoolYear = $this->getCurrentTutorYear();
+        $user = $this->getCurrentTutorYear();
         $target = '';
         $status = 1;
 
@@ -761,10 +761,10 @@ class DbHandler
         }
 
         // Υπολογισμός της τρέχουσας σχολικής χρονιάς (έτος εξετάσεων)
-        // Αν βρισκόμαστε από Αύγουστο έως Δεκέμβριο, οι εξετάσεις είναι το επόμενο έτος
-        // Αν βρισκόμαστε από Ιανουάριο έως Ιούλιο, οι εξετάσεις είναι το τρέχον έτος
+        // Αν βρισκόμαστε από Ιούνιο έως Δεκέμβριο (έναρξη προετοιμασίας), οι εξετάσεις είναι το επόμενο έτος
+        // Αν βρισκόμαστε από Ιανουάριο έως Μάιο, οι εξετάσεις είναι το τρέχον έτος
         $currentMonth = (int)date('m');
-        return ($currentMonth >= 8) ? date('Y') + 1 : date('Y');
+        return ($currentMonth >= 6) ? date('Y') + 1 : date('Y');
     }
 
     public function submitExtensionRequest($studentId, $mezeId, $hours, $userYear)
@@ -1145,8 +1145,8 @@ class DbHandler
         }
 
         $mail = new PHPMailer(true);
+        $smtpLog = '';
         try {
-            // 1. Δίνουμε περισσότερο χρόνο (5 λεπτά) στην PHP για να μην "κόψει" το script στη μέση
             @set_time_limit(300);
 
             $mail->isSMTP();
@@ -1156,9 +1156,22 @@ class DbHandler
             $mail->Password   = defined('SMTP_PASS') ? SMTP_PASS : '';
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
-
-            // 2. Ορίζουμε συγκεκριμένο χρόνο αναμονής (120 δευτερόλεπτα) για την απόκριση του Gmail
             $mail->Timeout    = 120;
+
+            // Χειρισμός SSL certificate verification (απαραίτητο σε πολλά shared hostings)
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ]
+            ];
+
+            // Καταγραφή SMTP debug για να βλέπουμε το πραγματικό σφάλμα
+            $mail->SMTPDebug  = 2;
+            $mail->Debugoutput = function($str, $level) use (&$smtpLog) {
+                $smtpLog .= trim($str) . ' | ';
+            };
 
             $mail->CharSet    = 'UTF-8';
             $mail->setFrom($mail->Username, defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'AEPP System');
@@ -1172,7 +1185,18 @@ class DbHandler
             $mail->send();
             return true;
         } catch (Exception $e) {
-            return $mail->ErrorInfo;
+            $errorMsg = $mail->ErrorInfo;
+            if (empty($errorMsg)) {
+                $errorMsg = $e->getMessage();
+            }
+            if (empty($errorMsg)) {
+                $errorMsg = get_class($e);
+            }
+            // Προσθέτουμε και τα τελευταία 200 χαρακτήρες του SMTP log για διάγνωση
+            if (!empty($smtpLog)) {
+                $errorMsg .= ' [SMTP: ' . substr($smtpLog, -200) . ']';
+            }
+            return $errorMsg;
         }
     }
 
@@ -1216,5 +1240,37 @@ class DbHandler
             return true;
         }
         return false;
+    }
+
+    /**
+     * Στέλνει SMS μέσω εξωτερικού παρόχου (SMS Gateway API).
+     */
+    public function sendSMS($phone, $message)
+    {
+        // -- ΥΠΟΔΕΙΓΜΑ ΧΡΗΣΗΣ HTTP API (Αφαιρέστε τα σχόλια όταν έχετε λογαριασμό) --
+        /*
+        // Παράδειγμα ρυθμίσεων
+        $apiKey = 'ΤΟ_API_KEY_ΣΑΣ';
+        $senderId = 'TUTOR'; // Το όνομα του αποστολέα (έως 11 χαρακτήρες)
+        
+        $url = "https://api.παροχος-sms.gr/send"; // Το URL του παρόχου
+        $data = [
+            'token' => $apiKey,
+            'to' => $phone,
+            'from' => $senderId,
+            'text' => $message
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        return true; // Ή ελέγχετε το $response για να δείτε αν πέτυχε
+        */
+
+        return true; // Προσωρινά επιστρέφει ΠΑΝΤΑ true (ακόμα και χωρίς πάροχο) για να δοκιμάσετε το περιβάλλον χρήστη
     }
 }

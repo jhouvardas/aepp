@@ -1255,6 +1255,18 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function getGroupById($id)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT * FROM aepp_groups WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $res;
+    }
+
     public function getGroups($userYear)
     {
         $conn = $this->connectToFamilyDB();

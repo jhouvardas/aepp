@@ -269,10 +269,24 @@ class MezeAdminFormMaker extends AdminFormMaker
                     $rawCorrectAns = preg_replace('/^(?:\(\d+\)|\d+[\.\)])\s*/u', '', trim($rawCorrectAns));
 
                     $dispStudentAns = htmlspecialchars($rawStudentAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    $dispCorrectAns = htmlspecialchars($rawCorrectAns, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    // Υποστήριξη πολλαπλών σωστών απαντήσεων (διαχωρισμένες με |)
+                    $correctAlts = array_map('trim', explode('|', $rawCorrectAns));
+                    $dispCorrectAns = implode(' <span class="text-muted small">ή</span> ', array_map(
+                        fn($p) => '<span>' . htmlspecialchars($p, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '</span>',
+                        $correctAlts
+                    ));
+
+                    $correctAltsRaw = array_map('trim', explode('|', $correctAnswer));
+                    $isBlankCorrect = false;
+                    foreach ($correctAltsRaw as $alt) {
+                        if ($this->normalizeString($studentAns) === $this->normalizeString($alt)) {
+                            $isBlankCorrect = true;
+                            break;
+                        }
+                    }
 
                     if ($studentAns !== '') {
-                        if ($this->normalizeString($studentAns) == $this->normalizeString($correctAnswer)) {
+                        if ($isBlankCorrect) {
                             $totalCorrect++;
                             $highlightedStudentText .= "
                             <div class='d-flex align-items-stretch mb-2 p-2 bg-white border border-success rounded shadow-sm'>
@@ -418,18 +432,33 @@ class MezeAdminFormMaker extends AdminFormMaker
                         <input class="form-check-input mt-0 me-2" type="checkbox" id="toggleFutureMeze" style="cursor: pointer; transform: scale(1.2);">
                         <label class="form-check-label fw-bold text-primary mb-0" for="toggleFutureMeze" style="cursor: pointer;">Προγραμματισμένα</label>
                     </div>
+                    <button type="button" id="toggleArchivedMeze" class="btn btn-outline-secondary shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0">
+                        <i class="fa fa-archive"></i> <span class="d-none d-sm-inline">Εμφάνιση Αρχείου</span>
+                    </button>
                     <a href="index.php?action=massDeleteSubmissions" class="btn btn-danger shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="return confirm('ΠΡΟΣΟΧΗ! Αυτό θα διαγράψει ΟΛΕΣ τις υποβολές των μαθητών και τις φωτογραφίες τους από τον server για να ελαφρύνει το σύστημα. Είστε απόλυτα σίγουροι;')">
                         <i class="fa fa-trash"></i> <span class="d-none d-sm-inline">Καθαρισμός Υποβολών</span><span class="d-inline d-sm-none">Καθ. Υποβολών</span>
                     </a>
                     <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm text-dark fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
                         <i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Μαζική Απόκρυψη Παλιών</span><span class="d-inline d-sm-none">Απόκρυψη Παλιών</span>
                     </a>
+                    <a href="index.php?action=export_google_contacts" class="btn btn-info shadow-sm text-white fw-bold text-nowrap flex-grow-1 flex-md-grow-0" title="Εξαγωγή Μαθητών για το Google Contacts">
+                        <i class="fa fa-address-book"></i> <span class="d-none d-sm-inline">Google Contacts</span>
+                    </a>
                     <input type="text" id="mezeFilter" class="form-control shadow-sm flex-grow-1" style="min-width: 150px; max-width: 250px;" placeholder="Αναζήτηση...">
                 </div>
             </div>
             <style>
-                .hide-future .future-meze-row {
+                .hide-future .future-meze-row:not(.archived-meze-row) {
                     display: none !important;
+                }
+
+                .hide-archive .archived-meze-row {
+                    display: none !important;
+                }
+
+                #toggleArchivedMeze.active {
+                    background-color: #6c757d;
+                    color: white;
                 }
             </style>
 
@@ -442,7 +471,7 @@ class MezeAdminFormMaker extends AdminFormMaker
             }
             ?>
             <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
-                <table class="table table-bordered table-striped align-middle mb-0 hide-future" id="mezeTable">
+                <table class="table table-bordered table-striped align-middle mb-0 hide-future hide-archive" id="mezeTable">
                     <thead class="table-dark text-center" style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 5%">#</th>
@@ -467,19 +496,26 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : '';
 
                                 $isFuture = ($mTimestamp > $currentTimestamp);
+                                $isArchived = ($isFuture && date('Y', $mTimestamp) >= 2030);
 
-                                $hiddenClass = '';
-                                if ($isFuture) {
-                                    $futureCount++;
-                                    if ($futureCount > 15) {
-                                        $hiddenClass = 'd-none hidden-admin-meze-item';
-                                    }
-                                } else {
-                                    $visibleCount++;
-                                    if ($visibleCount > 15) {
-                                        $hiddenClass = 'd-none hidden-admin-meze-item';
+                                $tr_classes = [];
+                                if ($isArchived) {
+                                    $tr_classes[] = 'archived-meze-row';
+                                } else if ($isFuture) {
+                                    $tr_classes[] = 'future-meze-row';
+                                }
+
+                                // Pagination logic only for non-archived items
+                                if (!$isArchived) {
+                                    if ($isFuture) {
+                                        $futureCount++;
+                                        if ($futureCount > 15) $tr_classes[] = 'd-none hidden-admin-meze-item';
+                                    } else {
+                                        $visibleCount++;
+                                        if ($visibleCount > 15) $tr_classes[] = 'd-none hidden-admin-meze-item';
                                     }
                                 }
+
                                 $isLocked = (isset($row['isLocked']) && $row['isLocked'] == 1);
                                 $isExpired = ($solTimestamp > 0 && $solTimestamp < $currentTimestamp);
                                 $hasExtensions = (!empty($userYear)) ? $dbHandler->hasAnyExtension($mezeId, $userYear) : false;
@@ -497,7 +533,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $rowStyle = 'style="background-color: #f2f2f2; color: #777;"';
                                 }
 
-                                if ($hasExtensions && !$isLocked) {
+                                if ($hasExtensions && !$isLocked && !$isArchived) {
                                     $badgeHtml .= '<br><span class="badge bg-warning text-dark mt-1" style="font-size: 0.75rem;"><i class="fa fa-clock-o"></i> Ενεργή Παράταση</span>';
                                     if (empty($rowStyle) && !$isFuture) $rowStyle = 'style="background-color: #fffde7;"';
                                 }
@@ -516,7 +552,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                         $badgeHtml .= '<br><span class="badge bg-warning text-dark mt-1" style="font-size: 0.75rem;"><i class="fa fa-exclamation-triangle"></i> ' . $ungradedCount . ' προς Βαθμολόγηση</span>';
                                         if (!$isFuture) $rowStyle = 'style="background-color: #fff3cd;"';
                                     }
-                                    if ($notSubmittedCount > 0 && !$isFuture) {
+                                    if ($notSubmittedCount > 0 && !$isFuture && !$isArchived) {
                                         if ($ungradedNotSubmittedCount > 0) {
                                             $badgeHtml .= '<br><span class="badge bg-danger mt-1" style="font-size: 0.75rem;"><i class="fa fa-exclamation-circle"></i> ' . $notSubmittedCount . ' δεν απάντησαν (' . $ungradedNotSubmittedCount . ' αβαθμολόγητοι)</span>';
                                             $rowStyle = 'style="background-color: #f8d7da;"';
@@ -543,7 +579,10 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     }
                                 }
 
-                                if ($isFuture) {
+                                if ($isArchived) {
+                                    $badgeHtml .= '<br><span class="badge bg-secondary text-white mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-archive"></i> Αρχειοθετημένο</span>';
+                                    $rowStyle = 'style="background-color: #e9ecef; color: #495057;"';
+                                } else if ($isFuture) {
                                     $badgeHtml .= '<br><span class="badge bg-primary text-white mt-1 shadow-sm" style="font-size: 0.75rem;"><i class="fa fa-calendar-check-o"></i> Προγραμματισμένο</span>';
                                     $rowStyle = 'style="background-color: #e9f2fd; color: #495057;"';
                                 }
@@ -577,7 +616,7 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     $tagsHtml = '<div class="mt-1">' . $tagsHtml . '</div>';
                                 }
                         ?>
-                                <tr <?php echo $rowStyle; ?> class="align-middle <?php echo $hiddenClass; ?> <?php echo $isFuture ? 'future-meze-row' : ''; ?>">
+                                <tr <?php echo $rowStyle; ?> class="align-middle <?php echo implode(' ', $tr_classes); ?>">
                                     <td class="text-center fw-bold"><?php echo $row['mezeNumber']; ?></td>
                                     <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
                                     <td class="text-center small">
@@ -655,12 +694,18 @@ class MezeAdminFormMaker extends AdminFormMaker
                 var toggleFutureBtn = document.getElementById('toggleFutureMeze');
                 if (toggleFutureBtn) {
                     toggleFutureBtn.addEventListener('change', function() {
+                        document.getElementById('mezeTable').classList.toggle('hide-future', !this.checked);
+                    });
+                }
+
+                // Διακόπτης εμφάνισης/απόκρυψης αρχειοθετημένων
+                var toggleArchivedBtn = document.getElementById('toggleArchivedMeze');
+                if (toggleArchivedBtn) {
+                    toggleArchivedBtn.addEventListener('click', function() {
                         var table = document.getElementById('mezeTable');
-                        if (this.checked) {
-                            table.classList.remove('hide-future');
-                        } else {
-                            table.classList.add('hide-future');
-                        }
+                        table.classList.toggle('hide-archive');
+                        this.classList.toggle('active');
+                        this.innerHTML = table.classList.contains('hide-archive') ? '<i class="fa fa-archive"></i> <span class="d-none d-sm-inline">Εμφάνιση Αρχείου</span>' : '<i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Απόκρυψη Αρχείου</span>';
                     });
                 }
 
