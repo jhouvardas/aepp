@@ -289,116 +289,6 @@ class ReportAdminFormMaker extends AdminFormMaker
     <?php
     }
 
-    public function manageGroupsForm($groups, $students, $db, $assignments = [])
-    {
-    ?>
-        <div class="container mt-4">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-dark text-white">Δημιουργία Ομάδας</div>
-                        <form action="index.php?action=save_group" method="POST" class="card-body d-grid">
-                            <input type="text" name="group_name" class="form-control mb-2" placeholder="Όνομα" required>
-                            <button type="submit" class="btn btn-primary w-100">Δημιουργία</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-info text-white">Ανάθεση σε Ομάδα</div>
-                        <form action="index.php?action=add_student_to_group" method="POST" class="card-body d-grid">
-                            <select name="student_id" class="form-control mb-2" required>
-                                <option value="">Επίλεξε Μαθητή</option>
-                                <?php foreach ($students as $s):
-                                    if (array_key_exists($s['studentId'], $assignments)) continue;
-                                ?>
-                                    <option value="<?php echo $s['studentId']; ?>"><?php echo "{$s['name']} {$s['lastName']}"; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <select name="group_id" class="form-control mb-2" required>
-                                <option value="">Επίλεξε Ομάδα</option>
-                                <?php foreach ($groups as $g) echo "<option value='{$g['id']}'>{$g['group_name']}</option>"; ?>
-                            </select>
-                            <button type="submit" class="btn btn-info w-100">Ανάθεση</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <h5>Υπάρχουσες Ομάδες & Μέλη</h5>
-                <table class="table table-sm table-bordered bg-white shadow-sm">
-                    <thead class="bg-light">
-                        <tr>
-                            <th style="width: 30%;">Ομάδα</th>
-                            <th>Μέλη</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($groups as $g):
-                            $members = [];
-                            foreach ($students as $s) {
-                                if (isset($assignments[$s['studentId']]) && $assignments[$s['studentId']] == $g['id']) {
-                                    $members[] = $s;
-                                }
-                            }
-                        ?>
-                            <tr>
-                                <td class="align-middle">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <strong id="group-name-<?php echo $g['id']; ?>"><?php echo htmlspecialchars($g['group_name']); ?></strong>
-                                        <div>
-                                            <a href="index.php?action=print_group&group_id=<?php echo $g['id']; ?>" class="btn btn-sm btn-outline-primary" title="Προβολή / Εκτύπωση Μαθητών"><i class="fa fa-print"></i></a>
-                                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="showRenameForm(<?php echo $g['id']; ?>)" title="Μετονομασία"><i class="fa fa-edit"></i></button>
-                                        </div>
-                                    </div>
-                                    <form action="index.php?action=rename_group" method="POST" id="rename-form-<?php echo $g['id']; ?>" class="d-none mt-2">
-                                        <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
-                                        <div class="input-group input-group-sm">
-                                            <input type="text" name="new_group_name" class="form-control" value="<?php echo htmlspecialchars($g['group_name']); ?>" required>
-                                            <button type="submit" class="btn btn-success" title="Αποθήκευση"><i class="fa fa-save"></i></button>
-                                            <button type="button" class="btn btn-secondary" onclick="hideRenameForm(<?php echo $g['id']; ?>)" title="Ακύρωση"><i class="fa fa-times"></i></button>
-                                        </div>
-                                    </form>
-                                </td>
-                                <td>
-                                    <?php if (empty($members)): ?>
-                                        <span class="text-muted small italic">Κενή ομάδα</span>
-                                    <?php else: ?>
-                                        <ul class="list-unstyled mb-0 small">
-                                            <?php foreach ($members as $m): ?>
-                                                <li class="mb-1">
-                                                    <?php echo "{$m['name']} {$m['lastName']}"; ?>
-                                                    <a href="index.php?action=remove_student_from_group&student_id=<?php echo $m['studentId']; ?>"
-                                                        class="text-danger ms-1"
-                                                        onclick="return confirm('Αφαίρεση από την ομάδα;')">
-                                                        <i class="fa fa-times-circle"></i>
-                                                    </a>
-                                                </li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <script>
-            function showRenameForm(id) {
-                document.getElementById('group-name-' + id).parentElement.classList.add('d-none');
-                document.getElementById('rename-form-' + id).classList.remove('d-none');
-            }
-
-            function hideRenameForm(id) {
-                document.getElementById('group-name-' + id).parentElement.classList.remove('d-none');
-                document.getElementById('rename-form-' + id).classList.add('d-none');
-            }
-        </script>
-    <?php
-    }
-
     public function showTaskGradesForm($task, $students, $existingGrades)
     {
     ?>
@@ -670,7 +560,7 @@ class ReportAdminFormMaker extends AdminFormMaker
                 <h3 class="mb-0 text-primary"><i class="fa fa-users"></i> Μαθητές: <?php echo htmlspecialchars($group['group_name']); ?></h3>
                 <div>
                     <button onclick="window.print();" class="btn btn-success shadow-sm me-2"><i class="fa fa-print"></i> Εκτύπωση</button>
-                    <a href="index.php?action=manage_groups" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Επιστροφή</a>
+                    <a href="index.php?action=assign_tasks" class="btn btn-secondary shadow-sm"><i class="fa fa-arrow-left"></i> Επιστροφή</a>
                 </div>
             </div>
 

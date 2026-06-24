@@ -314,49 +314,4 @@ class FormMaker
     <?php
     }
 
-    public function studentRegistrationForm()
-    {
-    ?>
-        <div class="container mt-5 mb-5">
-            <div class="card shadow border-primary mx-auto" style="max-width: 500px; border-radius: 15px;">
-                <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 15px 15px 0 0;">
-                    <h4 class="mb-0"><i class="fa fa-user-plus"></i> Εγγραφή Νέου Μαθητή</h4>
-                </div>
-                <div class="card-body p-4">
-                    <form action="index.php?action=processRegistration" method="POST" autocomplete="off">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Όνομα</label>
-                            <input type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Επώνυμο</label>
-                            <input type="text" name="lastName" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email (Χρησιμοποιείται για σύνδεση)</label>
-                            <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Τηλέφωνο</label>
-                            <input type="text" name="phone" class="form-control" placeholder="π.χ. 69..." required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Ημερομηνία Γέννησης</label>
-                            <input type="date" name="birthdate" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Σχολή Προτίμησης</label>
-                            <input type="text" name="school" class="form-control" placeholder="π.χ. Πληροφορική ΑΠΘ" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Προσωπικός Κωδικός (PIN)</label>
-                            <input type="text" name="student_password" class="form-control" minlength="6" maxlength="6" pattern="\d{6}" title="Ο κωδικός πρέπει να αποτελείται ακριβώς από 6 αριθμούς." placeholder="Ακριβώς 6 ψηφία (π.χ. 123456)" required inputmode="numeric">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm"><i class="fa fa-check"></i> Ολοκλήρωση Εγγραφής</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-<?php
-    }
 }

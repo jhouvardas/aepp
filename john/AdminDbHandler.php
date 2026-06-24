@@ -1121,6 +1121,181 @@ class AdminDbHandler extends DbHandler
         return $result;
     }
 
+    public function getDashboardMezedakia()
+    {
+        $conn = $this->connectToFamilyDB();
+        $sql = "SELECT * FROM aepp_mezedakia
+                WHERE mezeNumber >= 27
+                ORDER BY
+                    CASE WHEN mezeDate > NOW() THEN 0 ELSE 1 END ASC,
+                    CASE WHEN mezeDate > NOW() THEN mezeDate END ASC,
+                    CASE WHEN mezeDate <= NOW() THEN mezeDate END DESC,
+                    mezeNumber DESC";
+        $result = $conn->query($sql);
+        $conn->close();
+        return $result;
+    }
+
+    public function getTotalMezedakiaCount()
+    {
+        $conn = $this->connectToFamilyDB();
+        $row = $conn->query("SELECT COUNT(*) as total FROM aepp_mezedakia")->fetch_assoc();
+        $conn->close();
+        return (int)$row['total'];
+    }
+
+    public function getStudentDashboardStats($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $esc = $conn->real_escape_string($userYear);
+
+        $totalRow = $conn->query(
+            "SELECT COUNT(*) as total FROM aepp_mezedakia
+             WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030"
+        )->fetch_assoc();
+        $totalMeze = (int)$totalRow['total'];
+
+        $r = $conn->query(
+            "SELECT
+                sg.student_id,
+                g.group_name,
+                COUNT(DISTINCT sub.meze_id)                                              AS submitted_count,
+                COUNT(DISTINCT gr.meze_id)                                               AS graded_count,
+                ROUND(AVG(gr.grade_value), 1)                                            AS avg_grade,
+                COALESCE(SUM(CASE WHEN gr.is_on_time = 1 THEN 1 ELSE 0 END), 0)         AS on_time_count,
+                COALESCE(SUM(CASE WHEN gr.grade_value = 0  THEN 1 ELSE 0 END), 0)       AS zero_count
+             FROM aepp_student_groups sg
+             JOIN aepp_groups g ON g.id = sg.group_id AND g.user_year = '$esc'
+             LEFT JOIN aepp_meze_submissions sub
+                ON sub.student_id = sg.student_id
+                AND sub.meze_id IN (SELECT mezeId FROM aepp_mezedakia WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030)
+             LEFT JOIN meze_grades gr
+                ON gr.student_id = sg.student_id AND gr.user_year = '$esc'
+                AND gr.meze_id IN (SELECT mezeId FROM aepp_mezedakia WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030)
+             WHERE sg.student_id != 999999
+             GROUP BY sg.student_id, g.group_name
+             ORDER BY g.group_name, sg.student_id"
+        );
+
+        $stats = [];
+        while ($row = $r->fetch_assoc()) {
+            $stats[(int)$row['student_id']] = [
+                'group'      => $row['group_name'] ?? '-',
+                'submitted'  => (int)$row['submitted_count'],
+                'graded'     => (int)$row['graded_count'],
+                'avg_grade'  => $row['avg_grade'] !== null ? (float)$row['avg_grade'] : null,
+                'on_time'    => (int)$row['on_time_count'],
+                'zero_count' => (int)$row['zero_count'],
+            ];
+        }
+
+        $conn->close();
+        return ['stats' => $stats, 'total_meze' => $totalMeze];
+    }
+
+    public function getDashboardSubmissionStats($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $esc = $conn->real_escape_string($userYear);
+
+        // Groups with real student counts (exclude test student 999999)
+        $r = $conn->query(
+            "SELECT g.id, g.group_name,
+                    COUNT(CASE WHEN sg.student_id != 999999 THEN 1 END) as total_students
+             FROM aepp_groups g
+             LEFT JOIN aepp_student_groups sg ON sg.group_id = g.id
+             WHERE g.user_year = '$esc'
+             GROUP BY g.id, g.group_name
+             ORDER BY g.group_name"
+        );
+        $groups = [];
+        while ($row = $r->fetch_assoc()) {
+            $groups[(int)$row['id']] = [
+                'name'      => $row['group_name'],
+                'total'     => (int)$row['total_students'],
+                'yesterday' => 0,
+                'today'     => 0,
+            ];
+        }
+
+        if (empty($groups)) {
+            $conn->close();
+            return ['groups' => [], 'groupsWithoutActiveMeze' => []];
+        }
+
+        $ids = implode(',', array_keys($groups));
+
+        // Yesterday submissions per group (distinct students, exclude test student)
+        $r2 = $conn->query(
+            "SELECT sg.group_id, COUNT(DISTINCT s.student_id) as cnt
+             FROM aepp_meze_submissions s
+             JOIN aepp_student_groups sg ON sg.student_id = s.student_id
+             WHERE sg.group_id IN ($ids)
+               AND s.student_id != 999999
+               AND DATE(s.submission_date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+             GROUP BY sg.group_id"
+        );
+        while ($row = $r2->fetch_assoc()) {
+            if (isset($groups[(int)$row['group_id']])) {
+                $groups[(int)$row['group_id']]['yesterday'] = (int)$row['cnt'];
+            }
+        }
+
+        // Today submissions per group
+        $r3 = $conn->query(
+            "SELECT sg.group_id, COUNT(DISTINCT s.student_id) as cnt
+             FROM aepp_meze_submissions s
+             JOIN aepp_student_groups sg ON sg.student_id = s.student_id
+             WHERE sg.group_id IN ($ids)
+               AND s.student_id != 999999
+               AND DATE(s.submission_date) = CURDATE()
+             GROUP BY sg.group_id"
+        );
+        while ($row = $r3->fetch_assoc()) {
+            if (isset($groups[(int)$row['group_id']])) {
+                $groups[(int)$row['group_id']]['today'] = (int)$row['cnt'];
+            }
+        }
+
+        // Global active mezedakia (solutionDate not yet passed, not archived)
+        $r4 = $conn->query(
+            "SELECT COUNT(*) as cnt FROM aepp_mezedakia
+             WHERE mezeDate <= CURDATE()
+               AND solutionDate > NOW()
+               AND YEAR(mezeDate) < 2030"
+        );
+        $hasGlobalActive = (int)$r4->fetch_assoc()['cnt'] > 0;
+
+        // Groups that have their own extended deadline still active
+        $r5 = $conn->query(
+            "SELECT DISTINCT gd.group_id
+             FROM aepp_meze_group_deadlines gd
+             JOIN aepp_mezedakia m ON m.mezeId = gd.meze_id
+             WHERE gd.deadline_at > NOW()
+               AND m.mezeDate <= CURDATE()
+               AND gd.group_id IN ($ids)"
+        );
+        $groupsWithActiveDeadline = [];
+        while ($row = $r5->fetch_assoc()) {
+            $groupsWithActiveDeadline[] = (int)$row['group_id'];
+        }
+
+        $groupsWithoutActiveMeze = [];
+        if (!$hasGlobalActive) {
+            foreach ($groups as $gid => $gdata) {
+                if (!in_array($gid, $groupsWithActiveDeadline)) {
+                    $groupsWithoutActiveMeze[] = $gdata['name'];
+                }
+            }
+        }
+
+        $conn->close();
+        return [
+            'groups'                 => $groups,
+            'groupsWithoutActiveMeze' => $groupsWithoutActiveMeze,
+        ];
+    }
+
     /**
      * Επιστρέφει το πλήθος των υποβολών για ένα μεζεδάκι που δεν έχουν ακόμα βαθμολογηθεί.
      */

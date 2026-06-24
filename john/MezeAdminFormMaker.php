@@ -361,13 +361,13 @@ class MezeAdminFormMaker extends AdminFormMaker
      * @param mysqli_result|bool|array $result
      * @param AdminDbHandler $dbHandler
      */
-    public function listMezedakia($result, $dbHandler)
+    public function listMezedakia($result, $dbHandler, $totalCount = null)
     {
         $allGroups = $dbHandler->getGroups(isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "");
         $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : "";
 
         // Υπολογισμός Στατιστικών
-        $totalMezedakia = $result ? $result->num_rows : 0;
+        $totalMezedakia = $totalCount !== null ? $totalCount : ($result ? $result->num_rows : 0);
         $allStudents = $dbHandler->getTutorStudents($userYear);
         $realStudentsCount = 0;
         foreach ($allStudents as $s) {
@@ -432,6 +432,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                         <input class="form-check-input mt-0 me-2" type="checkbox" id="toggleFutureMeze" style="cursor: pointer; transform: scale(1.2);">
                         <label class="form-check-label fw-bold text-primary mb-0" for="toggleFutureMeze" style="cursor: pointer;">Προγραμματισμένα</label>
                     </div>
+                    <button type="button" id="togglePrevYearMeze" class="btn btn-outline-warning shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0">
+                        <i class="fa fa-history"></i> <span class="d-none d-sm-inline">Περσινά</span>
+                    </button>
                     <button type="button" id="toggleArchivedMeze" class="btn btn-outline-secondary shadow-sm fw-bold text-nowrap flex-grow-1 flex-md-grow-0">
                         <i class="fa fa-archive"></i> <span class="d-none d-sm-inline">Εμφάνιση Αρχείου</span>
                     </button>
@@ -440,9 +443,6 @@ class MezeAdminFormMaker extends AdminFormMaker
                     </a>
                     <a href="index.php?action=massHideMezedakia" class="btn btn-warning shadow-sm text-dark fw-bold text-nowrap flex-grow-1 flex-md-grow-0" onclick="return confirm('Αυτό θα μεταφέρει όλα τα ήδη ορατά μεζεδάκια στο 2030, μαζί με τις προθεσμίες τους, για να κρυφτούν από τους μαθητές. Είστε σίγουροι;')">
                         <i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Μαζική Απόκρυψη Παλιών</span><span class="d-inline d-sm-none">Απόκρυψη Παλιών</span>
-                    </a>
-                    <a href="index.php?action=export_google_contacts" class="btn btn-info shadow-sm text-white fw-bold text-nowrap flex-grow-1 flex-md-grow-0" title="Εξαγωγή Μαθητών για το Google Contacts">
-                        <i class="fa fa-address-book"></i> <span class="d-none d-sm-inline">Google Contacts</span>
                     </a>
                     <input type="text" id="mezeFilter" class="form-control shadow-sm flex-grow-1" style="min-width: 150px; max-width: 250px;" placeholder="Αναζήτηση...">
                 </div>
@@ -456,7 +456,11 @@ class MezeAdminFormMaker extends AdminFormMaker
                     display: none !important;
                 }
 
-                #toggleArchivedMeze.active {
+                .hide-prev-year .prev-year-meze-row {
+                    display: none !important;
+                }
+
+                #toggleArchivedMeze.active, #togglePrevYearMeze.active {
                     background-color: #6c757d;
                     color: white;
                 }
@@ -471,7 +475,7 @@ class MezeAdminFormMaker extends AdminFormMaker
             }
             ?>
             <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
-                <table class="table table-bordered table-striped align-middle mb-0 hide-future hide-archive" id="mezeTable">
+                <table class="table table-bordered table-striped align-middle mb-0 hide-future hide-archive hide-prev-year" id="mezeTable">
                     <thead class="table-dark text-center" style="position: sticky; top: 0; z-index: 2;">
                         <tr>
                             <th style="width: 5%">#</th>
@@ -497,12 +501,16 @@ class MezeAdminFormMaker extends AdminFormMaker
 
                                 $isFuture = ($mTimestamp > $currentTimestamp);
                                 $isArchived = ($isFuture && date('Y', $mTimestamp) >= 2030);
+                                $isPrevYear = ((int)($row['mezeNumber'] ?? 0) < 27);
 
                                 $tr_classes = [];
                                 if ($isArchived) {
                                     $tr_classes[] = 'archived-meze-row';
                                 } else if ($isFuture) {
                                     $tr_classes[] = 'future-meze-row';
+                                }
+                                if ($isPrevYear) {
+                                    $tr_classes[] = 'prev-year-meze-row';
                                 }
 
                                 // Pagination logic only for non-archived items
@@ -706,6 +714,17 @@ class MezeAdminFormMaker extends AdminFormMaker
                         table.classList.toggle('hide-archive');
                         this.classList.toggle('active');
                         this.innerHTML = table.classList.contains('hide-archive') ? '<i class="fa fa-archive"></i> <span class="d-none d-sm-inline">Εμφάνιση Αρχείου</span>' : '<i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Απόκρυψη Αρχείου</span>';
+                    });
+                }
+
+                // Διακόπτης εμφάνισης/απόκρυψης περσινών
+                var togglePrevYearBtn = document.getElementById('togglePrevYearMeze');
+                if (togglePrevYearBtn) {
+                    togglePrevYearBtn.addEventListener('click', function() {
+                        var table = document.getElementById('mezeTable');
+                        table.classList.toggle('hide-prev-year');
+                        this.classList.toggle('active');
+                        this.innerHTML = table.classList.contains('hide-prev-year') ? '<i class="fa fa-history"></i> <span class="d-none d-sm-inline">Περσινά</span>' : '<i class="fa fa-eye-slash"></i> <span class="d-none d-sm-inline">Απόκρυψη Περσινών</span>';
                     });
                 }
 
@@ -2653,6 +2672,269 @@ class MezeAdminFormMaker extends AdminFormMaker
                 }
             });
         </script>
+<?php
+    }
+
+    public function displayStudentOverview(array $students, array $dashData)
+    {
+        $statsMap  = $dashData['stats'];
+        $totalMeze = $dashData['total_meze'];
+        if (empty($students)) return;
+
+        // Palette — ένα χρώμα ανά ομάδα
+        $palette = ['#6366f1','#10b981','#0ea5e9','#f59e0b','#f43f5e','#8b5cf6','#14b8a6','#ef4444','#3b82f6','#84cc16'];
+        $groupColors = [];
+        $colorIdx = 0;
+
+        $rows = [];
+        foreach ($students as $s) {
+            if ($s['studentId'] == 999999) continue;
+            $sid = (int)$s['studentId'];
+            $st  = $statsMap[$sid] ?? ['group' => '-', 'submitted' => 0, 'graded' => 0, 'avg_grade' => null, 'on_time' => 0, 'zero_count' => 0];
+            if (!isset($groupColors[$st['group']])) {
+                $groupColors[$st['group']] = $palette[$colorIdx++ % count($palette)];
+            }
+            $rows[] = array_merge($s, $st);
+        }
+        usort($rows, function($a, $b) {
+            $avgA = $a['avg_grade'];
+            $avgB = $b['avg_grade'];
+            if ($avgA === null && $avgB === null) return strcmp($a['lastName'], $b['lastName']);
+            if ($avgA === null) return 1;
+            if ($avgB === null) return -1;
+            if ($avgB != $avgA) return $avgB <=> $avgA;
+            return strcmp($a['lastName'], $b['lastName']);
+        });
+?>
+<style>
+.sc-card {
+    border-radius: 18px !important;
+    border: none !important;
+    transition: transform .2s ease, box-shadow .2s ease;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+}
+.sc-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.13) !important;
+    color: inherit;
+}
+.sc-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 15px; color: #fff;
+    flex-shrink: 0;
+    letter-spacing: .5px;
+}
+.sc-donut {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    margin: 0 auto;
+}
+.sc-donut-inner {
+    width: 60px; height: 60px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+}
+.sc-stat-label {
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-top: 2px;
+}
+</style>
+
+<div class="container mt-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="fa fa-users text-primary"></i>
+        <span class="fw-bold text-dark" style="font-size:1.05rem;">Επισκόπηση Μαθητών</span>
+        <?php if ($totalMeze > 0): ?>
+            <span class="badge rounded-pill bg-light text-muted border ms-1"><?php echo $totalMeze; ?> μεζεδάκια φετινής χρονιάς</span>
+        <?php else: ?>
+            <span class="badge rounded-pill bg-light text-muted border ms-1">Δεν έχουν ξεκινήσει ακόμα τα μεζεδάκια</span>
+        <?php endif; ?>
+    </div>
+
+    <div class="row g-3">
+    <?php foreach ($rows as $r):
+        $sid         = (int)$r['studentId'];
+        $group       = $r['group'] ?? '-';
+        $gColor      = $groupColors[$group] ?? '#6366f1';
+        $initials    = mb_strtoupper(mb_substr($r['name'], 0, 1) . mb_substr($r['lastName'], 0, 1), 'UTF-8');
+
+        // Παραδόσεις
+        $subPct   = $totalMeze > 0 ? round($r['submitted'] / $totalMeze * 100) : 0;
+        $subDeg   = $subPct * 3.6;
+        $subHex   = $subPct >= 80 ? '#10b981' : ($subPct >= 50 ? '#f59e0b' : ($totalMeze === 0 ? '#cbd5e1' : '#f43f5e'));
+
+        // Μ.Ο.
+        $avg      = $r['avg_grade'];
+        $avgHex   = $avg === null ? '#94a3b8' : ($avg >= 8 ? '#10b981' : ($avg >= 5 ? '#f59e0b' : '#f43f5e'));
+        $avgDisp  = $avg !== null ? number_format($avg, 1) : '—';
+
+        // Εγκαιρότητα
+        $graded   = $r['graded'];
+        $otPct    = $graded > 0 ? round($r['on_time'] / $graded * 100) : null;
+        $otHex    = $otPct === null ? '#94a3b8' : ($otPct >= 80 ? '#10b981' : ($otPct >= 60 ? '#f59e0b' : '#f43f5e'));
+        $otDisp   = $otPct !== null ? $otPct . '%' : '—';
+
+        // Μηδενικά
+        $zeros    = $r['zero_count'];
+        $zeroHex  = $zeros > 0 ? '#f43f5e' : '#10b981';
+        $zeroDisp = $zeros > 0 ? $zeros : '✓';
+
+        // Top accent = απόδοση
+        $accent   = $avg === null ? '#cbd5e1' : ($avg >= 8 ? '#10b981' : ($avg >= 5 ? '#f59e0b' : '#f43f5e'));
+    ?>
+    <div class="col-6 col-md-4 col-xl-3">
+        <a href="index.php?action=studentReport&studentId=<?php echo $sid; ?>" class="sc-card card shadow-sm h-100">
+            <div style="height:5px; background:<?php echo $accent; ?>; border-radius:18px 18px 0 0;"></div>
+            <div class="card-body p-3 d-flex flex-column gap-3">
+
+                <!-- Avatar + Όνομα -->
+                <div class="d-flex align-items-center gap-2">
+                    <div class="sc-avatar flex-shrink-0" style="background:<?php echo $gColor; ?>;">
+                        <?php echo htmlspecialchars($initials); ?>
+                    </div>
+                    <div class="fw-bold text-dark" style="font-size:.95rem; line-height:1.3;">
+                        <?php echo htmlspecialchars($r['name'] . ' ' . $r['lastName']); ?>
+                    </div>
+                </div>
+
+                <!-- Donut — Παραδόσεις -->
+                <div class="sc-donut"
+                     style="background: conic-gradient(<?php echo $subHex; ?> <?php echo $subDeg; ?>deg, #f1f5f9 0deg);">
+                    <div class="sc-donut-inner">
+                        <?php if ($totalMeze > 0): ?>
+                            <span class="fw-bold lh-1" style="font-size:13px; color:#1e293b;">
+                                <?php echo $r['submitted']; ?>/<?php echo $totalMeze; ?>
+                            </span>
+                            <span style="font-size:9px; color:#94a3b8; margin-top:2px;">παραδ.</span>
+                        <?php else: ?>
+                            <span style="font-size:9px; color:#94a3b8; text-align:center; line-height:1.3;">δεν<br>ξεκίνησε</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="d-flex justify-content-around align-items-start pt-2"
+                     style="border-top:1px solid #f1f5f9;">
+                    <div class="text-center">
+                        <div class="fw-bold lh-1" style="font-size:1.15rem; color:<?php echo $avgHex; ?>;">
+                            <?php echo $avgDisp; ?>
+                        </div>
+                        <div class="sc-stat-label">ΜΟ</div>
+                    </div>
+                    <div style="width:1px; background:#f1f5f9; align-self:stretch;"></div>
+                    <div class="text-center">
+                        <div class="fw-bold lh-1" style="font-size:1.15rem; color:<?php echo $otHex; ?>;">
+                            <?php echo $otDisp; ?>
+                        </div>
+                        <div class="sc-stat-label">Εγκαιρ.</div>
+                    </div>
+                    <div style="width:1px; background:#f1f5f9; align-self:stretch;"></div>
+                    <div class="text-center">
+                        <div class="fw-bold lh-1" style="font-size:1.15rem; color:<?php echo $zeroHex; ?>;">
+                            <?php echo $zeroDisp; ?>
+                        </div>
+                        <div class="sc-stat-label">Μηδεν.</div>
+                    </div>
+                </div>
+
+            </div>
+        </a>
+    </div>
+    <?php endforeach; ?>
+    </div>
+</div>
+<?php
+    }
+
+    public function displayDashboardActivity(array $stats)
+    {
+        $groups = $stats['groups'];
+        $noActiveMeze = $stats['groupsWithoutActiveMeze'];
+        if (empty($groups)) return;
+
+        $colClass = count($groups) <= 2 ? 'col-sm-6 col-md-4' : (count($groups) <= 4 ? 'col-6 col-md-3' : 'col-6 col-md-2');
+?>
+        <div class="container mt-3">
+
+            <?php if (!empty($noActiveMeze)): ?>
+            <div class="alert alert-danger shadow-sm d-flex align-items-center gap-2 mb-3">
+                <i class="fa fa-exclamation-triangle fa-lg"></i>
+                <span>
+                    <strong>Δεν υπάρχει ενεργό μεζεδάκι</strong> για:
+                    <?php echo implode(', ', array_map(fn($n) => "<strong>$n</strong>", $noActiveMeze)); ?>.
+                    <a href="index.php?action=listMezedakia" class="alert-link ms-2">Λίστα μεζεδακίων →</a>
+                </span>
+            </div>
+            <?php endif; ?>
+
+            <div class="row g-3 mb-3">
+                <!-- Χθεσινές υποβολές -->
+                <div class="col-12 col-xl-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-secondary text-white fw-bold py-2">
+                            <i class="fa fa-calendar-minus-o"></i> Υποβολές Χθες
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-2">
+                                <?php foreach ($groups as $g):
+                                    $pct = $g['total'] > 0 ? round($g['yesterday'] / $g['total'] * 100) : 0;
+                                    $barColor = $pct >= 80 ? 'bg-success' : ($pct >= 50 ? 'bg-warning' : 'bg-danger');
+                                ?>
+                                <div class="<?php echo $colClass; ?>">
+                                    <div class="border rounded p-2 text-center h-100">
+                                        <div class="small fw-bold text-muted mb-1"><?php echo htmlspecialchars($g['name']); ?></div>
+                                        <div class="fs-4 fw-bold"><?php echo $g['yesterday']; ?><span class="fs-6 text-muted">/<?php echo $g['total']; ?></span></div>
+                                        <div class="progress mt-1" style="height: 5px;">
+                                            <div class="progress-bar <?php echo $barColor; ?>" style="width: <?php echo $pct; ?>%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Σημερινές υποβολές -->
+                <div class="col-12 col-xl-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-header bg-primary text-white fw-bold py-2">
+                            <i class="fa fa-clock-o"></i> Υποβολές Σήμερα
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-2">
+                                <?php foreach ($groups as $g):
+                                    $pct = $g['total'] > 0 ? round($g['today'] / $g['total'] * 100) : 0;
+                                    $barColor = $pct >= 80 ? 'bg-success' : ($pct >= 50 ? 'bg-warning' : 'bg-danger');
+                                ?>
+                                <div class="<?php echo $colClass; ?>">
+                                    <div class="border rounded p-2 text-center h-100">
+                                        <div class="small fw-bold text-muted mb-1"><?php echo htmlspecialchars($g['name']); ?></div>
+                                        <div class="fs-4 fw-bold"><?php echo $g['today']; ?><span class="fs-6 text-muted">/<?php echo $g['total']; ?></span></div>
+                                        <div class="progress mt-1" style="height: 5px;">
+                                            <div class="progress-bar <?php echo $barColor; ?>" style="width: <?php echo $pct; ?>%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 <?php
     }
 }

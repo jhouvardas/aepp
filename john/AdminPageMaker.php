@@ -67,13 +67,9 @@ class AdminPageMaker extends PageMaker
                             </a>
                             <div class="dropdown-menu shadow border-success">
                                 <a class="dropdown-item text-success fw-bold" href="index.php?action=viewStudentProfile"><i class="fa fa-address-card"></i> Καρτέλες Μαθητών</a>
-                                <a class="dropdown-item" href="index.php?action=manage_groups"><i class="fa fa-sitemap"></i> Διαχείριση Ομάδων</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-primary fw-bold" href="#" onclick="copyRegLink(this, event)"><i class="fa fa-link"></i> Link Εγγραφής (Αντιγραφή)</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a>
                                 <a class="dropdown-item text-secondary fw-bold" href="index.php?action=mass_sms_form"><i class="fa fa-mobile-phone"></i> Μαζικό SMS</a>
-                                <a class="dropdown-item text-info fw-bold" href="index.php?action=export_google_contacts"><i class="fa fa-address-book"></i> Εξαγωγή Google Contacts</a>
                             </div>
                         </li>
 
@@ -165,39 +161,6 @@ class AdminPageMaker extends PageMaker
                     </form>
                 </div>
             </nav>
-            <script>
-                // Αντιγραφή του link εγγραφής (Διαθέσιμο σε όλο το Admin Panel)
-                function copyRegLink(btn, event) {
-                    if (event) {
-                        event.preventDefault();
-                        event.stopPropagation(); // Κρατάει το dropdown ανοιχτό για να δεις το μήνυμα "Αντιγράφηκε!"
-                    }
-                    var link = 'http://jhouv.eu/aepp/index.php?action=register';
-                    var fallbackFn = function() {
-                        var textArea = document.createElement("textarea");
-                        textArea.value = link;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {
-                            document.execCommand('copy');
-                        } catch (err) {}
-                        document.body.removeChild(textArea);
-                    };
-                    var successFn = function() {
-                        var originalHtml = btn.innerHTML;
-                        btn.innerHTML = '<i class="fa fa-check text-success"></i> <span class="text-success">Αντιγράφηκε!</span>';
-                        setTimeout(function() {
-                            btn.innerHTML = originalHtml;
-                        }, 2000);
-                    };
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(link).then(successFn).catch(fallbackFn);
-                    } else {
-                        fallbackFn();
-                        successFn();
-                    }
-                }
-            </script>
         <?php
     }
 

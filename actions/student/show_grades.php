@@ -38,6 +38,7 @@
                 $delaysCount = (is_array($grades) ? count($grades) : 0) - $tempOnTime;
                 $canRequestExtension = ($overallAverage > 15 && $delaysCount <= 5);
 
+                $classStats   = $db->getClassGradeStats($currentYear);
                 $allMezedakia = $db->getAllMezedakia();
                 $pendingRequestIds = is_object($db) ? $db->getStudentPendingRequests($studentId) : [];
 
@@ -134,6 +135,54 @@
                                     </tfoot>
                                 </table>
                             </div>
+
+                            <!-- Σύγκριση με τάξη -->
+                            <?php if ($classStats['max_avg'] !== null && $overallAverage > 0):
+                                $scale    = $classStats['max_avg'];
+                                $myPct    = min(100, round($overallAverage / $scale * 100));
+                                $clsPct   = min(100, round($classStats['class_avg'] / $scale * 100));
+                                $myColor  = $overallAverage >= $classStats['class_avg'] ? '#10b981' : '#f59e0b';
+                            ?>
+                            <div class="card border-0 shadow-sm mt-4 mb-2" style="border-radius:14px; overflow:hidden;">
+                                <div style="height:4px; background: linear-gradient(90deg, #6366f1, #0ea5e9);"></div>
+                                <div class="card-body px-4 py-3">
+                                    <div class="text-muted small fw-bold mb-3" style="letter-spacing:.6px; text-transform:uppercase;">Πορεία σε σχέση με την τάξη</div>
+
+                                    <!-- Ο Μ.Ο. σου -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small fw-bold" style="color:<?php echo $myColor; ?>;">Ο Μ.Ο. σου</span>
+                                            <span class="small fw-bold" style="color:<?php echo $myColor; ?>;"><?php echo number_format($overallAverage, 1); ?></span>
+                                        </div>
+                                        <div class="rounded-pill overflow-hidden" style="height:10px; background:#f1f5f9;">
+                                            <div class="rounded-pill h-100" style="width:<?php echo $myPct; ?>%; background:<?php echo $myColor; ?>; transition:width .8s ease;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Μ.Ο. τάξης -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small text-muted">Μ.Ο. τάξης</span>
+                                            <span class="small text-muted"><?php echo number_format($classStats['class_avg'], 1); ?></span>
+                                        </div>
+                                        <div class="rounded-pill overflow-hidden" style="height:10px; background:#f1f5f9;">
+                                            <div class="rounded-pill h-100" style="width:<?php echo $clsPct; ?>%; background:#94a3b8; transition:width .8s ease;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Υψηλότερος -->
+                                    <div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="small text-muted">Υψηλότερος στην τάξη</span>
+                                            <span class="small text-muted"><?php echo number_format($classStats['max_avg'], 1); ?></span>
+                                        </div>
+                                        <div class="rounded-pill overflow-hidden" style="height:10px; background:#f1f5f9;">
+                                            <div class="rounded-pill h-100" style="width:100%; background:#e2e8f0; transition:width .8s ease;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
 
                             <!-- Νέα Ενότητα: Αιτήματα Παράτασης -->
                             <div class="mt-5">

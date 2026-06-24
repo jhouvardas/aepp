@@ -667,50 +667,6 @@ class DbHandler
         return $studentId;
     }
 
-    public function registerStudent($data)
-    {
-        $conn = $this->connectToTutorDB();
-        if (!$conn) return false;
-
-        $name = trim(isset($data['name']) ? $data['name'] : '');
-        $lastName = trim(isset($data['lastName']) ? $data['lastName'] : '');
-        $email = trim(isset($data['email']) ? $data['email'] : '');
-        $phone = trim(isset($data['phone']) ? $data['phone'] : '');
-        $birthdate = trim(isset($data['birthdate']) ? $data['birthdate'] : '');
-        $school = trim(isset($data['school']) ? $data['school'] : '');
-        $password = trim(isset($data['student_password']) ? $data['student_password'] : '');
-        $schoolYear = $this->getCurrentTutorYear();
-        $user = $this->getCurrentTutorYear();
-        $target = '';
-        $status = 1;
-
-        // Έλεγχος αν υπάρχει ήδη μαθητής με αυτό το email
-        $stmtCheck = $conn->prepare("SELECT studentId FROM student WHERE email = ?");
-        $stmtCheck->bind_param("s", $email);
-        $stmtCheck->execute();
-        if ($stmtCheck->get_result()->num_rows > 0) {
-            $stmtCheck->close();
-            $conn->close();
-            return "email_exists";
-        }
-        $stmtCheck->close();
-
-        // Εισαγωγή νέου μαθητή
-        $sql = "INSERT INTO student (name, lastName, email, phone, birthday, school, password, schoolYear, user, target, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-
-        if (!$stmt) {
-            $conn->close();
-            return false;
-        }
-        $stmt->bind_param("ssssssssssi", $name, $lastName, $email, $phone, $birthdate, $school, $password, $schoolYear, $user, $target, $status);
-        $success = $stmt->execute();
-        $stmt->close();
-        $conn->close();
-
-        return $success;
-    }
-
     public function resetStudentPassword($email)
     {
         $conn = $this->connectToTutorDB();
@@ -992,6 +948,27 @@ class DbHandler
         $stmt->close();
         $conn->close();
         return $overallAverage;
+    }
+
+    public function getClassGradeStats($userYear)
+    {
+        $conn = $this->connectToFamilyDB();
+        $esc  = $conn->real_escape_string($userYear);
+        $row  = $conn->query(
+            "SELECT ROUND(AVG(student_avg), 2) AS class_avg,
+                    ROUND(MAX(student_avg), 2) AS max_avg
+             FROM (
+                 SELECT student_id, AVG(grade_value) AS student_avg
+                 FROM meze_grades
+                 WHERE user_year = '$esc' AND student_id != 999999
+                 GROUP BY student_id
+             ) AS averages"
+        )->fetch_assoc();
+        $conn->close();
+        return [
+            'class_avg' => $row['class_avg'] ? (float)$row['class_avg'] : null,
+            'max_avg'   => $row['max_avg']   ? (float)$row['max_avg']   : null,
+        ];
     }
 
     public function getStudentGroupTasks($studentId)

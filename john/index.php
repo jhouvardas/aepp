@@ -73,7 +73,7 @@
         exit();
     }
 
-    $noLayoutActions = ['export_word_exam', 'export_google_contacts', 'previewMeze', 'login', 'process_login'];
+    $noLayoutActions = ['export_word_exam', 'previewMeze', 'login', 'process_login'];
 
     if (!in_array($action, $noLayoutActions)) {
         $page->displayHeadMatter();
@@ -119,8 +119,6 @@
             'list_for_test'         => 'actions/theory/manage.php',
             'create_exam'           => 'actions/theory/manage.php',
             'export_word_exam'      => 'actions/theory/export.php',
-            // Exports
-            'export_google_contacts' => 'actions/exports/contacts.php',
             // Kena
             'addKena'               => 'actions/kena/manage.php',
             'saveKena'              => 'actions/kena/manage.php',
@@ -171,16 +169,11 @@
             'view_extension_requests' => 'actions/extensions/manage.php',
             'processExtension'      => 'actions/extensions/manage.php',
             'toggleMezeLock'        => 'actions/extensions/manage.php',
-            // Groups & Tasks (mixed in original file)
-            'manage_groups'         => 'actions/groups/manage.php',
+            // Groups & Tasks
             'print_group'           => 'actions/groups/manage.php',
             'assign_tasks'          => 'actions/groups/manage.php',
             'list_all_tasks'        => 'actions/groups/manage.php',
-            'save_group'            => 'actions/groups/manage.php',
-            'rename_group'          => 'actions/groups/manage.php',
-            'add_student_to_group'  => 'actions/groups/manage.php',
             'save_group_task'       => 'actions/groups/manage.php',
-            'remove_student_from_group' => 'actions/groups/manage.php',
             'grade_task'            => 'actions/tasks/manage.php',
             'save_task_grades'      => 'actions/tasks/manage.php',
             // Announcements
@@ -204,14 +197,19 @@
         if (isset($actionMap[$action])) {
             require $actionMap[$action];
         } else {
-            // Default: dashboard (λίστα μεζεδακίων)
-            $mezedakia = $db->getAllMezedakiaForAdmin();
+            // Default: dashboard (λίστα μεζεδακίων - μόνο προγραμματισμένα + 5 πρόσφατα)
+            $mezedakia = $db->getDashboardMezedakia();
+            $totalMezeCount = $db->getTotalMezedakiaCount();
             if (empty($userYear)) {
                 echo "<div class='container mt-4'><div class='alert alert-warning shadow-sm text-center'>
                         <i class='fa fa-user-circle'></i> Παρακαλώ πληκτρολογήστε το <b>Username</b> σας και πατήστε <b>Ορισμός</b> για να φορτώσουν τα μεζεδάκια.
                       </div></div>";
             } else {
-                $mezeFm->listMezedakia($mezedakia, $db);
+                $dashStats    = $db->getDashboardSubmissionStats($userYear);
+                $studentStats = $db->getStudentDashboardStats($userYear);
+                $allStudents  = $db->getTutorStudents($userYear);
+                $mezeFm->displayDashboardActivity($dashStats);
+                $mezeFm->displayStudentOverview($allStudents, $studentStats);
             }
         }
     }
