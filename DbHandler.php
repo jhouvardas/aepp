@@ -404,15 +404,55 @@ class DbHandler
         return $result;
     }
 
-    public function getAllMezedakia()
+    public function getAllMezedakia($studentId = null)
     {
-        $conn = $this->connectToFamilyDB();
+        $conn  = $this->connectToFamilyDB();
         $today = date('Y-m-d');
-        // Φέρνει μόνο τα μεζεδάκια που η ημερομηνία τους έχει φτάσει ή περάσει
-        $sql = "SELECT * FROM aepp_mezedakia 
-            WHERE mezeDate <= '$today' 
-            ORDER BY mezeDate DESC, mezeNumber DESC";
-        $result = $conn->query($sql);
+
+        if ($studentId) {
+            // Κανόνας ορατότητας:
+            // α) Μεζεδάκι ΧΩΡΙΣ group deadlines → ορατό σε όλους αν mezeDate <= σήμερα
+            // β) Μεζεδάκι ΜΕ group deadlines   → ορατό ΜΟΝΟ στους μαθητές των ομάδων που έχουν deadline
+            // Το solutionDate αντικαθίσταται από το group deadline της ομάδας του μαθητή
+            $sql = "SELECT m.*,
+                        COALESCE(
+                            (SELECT gd.deadline_at
+                             FROM aepp_meze_group_deadlines gd
+                             JOIN aepp_student_groups sg ON sg.group_id = gd.group_id
+                             WHERE gd.meze_id = m.mezeId AND sg.student_id = ?
+                             LIMIT 1),
+                            m.solutionDate
+                        ) AS solutionDate
+                    FROM aepp_mezedakia m
+                    WHERE (
+                        -- Χωρίς group deadlines: κανονική εμφάνιση με mezeDate
+                        (NOT EXISTS (
+                            SELECT 1 FROM aepp_meze_group_deadlines gd0
+                            WHERE gd0.meze_id = m.mezeId
+                        ) AND m.mezeDate <= ?)
+                        OR
+                        -- Με group deadlines: μόνο αν ο μαθητής ανήκει σε ομάδα με deadline
+                        EXISTS (
+                            SELECT 1
+                            FROM aepp_meze_group_deadlines gd2
+                            JOIN aepp_student_groups sg2 ON sg2.group_id = gd2.group_id
+                            WHERE gd2.meze_id = m.mezeId AND sg2.student_id = ?
+                        )
+                    )
+                    ORDER BY m.mezeDate DESC, m.mezeNumber DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("isi", $studentId, $today, $studentId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        } else {
+            $stmt = $conn->prepare("SELECT * FROM aepp_mezedakia WHERE mezeDate <= ? ORDER BY mezeDate DESC, mezeNumber DESC");
+            $stmt->bind_param("s", $today);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        }
+
         $conn->close();
         return $result;
     }
@@ -455,35 +495,54 @@ class DbHandler
         return $students;
     }
 
-    public function saveMezeSubmission($studentId, $mezeId, $text, $files)
+    public function hasStudentSubmitted($studentId, $mezeId)
     {
         $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT 1 FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ? LIMIT 1");
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->execute();
+        $exists = $stmt->get_result()->num_rows > 0;
+        $stmt->close();
+        $conn->close();
+        return $exists;
+    }
 
-        // 1. Έλεγχος για προηγούμενη υποβολή και διαγραφή παλιών αρχείων
-        $checkSql = "SELECT file1, file2, file3 FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
-        $stmtCheck = $conn->prepare($checkSql);
-        $stmtCheck->bind_param("ii", $studentId, $mezeId);
-        $stmtCheck->execute();
-        $res = $stmtCheck->get_result();
+    public function getMezeSolution($mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT mezeSolution, mezeSolutionImage FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmt->bind_param("i", $mezeId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $conn->close();
+        return $row;
+    }
 
-        if ($row = $res->fetch_assoc()) {
-            $oldTargetDir = "uploads/submissions/"; // Σιγουρέψου ότι εδώ είναι σωστό το path
-            for ($i = 1; $i <= 3; $i++) {
-                $f = "file" . $i;
-                if (!empty($row[$f])) {
-                    $filePath = $oldTargetDir . $row[$f];
-                    if (file_exists($filePath)) {
-                        unlink($filePath);
-                    }
-                }
-            }
-            $delSql = "DELETE FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?";
-            $stmtDel = $conn->prepare($delSql);
-            $stmtDel->bind_param("ii", $studentId, $mezeId);
-            $stmtDel->execute();
-            $stmtDel->close();
+    public function getStudentSubmittedMezeIds($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("SELECT meze_id FROM aepp_meze_submissions WHERE student_id = ?");
+        $stmt->bind_param("i", $studentId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $ids = [];
+        while ($r = $res->fetch_assoc()) {
+            $ids[] = (int)$r['meze_id'];
         }
-        $stmtCheck->close();
+        $stmt->close();
+        $conn->close();
+        return $ids;
+    }
+
+    public function saveMezeSubmission($studentId, $mezeId, $text, $files)
+    {
+        // Δεν επιτρέπεται επανυποβολή
+        if ($this->hasStudentSubmitted($studentId, $mezeId)) {
+            return false;
+        }
+
+        $conn = $this->connectToFamilyDB();
 
         // 2. Ανέβασμα των νέων αρχείων
         $uploadedFiles = [null, null, null];
@@ -647,7 +706,7 @@ class DbHandler
         if (!$conn) return false;
 
         // Επιτρέπουμε και την είσοδο με Master Passwords
-        if ($password === date('Ym') || $password === $this->getCurrentTutorYear()) {
+        if ($password === date('Ym') || $password === $this->getCurrentTutorYear() || (defined('MASTER_PASSWORD') && $password === MASTER_PASSWORD)) {
             $stmt = $conn->prepare("SELECT studentId FROM student WHERE email = ? AND status = 1 ORDER BY studentId DESC LIMIT 1");
             $stmt->bind_param("s", $email);
         } else {
@@ -705,6 +764,86 @@ class DbHandler
         $stmt->close();
         $conn->close();
         return false;
+    }
+
+    public function sendPasswordResetCode($email, $code)
+    {
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
+
+        $email = trim($email);
+        $stmt  = $conn->prepare("SELECT name, lastName FROM student WHERE email = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        if (!($row = $res->fetch_assoc())) {
+            $stmt->close();
+            $conn->close();
+            return false;
+        }
+        $name = $row['name'] . ' ' . $row['lastName'];
+        $stmt->close();
+        $conn->close();
+
+        $subject = "Κωδικός Επαλήθευσης για Επαναφορά Κωδικού (ΑΕΠΠ)";
+        $body    = "<div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 10px;'>
+                    <h2 style='color: #007bff;'>Επαναφορά Κωδικού Πρόσβασης</h2>
+                    <p>Γεια σου <b>" . htmlspecialchars($name) . "</b>,</p>
+                    <p>Ο κωδικός επαλήθευσης για να ορίσεις νέο κωδικό είναι:</p>
+                    <div style='background:#f8f9fa; padding:15px; border-radius:5px; text-align:center; margin:20px 0;'>
+                        <h1 style='color:#dc3545; letter-spacing:8px; margin:0;'>$code</h1>
+                    </div>
+                    <p>Ο κωδικός ισχύει για <b>1 ώρα</b>. Αν δεν ζήτησες επαναφορά κωδικού, αγνόησε αυτό το email.</p>
+                    </div>";
+        $this->sendSystemEmail($email, $subject, $body);
+        return true;
+    }
+
+    public function updateStudentPasswordByEmail($email, $newPass)
+    {
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return false;
+
+        $stmt = $conn->prepare("UPDATE student SET password = ? WHERE email = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("ss", $newPass, $email);
+        $stmt->execute();
+        $ok = $stmt->affected_rows > 0;
+        $stmt->close();
+        $conn->close();
+        return $ok;
+    }
+
+    public function changeStudentPassword($studentId, $oldPass, $newPass)
+    {
+        if ($studentId == 999999) return 'error';
+
+        $conn = $this->connectToTutorDB();
+        if (!$conn) return 'error';
+
+        $oldPass = trim($oldPass);
+        $newPass = trim($newPass);
+
+        $stmt = $conn->prepare("SELECT studentId FROM student WHERE studentId = ? AND password = ? AND status = 1 LIMIT 1");
+        $stmt->bind_param("is", $studentId, $oldPass);
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        if ($res->num_rows === 0) {
+            $stmt->close();
+            $conn->close();
+            return 'wrong_old';
+        }
+        $stmt->close();
+
+        $updateStmt = $conn->prepare("UPDATE student SET password = ? WHERE studentId = ?");
+        $updateStmt->bind_param("si", $newPass, $studentId);
+        $updateStmt->execute();
+        $ok = $updateStmt->affected_rows > 0;
+        $updateStmt->close();
+        $conn->close();
+
+        return $ok ? 'ok' : 'error';
     }
 
     public function getCurrentTutorYear()
@@ -852,60 +991,58 @@ class DbHandler
         return false;
     }
 
-    public function canShowMezeSolution($mezeId, $userYear)
+    public function canShowMezeSolution($mezeId, $userYear, $studentId = null)
     {
+        // Αν ο μαθητής έχει υποβάλει, βλέπει αμέσως τη λύση
+        if ($studentId && $this->hasStudentSubmitted($studentId, $mezeId)) {
+            return true;
+        }
+
         $conn = $this->connectToFamilyDB();
 
-        // 1. Get all group deadlines for this meze
-        $stmt = $conn->prepare("SELECT deadline_at FROM aepp_meze_group_deadlines WHERE meze_id = ?");
-        $stmt->bind_param("i", $mezeId);
-        $stmt->execute();
-        $res = $stmt->get_result();
-
-        $deadlines = [];
-        while ($row = $res->fetch_assoc()) {
-            $deadlines[] = $row['deadline_at'];
-        }
-        $stmt->close();
-
-        if (empty($deadlines)) {
-            // No group deadlines set. Fallback to old logic.
-            $sql = "SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?";
-            $stmtOld = $conn->prepare($sql);
-            $stmtOld->bind_param("i", $mezeId);
-            $stmtOld->execute();
-            $mezeData = $stmtOld->get_result()->fetch_assoc();
-            $stmtOld->close();
-
-            if (!$mezeData || empty($mezeData['solutionDate']) || strtotime($mezeData['solutionDate']) > time()) {
-                $conn->close();
-                return false;
-            }
-
-            // Check for active extensions (old system)
-            $extSql = "SELECT COUNT(*) as extCount FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())";
-            $extStmt = $conn->prepare($extSql);
-            $extStmt->bind_param("i", $mezeId);
-            $extStmt->execute();
-            $extRow = $extStmt->get_result()->fetch_assoc();
-            $hasActiveExtensions = ($extRow['extCount'] > 0);
-            $extStmt->close();
+        // Αν έχουμε studentId, ελέγχουμε το deadline της ομάδας ΤΟΥ
+        if ($studentId) {
+            $stmt = $conn->prepare(
+                "SELECT gd.deadline_at
+                 FROM aepp_meze_group_deadlines gd
+                 JOIN aepp_student_groups sg ON sg.group_id = gd.group_id
+                 WHERE gd.meze_id = ? AND sg.student_id = ?
+                 LIMIT 1"
+            );
+            $stmt->bind_param("ii", $mezeId, $studentId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
             $conn->close();
-            return !$hasActiveExtensions;
-        }
 
-        // New logic: Find the latest deadline among all groups
-        $latestTimestamp = 0;
-        foreach ($deadlines as $d) {
-            $ts = strtotime($d);
-            if ($ts > $latestTimestamp) {
-                $latestTimestamp = $ts;
+            if ($row) {
+                // Η λύση εμφανίζεται μόνο αν έχει περάσει το deadline της ομάδας του
+                return time() > strtotime($row['deadline_at']);
             }
+            // Μαθητής χωρίς group deadline → χρήση κανονικής λογικής solutionDate
         }
 
+        // Fallback: χωρίς group deadlines, χρήση global solutionDate
+        $stmtOld = $conn->prepare("SELECT solutionDate FROM aepp_mezedakia WHERE mezeId = ?");
+        $stmtOld->bind_param("i", $mezeId);
+        $stmtOld->execute();
+        $mezeData = $stmtOld->get_result()->fetch_assoc();
+        $stmtOld->close();
+
+        if (!$mezeData || empty($mezeData['solutionDate']) || strtotime($mezeData['solutionDate']) > time()) {
+            $conn->close();
+            return false;
+        }
+
+        // Αν υπάρχουν ενεργές παρατάσεις, δεν εμφανίζεται ακόμα η λύση
+        $extStmt = $conn->prepare("SELECT COUNT(*) as extCount FROM aepp_meze_extensions WHERE meze_id = ? AND (expires_at IS NULL OR expires_at > NOW())");
+        $extStmt->bind_param("i", $mezeId);
+        $extStmt->execute();
+        $extRow = $extStmt->get_result()->fetch_assoc();
+        $hasActiveExtensions = ($extRow['extCount'] > 0);
+        $extStmt->close();
         $conn->close();
-        // Show solution only if the current time is past the latest deadline of all assigned groups
-        return time() > $latestTimestamp;
+        return !$hasActiveExtensions;
     }
 
     public function getStudentGradesForStudent($studentId, $userYear)
@@ -1249,5 +1386,118 @@ class DbHandler
         */
 
         return true; // Προσωρινά επιστρέφει ΠΑΝΤΑ true (ακόμα και χωρίς πάροχο) για να δοκιμάσετε το περιβάλλον χρήστη
+    }
+
+    // ==================== ΣΧΟΛΕΣ / ΠΡΟΤΙΜΗΣΕΙΣ ====================
+
+    public function ensureSchoolsTables()
+    {
+        $conn = $this->connectToFamilyDB();
+        $conn->query("CREATE TABLE IF NOT EXISTS aepp_schools (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(20) DEFAULT '',
+            university VARCHAR(300) NOT NULL DEFAULT '',
+            department VARCHAR(300) NOT NULL DEFAULT '',
+            city VARCHAR(100) NOT NULL DEFAULT '',
+            direction VARCHAR(100) NOT NULL DEFAULT '',
+            base_points VARCHAR(20) DEFAULT '',
+            year INT NOT NULL DEFAULT 2024
+        ) CHARACTER SET utf8 COLLATE utf8_unicode_ci");
+        $conn->query("CREATE TABLE IF NOT EXISTS aepp_student_preferences (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            student_id INT NOT NULL,
+            school_id INT NOT NULL,
+            preference_order INT NOT NULL DEFAULT 1,
+            UNIQUE KEY uq_student_school (student_id, school_id),
+            INDEX idx_student (student_id)
+        ) CHARACTER SET utf8 COLLATE utf8_unicode_ci");
+        $conn->close();
+    }
+
+    public function getSchoolYears()
+    {
+        $conn = $this->connectToFamilyDB();
+        $result = $conn->query("SELECT DISTINCT year FROM aepp_schools ORDER BY year DESC");
+        $years = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) $years[] = (int)$row['year'];
+        }
+        $conn->close();
+        return $years;
+    }
+
+    public function getSchoolsForStudent()
+    {
+        $conn = $this->connectToFamilyDB();
+        $rowYear = $conn->query("SELECT MAX(year) as y FROM aepp_schools")->fetch_assoc();
+        if (!$rowYear || !$rowYear['y']) {
+            $conn->close();
+            return ['schools' => [], 'year' => null, 'directions' => []];
+        }
+        $latestYear = (int)$rowYear['y'];
+
+        $stmt = $conn->prepare("SELECT * FROM aepp_schools WHERE year = ? ORDER BY university ASC, department ASC");
+        $stmt->bind_param("i", $latestYear);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $schools = [];
+        $directions = [];
+        while ($row = $result->fetch_assoc()) {
+            $schools[] = $row;
+            if (!empty($row['direction']) && !in_array($row['direction'], $directions)) {
+                $directions[] = $row['direction'];
+            }
+        }
+        $stmt->close();
+        $conn->close();
+        sort($directions);
+        return ['schools' => $schools, 'year' => $latestYear, 'directions' => $directions];
+    }
+
+    public function getStudentPreferences($studentId)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("
+            SELECT p.preference_order, s.id, s.university, s.department, s.city, s.direction, s.base_points, s.year
+            FROM aepp_student_preferences p
+            JOIN aepp_schools s ON s.id = p.school_id
+            WHERE p.student_id = ?
+            ORDER BY p.preference_order ASC
+        ");
+        $stmt->bind_param("i", $studentId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $prefs = [];
+        while ($row = $result->fetch_assoc()) {
+            $prefs[] = $row;
+        }
+        $stmt->close();
+        $conn->close();
+        return $prefs;
+    }
+
+    public function saveStudentPreferences($studentId, $orderedSchoolIds)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        $stmt = $conn->prepare("DELETE FROM aepp_student_preferences WHERE student_id = ?");
+        $stmt->bind_param("i", $studentId);
+        $stmt->execute();
+        $stmt->close();
+
+        if (!empty($orderedSchoolIds)) {
+            $orderedSchoolIds = array_slice($orderedSchoolIds, 0, 10); // Max 10
+            $stmt = $conn->prepare("INSERT INTO aepp_student_preferences (student_id, school_id, preference_order) VALUES (?, ?, ?)");
+            foreach ($orderedSchoolIds as $order => $schoolId) {
+                $schoolId = (int)$schoolId;
+                $orderNum = $order + 1;
+                if ($schoolId > 0) {
+                    $stmt->bind_param("iii", $studentId, $schoolId, $orderNum);
+                    $stmt->execute();
+                }
+            }
+            $stmt->close();
+        }
+        $conn->close();
     }
 }

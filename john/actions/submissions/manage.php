@@ -1,5 +1,13 @@
 ﻿<?php
 switch ($action) {
+        case 'deleteSubmission':
+            if (isset($_GET['student_id'], $_GET['meze_id'])) {
+                $db->deleteSubmission((int)$_GET['student_id'], (int)$_GET['meze_id']);
+                echo "<script>window.location.href='index.php?action=viewSubmissions&id=" . (int)$_GET['meze_id'] . "';</script>";
+                exit();
+            }
+            break;
+
         case 'viewSubmissions':
             if (isset($_GET['id'])) {
                 $mezeRes = $db->getMezedakiById($_GET['id']);

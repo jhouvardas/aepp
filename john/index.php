@@ -161,6 +161,7 @@
             'sendReminder'          => 'actions/submissions/manage.php',
             'quickGrade'            => 'actions/submissions/manage.php',
             'sendReportEmail'       => 'actions/submissions/manage.php',
+            'deleteSubmission'      => 'actions/submissions/manage.php',
             // Extensions
             'giveExtension'         => 'actions/extensions/manage.php',
             'extendMezeForAll'      => 'actions/extensions/manage.php',
@@ -192,6 +193,11 @@
             'retry_failed_emails'   => 'actions/emails/manage.php',
             'mass_sms_form'         => 'actions/emails/manage.php',
             'send_mass_sms'         => 'actions/emails/manage.php',
+            // Schools / Universities
+            'importSchools'         => 'actions/schools/manage.php',
+            'listSchools'           => 'actions/schools/manage.php',
+            'deleteSchoolYear'      => 'actions/schools/manage.php',
+            'allSchoolPreferences'  => 'actions/schools/manage.php',
         ];
 
         if (isset($actionMap[$action])) {

@@ -1,26 +1,7 @@
 ﻿<?php
         $currentYear = $db->getCurrentTutorYear();
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_SESSION['student_id'])) {
-            $studentId = null;
-
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                $email = isset($_POST['student_email']) ? $_POST['student_email'] : '';
-                $pass = isset($_POST['st_access']) ? $_POST['st_access'] : '';
-                $studentId = $db->authenticateStudentByEmail($email, $pass);
-
-                if ($studentId) {
-                    $_SESSION['student_id'] = $studentId;
-                    $returnTo = isset($_GET['returnTo']) ? $_GET['returnTo'] : '';
-                    if ($returnTo === 'viewMezedakia') {
-                        header("Location: index.php?action=viewMezedakia");
-                        exit();
-                    }
-                }
-            } else {
-                $studentId = $_SESSION['student_id'];
-            }
-
-            if ($studentId) {
+        $studentId = isset($_SESSION['student_id']) ? $_SESSION['student_id'] : null;
+        if ($studentId) {
 
                 $grades = $db->getStudentGradesForStudent($studentId, $currentYear);
                 $students = $db->getTutorStudents($currentYear);
@@ -50,7 +31,8 @@
                 <div class="container mt-4 mb-5">
                     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
                         <h3 class="text-primary mb-0"><i class="fa fa-user-circle"></i> <?php echo $fullName; ?></h3>
-                        <a href="index.php?action=myGrades" class="btn btn-outline-secondary btn-sm"><i class="fa fa-sign-out"></i> Έξοδος</a>
+                        <a href="index.php?action=studentDashboard" class="btn btn-outline-primary btn-sm me-2"><i class="fa fa-th-large"></i> Dashboard</a>
+                        <a href="index.php?action=studentLogout" class="btn btn-outline-secondary btn-sm"><i class="fa fa-sign-out"></i> Αποσύνδεση</a>
                     </div>
 
                     <!-- Navigation tabs για τον μαθητή -->
@@ -389,10 +371,5 @@
                 </div>
         <?php
             } else {
-                unset($_SESSION['student_id']);
-                echo "<div class='container mt-5 text-center'><div class='alert alert-danger d-inline-block px-5 shadow'><h4><i class='fa fa-exclamation-triangle'></i> Σφάλμα Σύνδεσης</h4><p>Λάθος Email ή Κωδικός. Παρακαλώ προσπαθήστε ξανά.</p><hr><a href='index.php?action=myGrades' class='btn btn-danger'>Επιστροφή</a></div></div>";
+                echo "<script>window.location.href='index.php?action=myGrades';</script>";
             }
-        } else {
-            header("Location: index.php?action=myGrades");
-            exit();
-        }

@@ -439,6 +439,34 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
+    public function deleteSubmission($studentId, $mezeId)
+    {
+        $conn = $this->connectToFamilyDB();
+
+        // Διαγραφή αρχείων από τον server
+        $stmt = $conn->prepare("SELECT file1, file2, file3 FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?");
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($row) {
+            $targetDir = __DIR__ . "/../../uploads/submissions/";
+            foreach (['file1', 'file2', 'file3'] as $f) {
+                if (!empty($row[$f]) && file_exists($targetDir . $row[$f])) {
+                    unlink($targetDir . $row[$f]);
+                }
+            }
+        }
+
+        $stmt = $conn->prepare("DELETE FROM aepp_meze_submissions WHERE student_id = ? AND meze_id = ?");
+        $stmt->bind_param("ii", $studentId, $mezeId);
+        $success = $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        return $success;
+    }
+
     public function massDeleteOldSubmissions()
     {
         $conn = $this->connectToFamilyDB();
@@ -569,7 +597,7 @@ class AdminDbHandler extends DbHandler
         return $success;
     }
 
-    public function toggleGroupDeadline($mezeId, $groupId)
+    public function toggleGroupDeadline($mezeId, $groupId, $deadline = null)
     {
         $conn = $this->connectToFamilyDB();
 
@@ -585,10 +613,20 @@ class AdminDbHandler extends DbHandler
             $stmt = $conn->prepare("DELETE FROM aepp_meze_group_deadlines WHERE meze_id = ? AND group_id = ?");
             $stmt->bind_param("ii", $mezeId, $groupId);
         } else {
-            // If it doesn't exist, create it for tomorrow at 3 AM
-            $deadline = date('Y-m-d 03:00:00', strtotime('+1 day'));
+            // Use provided deadline (from date picker) or fall back to tomorrow at 3am
+            $deadlineVal = $deadline ? date('Y-m-d H:i:s', strtotime($deadline)) : date('Y-m-d 03:00:00', strtotime('+1 day'));
             $stmt = $conn->prepare("INSERT INTO aepp_meze_group_deadlines (meze_id, group_id, deadline_at) VALUES (?, ?, ?)");
-            $stmt->bind_param("iis", $mezeId, $groupId, $deadline);
+            $stmt->bind_param("iis", $mezeId, $groupId, $deadlineVal);
+            $stmt->execute();
+            $stmt->close();
+
+            // Αν το mezeDate είναι στο μέλλον, το βάζουμε σήμερα ώστε να φαίνεται στους μαθητές
+            $stmtUpd = $conn->prepare("UPDATE aepp_mezedakia SET mezeDate = CURDATE() WHERE mezeId = ? AND mezeDate > CURDATE()");
+            $stmtUpd->bind_param("i", $mezeId);
+            $success = $stmtUpd->execute();
+            $stmtUpd->close();
+            $conn->close();
+            return $success;
         }
 
         $success = $stmt->execute();
@@ -1149,11 +1187,22 @@ class AdminDbHandler extends DbHandler
         $conn = $this->connectToFamilyDB();
         $esc = $conn->real_escape_string($userYear);
 
-        $totalRow = $conn->query(
-            "SELECT COUNT(*) as total FROM aepp_mezedakia
-             WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030"
-        )->fetch_assoc();
-        $totalMeze = (int)$totalRow['total'];
+        // Ορατά μεζεδάκια ανά μαθητή — ακριβώς η ίδια λογική με το getAllMezedakia():
+        // α) Δεν έχει ΚΑΝΕΝΑ group deadline ΚΑΙ mezeDate <= σήμερα (globally ορατό)
+        // β) Έχει group deadline για την ομάδα του συγκεκριμένου μαθητή
+        $visibleSubq = "
+            SELECT m2.mezeId FROM aepp_mezedakia m2
+            WHERE m2.mezeNumber >= 27 AND YEAR(m2.mezeDate) < 2030
+            AND (
+                (NOT EXISTS (SELECT 1 FROM aepp_meze_group_deadlines gd0 WHERE gd0.meze_id = m2.mezeId)
+                 AND m2.mezeDate <= CURDATE())
+                OR EXISTS (
+                    SELECT 1 FROM aepp_meze_group_deadlines gd2
+                    JOIN aepp_student_groups sg2 ON sg2.group_id = gd2.group_id
+                    WHERE gd2.meze_id = m2.mezeId AND sg2.student_id = sg.student_id
+                )
+            )
+        ";
 
         $r = $conn->query(
             "SELECT
@@ -1163,15 +1212,28 @@ class AdminDbHandler extends DbHandler
                 COUNT(DISTINCT gr.meze_id)                                               AS graded_count,
                 ROUND(AVG(gr.grade_value), 1)                                            AS avg_grade,
                 COALESCE(SUM(CASE WHEN gr.is_on_time = 1 THEN 1 ELSE 0 END), 0)         AS on_time_count,
-                COALESCE(SUM(CASE WHEN gr.grade_value = 0  THEN 1 ELSE 0 END), 0)       AS zero_count
+                COALESCE(SUM(CASE WHEN gr.grade_value = 0  THEN 1 ELSE 0 END), 0)       AS zero_count,
+                (SELECT COUNT(DISTINCT m3.mezeId)
+                 FROM aepp_mezedakia m3
+                 WHERE m3.mezeNumber >= 27 AND YEAR(m3.mezeDate) < 2030
+                 AND (
+                     (NOT EXISTS (SELECT 1 FROM aepp_meze_group_deadlines gd0b WHERE gd0b.meze_id = m3.mezeId)
+                      AND m3.mezeDate <= CURDATE())
+                     OR EXISTS (
+                         SELECT 1 FROM aepp_meze_group_deadlines gd3
+                         JOIN aepp_student_groups sg3 ON sg3.group_id = gd3.group_id
+                         WHERE gd3.meze_id = m3.mezeId AND sg3.student_id = sg.student_id
+                     )
+                 )
+                )                                                                        AS total_visible
              FROM aepp_student_groups sg
              JOIN aepp_groups g ON g.id = sg.group_id AND g.user_year = '$esc'
              LEFT JOIN aepp_meze_submissions sub
                 ON sub.student_id = sg.student_id
-                AND sub.meze_id IN (SELECT mezeId FROM aepp_mezedakia WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030)
+                AND sub.meze_id IN ($visibleSubq)
              LEFT JOIN meze_grades gr
                 ON gr.student_id = sg.student_id AND gr.user_year = '$esc'
-                AND gr.meze_id IN (SELECT mezeId FROM aepp_mezedakia WHERE mezeNumber >= 27 AND mezeDate <= CURDATE() AND YEAR(mezeDate) < 2030)
+                AND gr.meze_id IN ($visibleSubq)
              WHERE sg.student_id != 999999
              GROUP BY sg.student_id, g.group_name
              ORDER BY g.group_name, sg.student_id"
@@ -1180,17 +1242,18 @@ class AdminDbHandler extends DbHandler
         $stats = [];
         while ($row = $r->fetch_assoc()) {
             $stats[(int)$row['student_id']] = [
-                'group'      => $row['group_name'] ?? '-',
-                'submitted'  => (int)$row['submitted_count'],
-                'graded'     => (int)$row['graded_count'],
-                'avg_grade'  => $row['avg_grade'] !== null ? (float)$row['avg_grade'] : null,
-                'on_time'    => (int)$row['on_time_count'],
-                'zero_count' => (int)$row['zero_count'],
+                'group'       => $row['group_name'] ?? '-',
+                'submitted'   => (int)$row['submitted_count'],
+                'graded'      => (int)$row['graded_count'],
+                'avg_grade'   => $row['avg_grade'] !== null ? (float)$row['avg_grade'] : null,
+                'on_time'     => (int)$row['on_time_count'],
+                'zero_count'  => (int)$row['zero_count'],
+                'total_meze'  => (int)$row['total_visible'],
             ];
         }
 
         $conn->close();
-        return ['stats' => $stats, 'total_meze' => $totalMeze];
+        return ['stats' => $stats, 'total_meze' => 0]; // total_meze global δεν χρησιμοποιείται πλέον
     }
 
     public function getDashboardSubmissionStats($userYear)
@@ -1871,5 +1934,232 @@ class AdminDbHandler extends DbHandler
         $stmt->close();
         $conn->close();
         return $deadlines;
+    }
+
+    // ==================== ΣΧΟΛΕΣ / UNIVERSITIES ====================
+
+    private function normalizeHeader($h)
+    {
+        $h = mb_strtolower(trim($h), 'UTF-8');
+        $from = ['ά','έ','ή','ί','ό','ύ','ώ','ϊ','ΐ','ΰ','/','\\','-','(',')',' ','.'];
+        $to   = ['α','ε','η','ι','ο','υ','ω','ι','ι','υ','_','_','_','','', '_','_'];
+        return str_replace($from, $to, $h);
+    }
+
+    public function parseSchoolsCsv($filePath)
+    {
+        $rows = [];
+        $errors = [];
+
+        if (($handle = fopen($filePath, 'r')) === false) {
+            return ['rows' => [], 'errors' => ['Δεν ήταν δυνατό το άνοιγμα του αρχείου.']];
+        }
+
+        // Detect delimiter
+        $firstLine = fgets($handle);
+        rewind($handle);
+        $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+
+        // Read header row
+        $headerRaw = fgetcsv($handle, 0, $delimiter);
+        if (!$headerRaw) {
+            fclose($handle);
+            return ['rows' => [], 'errors' => ['Το αρχείο είναι κενό ή δεν έχει headers.']];
+        }
+
+        // Strip BOM from first header
+        $headerRaw[0] = preg_replace('/^\xEF\xBB\xBF/', '', $headerRaw[0]);
+
+        // Map headers to fields
+        $colMap = [];
+        foreach ($headerRaw as $i => $h) {
+            $n = $this->normalizeHeader($h);
+            if (strpos($n, 'κωδ') === 0 || $n === 'code') {
+                $colMap['code'] = $i;
+            } elseif (strpos($n, 'ιδρυμ') !== false || strpos($n, 'πανεπ') !== false || $n === 'university') {
+                $colMap['university'] = $i;
+            } elseif (strpos($n, 'τμημ') !== false || strpos($n, 'σχολη') !== false || $n === 'department') {
+                $colMap['department'] = $i;
+            } elseif (strpos($n, 'πολη') !== false || $n === 'city') {
+                $colMap['city'] = $i;
+            } elseif (strpos($n, 'κατευθ') !== false || strpos($n, 'ομαδ') !== false || $n === 'direction') {
+                $colMap['direction'] = $i;
+            } elseif (strpos($n, 'ελαχ') !== false || strpos($n, 'βαση') !== false || strpos($n, 'μορι') !== false || strpos($n, 'point') !== false || strpos($n, 'base') !== false) {
+                $colMap['base_points'] = $i;
+            }
+        }
+
+        if (!isset($colMap['department']) && !isset($colMap['university'])) {
+            // Fallback: positional mapping if headers not recognized
+            // Assume: code, university, department, city, direction, base_points
+            $map = ['code', 'university', 'department', 'city', 'direction', 'base_points'];
+            foreach ($map as $i => $field) {
+                $colMap[$field] = $i;
+            }
+        }
+
+        $lineNum = 1;
+        while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $lineNum++;
+            if (count(array_filter($data)) === 0) continue;
+
+            $row = [
+                'code'        => isset($colMap['code'])        ? trim($data[$colMap['code']] ?? '')        : '',
+                'university'  => isset($colMap['university'])  ? trim($data[$colMap['university']] ?? '')  : '',
+                'department'  => isset($colMap['department'])  ? trim($data[$colMap['department']] ?? '')  : '',
+                'city'        => isset($colMap['city'])        ? trim($data[$colMap['city']] ?? '')        : '',
+                'direction'   => isset($colMap['direction'])   ? trim($data[$colMap['direction']] ?? '')   : '',
+                'base_points' => isset($colMap['base_points']) ? trim($data[$colMap['base_points']] ?? '') : '',
+            ];
+
+            if (empty($row['department']) && empty($row['university'])) {
+                continue;
+            }
+
+            $rows[] = $row;
+        }
+
+        fclose($handle);
+        return ['rows' => $rows, 'errors' => $errors, 'headers' => $headerRaw, 'colMap' => $colMap];
+    }
+
+    public function parseCsvHeadersAndPreview($filePath)
+    {
+        $headers = [];
+        $preview = [];
+        if (($handle = fopen($filePath, 'r')) === false) return ['headers' => [], 'preview' => []];
+        $firstLine = fgets($handle);
+        rewind($handle);
+        $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+        $headerRaw = fgetcsv($handle, 0, $delimiter);
+        if ($headerRaw) {
+            $headerRaw[0] = preg_replace('/^\xEF\xBB\xBF/', '', $headerRaw[0]);
+            $headers = $headerRaw;
+        }
+        $i = 0;
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false && $i < 5) {
+            $preview[] = $row;
+            $i++;
+        }
+        fclose($handle);
+        return ['headers' => $headers, 'preview' => $preview];
+    }
+
+    public function autoDetectColumnMapping($headers)
+    {
+        $map = [];
+        foreach ($headers as $i => $h) {
+            $n = $this->normalizeHeader($h);
+            if (!isset($map['code']) && (strpos($n, 'κωδ') === 0 || $n === 'code')) {
+                $map['code'] = $i;
+            } elseif (!isset($map['university']) && (strpos($n, 'ιδρυμ') !== false || strpos($n, 'πανεπ') !== false || $n === 'university')) {
+                $map['university'] = $i;
+            } elseif (!isset($map['department']) && (strpos($n, 'τμημ') !== false || strpos($n, 'σχολη') !== false || $n === 'department')) {
+                $map['department'] = $i;
+            } elseif (!isset($map['city']) && (strpos($n, 'πολη') !== false || $n === 'city')) {
+                $map['city'] = $i;
+            } elseif (!isset($map['direction']) && (strpos($n, 'κατευθ') !== false || strpos($n, 'ομαδ') !== false || $n === 'direction')) {
+                $map['direction'] = $i;
+            } elseif (!isset($map['base_points']) && (strpos($n, 'ελαχ') !== false || strpos($n, 'βαθμ') !== false || strpos($n, 'βαση') !== false || strpos($n, 'μορι') !== false || strpos($n, 'point') !== false || strpos($n, 'base') !== false || strpos($n, 'τελευτ') !== false)) {
+                $map['base_points'] = $i;
+            } elseif (!isset($map['sci_field']) && (strpos($n, 'πεδι') !== false || strpos($n, 'επιστημ') !== false)) {
+                $map['sci_field'] = $i;
+            }
+        }
+        return $map;
+    }
+
+    public function parseSchoolsCsvWithMapping($filePath, $colMap)
+    {
+        $rows = [];
+        if (($handle = fopen($filePath, 'r')) === false) return [];
+        $firstLine = fgets($handle);
+        rewind($handle);
+        $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+        fgetcsv($handle, 0, $delimiter); // Skip header row
+        while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+            if (count(array_filter($data)) === 0) continue;
+            // Φίλτρο: μόνο σχολές που ανήκουν στο Επιστημονικό Πεδίο 4
+            if (isset($colMap['sci_field']) && $colMap['sci_field'] !== '') {
+                $fieldVal = trim($data[(int)$colMap['sci_field']] ?? '');
+                // Το πεδίο μπορεί να έχει τιμή "4" ή "1,4" ή "4,2" κτλ.
+                $fieldNums = preg_split('/[,;\s\/]+/', $fieldVal);
+                if (!in_array('4', $fieldNums)) continue;
+            }
+
+            $row = [
+                'code'        => isset($colMap['code'])        && $colMap['code'] !== '' ? trim($data[(int)$colMap['code']] ?? '')        : '',
+                'university'  => isset($colMap['university'])  && $colMap['university'] !== '' ? trim($data[(int)$colMap['university']] ?? '')  : '',
+                'department'  => isset($colMap['department'])  && $colMap['department'] !== '' ? trim($data[(int)$colMap['department']] ?? '')  : '',
+                'city'        => isset($colMap['city'])        && $colMap['city'] !== '' ? trim($data[(int)$colMap['city']] ?? '')        : '',
+                'direction'   => isset($colMap['direction'])   && $colMap['direction'] !== '' ? trim($data[(int)$colMap['direction']] ?? '')   : '',
+                'base_points' => isset($colMap['base_points']) && $colMap['base_points'] !== '' ? trim($data[(int)$colMap['base_points']] ?? '') : '',
+            ];
+            if (empty($row['department']) && empty($row['university'])) continue;
+            $rows[] = $row;
+        }
+        fclose($handle);
+        return $rows;
+    }
+
+    public function importSchools($rows, $year)
+    {
+        $this->ensureSchoolsTables();
+        $conn = $this->connectToFamilyDB();
+
+        $stmt = $conn->prepare("DELETE FROM aepp_schools WHERE year = ?");
+        $stmt->bind_param("i", $year);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $conn->prepare("INSERT INTO aepp_schools (code, university, department, city, direction, base_points, year) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $count = 0;
+        foreach ($rows as $row) {
+            $code       = $row['code'] ?? '';
+            $university = $row['university'] ?? '';
+            $department = $row['department'] ?? '';
+            $city       = $row['city'] ?? '';
+            $direction  = $row['direction'] ?? '';
+            $points     = $row['base_points'] ?? '';
+            if (empty($department) && empty($university)) continue;
+            $stmt->bind_param("ssssssi", $code, $university, $department, $city, $direction, $points, $year);
+            $stmt->execute();
+            $count++;
+        }
+        $stmt->close();
+        $conn->close();
+        return $count;
+    }
+
+    public function getSchoolsAdmin($year = null)
+    {
+        $this->ensureSchoolsTables();
+        $conn = $this->connectToFamilyDB();
+        if ($year) {
+            $stmt = $conn->prepare("SELECT * FROM aepp_schools WHERE year = ? ORDER BY university ASC, department ASC");
+            $stmt->bind_param("i", $year);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $result = $conn->query("SELECT * FROM aepp_schools ORDER BY year DESC, university ASC, department ASC");
+        }
+        $schools = [];
+        while ($row = $result->fetch_assoc()) {
+            $schools[] = $row;
+        }
+        $conn->close();
+        return $schools;
+    }
+
+    public function deleteSchoolsByYear($year)
+    {
+        $conn = $this->connectToFamilyDB();
+        $stmt = $conn->prepare("DELETE FROM aepp_schools WHERE year = ?");
+        $stmt->bind_param("i", $year);
+        $stmt->execute();
+        $affected = $stmt->affected_rows;
+        $stmt->close();
+        $conn->close();
+        return $affected;
     }
 }

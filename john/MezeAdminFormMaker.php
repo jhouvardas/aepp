@@ -499,7 +499,18 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $currentTimestamp = time();
                                 $userYear = isset($_SESSION['tutor_user']) ? $_SESSION['tutor_user'] : '';
 
+                                $groupDeadlines = $dbHandler->getGroupDeadlinesForMeze($mezeId);
+
                                 $isFuture = ($mTimestamp > $currentTimestamp);
+                                // Αν υπάρχει ενεργό group deadline, δεν θεωρείται "Προγραμματισμένο"
+                                if ($isFuture && !empty($groupDeadlines)) {
+                                    foreach ($groupDeadlines as $gDeadline) {
+                                        if (strtotime($gDeadline) > $currentTimestamp) {
+                                            $isFuture = false;
+                                            break;
+                                        }
+                                    }
+                                }
                                 $isArchived = ($isFuture && date('Y', $mTimestamp) >= 2030);
                                 $isPrevYear = ((int)($row['mezeNumber'] ?? 0) < 27);
 
@@ -528,7 +539,6 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $isExpired = ($solTimestamp > 0 && $solTimestamp < $currentTimestamp);
                                 $hasExtensions = (!empty($userYear)) ? $dbHandler->hasAnyExtension($mezeId, $userYear) : false;
                                 $isClosed = $isLocked || ($isExpired && !$hasExtensions);
-                                $groupDeadlines = $dbHandler->getGroupDeadlinesForMeze($mezeId);
 
                                 $rowStyle = '';
                                 $badgeHtml = '';
@@ -629,14 +639,32 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <td class="text-center small"><?php echo $dbHandler->formatGreekDate($row['mezeDate']); ?></td>
                                     <td class="text-center small">
                                         <?php
-                                        if (!empty($row['solutionDate'])) {
+                                        if (!empty($groupDeadlines)):
+                                            // Build group name lookup from $allGroups
+                                            $gNameMap = [];
+                                            foreach ($allGroups as $gItem) { $gNameMap[$gItem['id']] = $gItem['group_name']; }
+                                            foreach ($groupDeadlines as $gid => $gdAt):
+                                                $gdTs = strtotime($gdAt);
+                                                $gdExpired = $gdTs < $currentTimestamp;
+                                                $gdColor = $gdExpired ? 'text-danger' : 'text-success fw-bold';
+                                                $gLabel = htmlspecialchars($gNameMap[$gid] ?? "#{$gid}");
+                                        ?>
+                                            <div class="<?php echo $gdColor; ?>" style="font-size:0.75rem; white-space:nowrap;">
+                                                <i class="fa fa-users"></i> <?php echo $gLabel; ?>: <?php echo date('d/m H:i', $gdTs); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        <?php if (!empty($row['solutionDate'])): ?>
+                                            <div class="text-muted" style="font-size:0.68rem;">(global: <?php echo date('d/m', strtotime($row['solutionDate'])); ?>)</div>
+                                        <?php endif; ?>
+                                        <?php elseif (!empty($row['solutionDate'])): ?>
+                                        <?php
                                             $dateColor = $isExpired ? 'text-danger fw-bold' : '';
                                             $timeColor = $isExpired ? 'text-danger' : 'text-muted';
                                             echo "<span class='$dateColor'>" . $dbHandler->formatGreekDate($row['solutionDate']) . "</span><br><span class='$timeColor'>" . date('H:i', strtotime($row['solutionDate'])) . "</span>";
-                                        } else {
-                                            echo "-";
-                                        }
                                         ?>
+                                        <?php else: ?>
+                                            -
+                                        <?php endif; ?>
                                     </td>
                                     <td class="small">
                                         <div class="text-dark mb-1" style="line-height: 1.5; font-size: 0.95rem; font-weight: 500;"><?php echo $previewText; ?></div>
@@ -663,14 +691,21 @@ class MezeAdminFormMaker extends AdminFormMaker
                                                         $deadlineDate = $hasDeadline ? date('d/m H:i', strtotime($groupDeadlines[$g['id']])) : '';
                                                     ?>
                                                         <li>
-                                                            <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+                                                            <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 border-bottom">
                                                                 <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
                                                                 <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
-                                                                <span class="fw-bold me-auto text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
-                                                                <?php if ($hasDeadline): ?>
-                                                                    <span class="badge bg-success me-2 shadow-sm"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
-                                                                <?php endif; ?>
-                                                                <button type="submit" class="btn btn-sm <?php echo $hasDeadline ? 'btn-danger' : 'btn-success'; ?>"><?php echo $hasDeadline ? 'Ακύρωση' : 'Set'; ?></button>
+                                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                    <span class="fw-bold text-truncate" style="max-width:110px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
+                                                                    <?php if ($hasDeadline): ?>
+                                                                        <span class="badge bg-success shadow-sm flex-shrink-0"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
+                                                                        <button type="submit" class="btn btn-sm btn-danger ms-auto">Ακύρωση</button>
+                                                                    <?php else: ?>
+                                                                        <input type="datetime-local" name="deadline"
+                                                                               value="<?php echo date('Y-m-d\T03:00', strtotime('+1 day')); ?>"
+                                                                               class="form-control form-control-sm flex-grow-1" style="min-width:140px;">
+                                                                        <button type="submit" class="btn btn-sm btn-success flex-shrink-0">Set</button>
+                                                                    <?php endif; ?>
+                                                                </div>
                                                             </form>
                                                         </li>
                                                     <?php endforeach; ?>
@@ -1258,15 +1293,22 @@ class MezeAdminFormMaker extends AdminFormMaker
                                 $deadlineDate = $hasDeadline ? date('d/m H:i', strtotime($groupDeadlines[$g['id']])) : '';
                             ?>
                                 <li>
-                                    <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+                                    <form action="index.php?action=toggleGroupDeadline" method="post" class="px-3 py-2 border-bottom">
                                         <input type="hidden" name="meze_id" value="<?php echo $mezeId; ?>">
                                         <input type="hidden" name="group_id" value="<?php echo $g['id']; ?>">
                                         <input type="hidden" name="source" value="edit_page">
-                                        <span class="fw-bold me-auto text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
-                                        <?php if ($hasDeadline): ?>
-                                            <span class="badge bg-success me-2 shadow-sm"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
-                                        <?php endif; ?>
-                                        <button type="submit" class="btn btn-sm <?php echo $hasDeadline ? 'btn-danger' : 'btn-success'; ?>" title="Προσοχή: Η αλλαγή αποθηκεύεται κατευθείαν"><?php echo $hasDeadline ? 'Ακύρωση' : 'Set'; ?></button>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="fw-bold text-truncate" style="max-width:110px;" title="<?php echo htmlspecialchars($g['group_name']); ?>"><?php echo htmlspecialchars($g['group_name']); ?></span>
+                                            <?php if ($hasDeadline): ?>
+                                                <span class="badge bg-success shadow-sm flex-shrink-0"><i class="fa fa-clock-o"></i> <?php echo $deadlineDate; ?></span>
+                                                <button type="submit" class="btn btn-sm btn-danger ms-auto">Ακύρωση</button>
+                                            <?php else: ?>
+                                                <input type="datetime-local" name="deadline"
+                                                       value="<?php echo date('Y-m-d\T03:00', strtotime('+1 day')); ?>"
+                                                       class="form-control form-control-sm flex-grow-1" style="min-width:140px;">
+                                                <button type="submit" class="btn btn-sm btn-success flex-shrink-0">Set</button>
+                                            <?php endif; ?>
+                                        </div>
                                     </form>
                                 </li>
                             <?php endforeach; ?>
@@ -1916,7 +1958,19 @@ class MezeAdminFormMaker extends AdminFormMaker
                                     <span class="badge bg-warning text-dark ms-2"><i class="fa fa-refresh"></i> Επανυποβολή</span>
                                 <?php endif; ?>
                             </strong>
-                            <small><?php echo ($sub) ? date('d/m/Y H:i', strtotime($sub['submission_date'])) : '<span class="badge bg-warning text-dark">Δεν δόθηκε απάντηση</span>'; ?></small>
+                            <div class="d-flex align-items-center gap-2">
+                                <small><?php echo ($sub) ? date('d/m/Y H:i', strtotime($sub['submission_date'])) : '<span class="badge bg-warning text-dark">Δεν δόθηκε απάντηση</span>'; ?></small>
+                                <?php if ($sub):
+                                    $confirmMsg = 'Διαγραφή υποβολής του ' . addslashes($st['name'] . ' ' . $st['lastName']) . ';';
+                                ?>
+                                    <a href="index.php?action=deleteSubmission&student_id=<?php echo $stId; ?>&meze_id=<?php echo $mezeId; ?>"
+                                       class="btn btn-sm btn-danger py-0 px-2"
+                                       onclick="return confirm('<?php echo $confirmMsg; ?>')"
+                                       title="Διαγραφή υποβολής">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="card-body">
                             <?php if ($sub): ?>
@@ -2770,10 +2824,11 @@ class MezeAdminFormMaker extends AdminFormMaker
         $gColor      = $groupColors[$group] ?? '#6366f1';
         $initials    = mb_strtoupper(mb_substr($r['name'], 0, 1) . mb_substr($r['lastName'], 0, 1), 'UTF-8');
 
-        // Παραδόσεις
-        $subPct   = $totalMeze > 0 ? round($r['submitted'] / $totalMeze * 100) : 0;
+        // Παραδόσεις (per-student total — λαμβάνει υπόψη group deadlines)
+        $stTotal  = $r['total_meze'] ?? 0;
+        $subPct   = $stTotal > 0 ? round($r['submitted'] / $stTotal * 100) : 0;
         $subDeg   = $subPct * 3.6;
-        $subHex   = $subPct >= 80 ? '#10b981' : ($subPct >= 50 ? '#f59e0b' : ($totalMeze === 0 ? '#cbd5e1' : '#f43f5e'));
+        $subHex   = $subPct >= 80 ? '#10b981' : ($subPct >= 50 ? '#f59e0b' : ($stTotal === 0 ? '#cbd5e1' : '#f43f5e'));
 
         // Μ.Ο.
         $avg      = $r['avg_grade'];
@@ -2813,9 +2868,9 @@ class MezeAdminFormMaker extends AdminFormMaker
                 <div class="sc-donut"
                      style="background: conic-gradient(<?php echo $subHex; ?> <?php echo $subDeg; ?>deg, #f1f5f9 0deg);">
                     <div class="sc-donut-inner">
-                        <?php if ($totalMeze > 0): ?>
+                        <?php if ($stTotal > 0): ?>
                             <span class="fw-bold lh-1" style="font-size:13px; color:#1e293b;">
-                                <?php echo $r['submitted']; ?>/<?php echo $totalMeze; ?>
+                                <?php echo $r['submitted']; ?>/<?php echo $stTotal; ?>
                             </span>
                             <span style="font-size:9px; color:#94a3b8; margin-top:2px;">παραδ.</span>
                         <?php else: ?>

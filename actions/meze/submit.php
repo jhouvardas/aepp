@@ -16,8 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $success = $db->saveMezeSubmission($studentId, $mezeId, $text, $_FILES['files']);
     if ($success) {
-        $page->displayMezeSuccess();
+        $mezeData = $db->getMezeSolution((int)$mezeId);
+        $page->displayMezeSuccessWithSolution($mezeData ?: []);
         exit();
+    } elseif ($db->hasStudentSubmitted($studentId, (int)$mezeId)) {
+        echo "<div class='container mt-5'><div class='alert alert-warning'><i class='fa fa-exclamation-triangle'></i> Έχεις ήδη υποβάλει λύση για αυτό το μεζεδάκι.</div></div>";
     } else {
         echo "<div class='container mt-5'><div class='alert alert-danger'>Κάτι πήγε στραβά στην αποθήκευση. Παρακαλώ επικοινώνησε με τον δάσκαλο.</div></div>";
     }

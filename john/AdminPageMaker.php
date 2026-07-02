@@ -36,6 +36,24 @@ class AdminPageMaker extends PageMaker
                     font-family: Consolas, monospace;
                     font-size: 14px;
                 }
+
+                /* Desktop nav — single row, no wrapping */
+                @media (min-width: 1200px) {
+                    #adminNavbar .nav-link {
+                        white-space: nowrap;
+                        padding-left: 0.4rem;
+                        padding-right: 0.4rem;
+                        font-size: 0.82rem;
+                    }
+                    .navbar-brand { font-size: 0.9rem; margin-right: 0.3rem; }
+                }
+                @media (min-width: 1400px) {
+                    #adminNavbar .nav-link {
+                        padding-left: 0.6rem;
+                        padding-right: 0.6rem;
+                        font-size: 0.9rem;
+                    }
+                }
             </style>
 
         </head>
@@ -52,113 +70,121 @@ class AdminPageMaker extends PageMaker
             $pendingRequestsCount = $dbHandler->getPendingExtensionRequestsCount($userYear);
         }
         ?>
-            <nav class="navbar navbar-dark bg-dark shadow mb-4">
-                <a class="navbar-brand font-weight-bold" href="index.php">ADMIN PANEL</a>
+            <nav class="navbar navbar-expand-xl navbar-dark bg-dark shadow mb-4">
+                <div class="container-fluid">
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                    <a class="navbar-brand fw-bold" href="index.php">
+                        <i class="fa fa-cog text-warning"></i> ADMIN
+                    </a>
 
-                <div class="collapse navbar-collapse" id="adminNavbar">
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="studentsDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-users text-success"></i> Μαθητές
-                            </a>
-                            <div class="dropdown-menu shadow border-success">
-                                <a class="dropdown-item text-success fw-bold" href="index.php?action=viewStudentProfile"><i class="fa fa-address-card"></i> Καρτέλες Μαθητών</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a>
-                                <a class="dropdown-item text-secondary fw-bold" href="index.php?action=mass_sms_form"><i class="fa fa-mobile-phone"></i> Μαζικό SMS</a>
-                            </div>
-                        </li>
+                    <div class="collapse navbar-collapse" id="adminNavbar">
+                        <ul class="navbar-nav">
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="tasksDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-tasks text-info"></i> Εργασίες
-                            </a>
-                            <div class="dropdown-menu shadow border-info">
-                                <a class="dropdown-item" href="index.php?action=assign_tasks"><i class="fa fa-plus"></i> Ανάθεση Εργασιών</a>
-                                <a class="dropdown-item" href="index.php?action=list_all_tasks"><i class="fa fa-history"></i> Ιστορικό Εργασιών</a>
-                            </div>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="theoryDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-book text-light"></i> Θεωρία & Τεστ
-                            </a>
-                            <div class="dropdown-menu shadow">
-                                <a class="dropdown-item" href="index.php?action=add_theory"><i class="fa fa-plus-circle"></i> Νέα Ερώτηση</a>
-                                <a class="dropdown-item" href="index.php?action=list_theory"><i class="fa fa-list"></i> Λίστα Θεωρίας</a>
-                                <a class="dropdown-item" href="index.php?action=manage_books"><i class="fa fa-book"></i> Διαχείριση Βιβλίων</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="index.php?action=list_for_test"><i class="fa fa-file-text-o"></i> Δημιουργία Τεστ</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link font-weight-bold" href="index.php?action=manage_announcements">
-                                <i class="fa fa-bullhorn text-primary"></i> Ανακοινώσεις
-                            </a>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="mezedakiaDrop" data-bs-toggle="dropdown">
-                                <i class="fa fa-coffee text-warning"></i> Μεζεδάκια
-                            </a>
-                            <div class="dropdown-menu shadow border-danger">
-                                <a class="dropdown-item" href="index.php?action=addMezedaki">
-                                    <i class="fa fa-plus-circle text-primary"></i> 1. Νέα Εισαγωγή
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa fa-users text-success"></i> Μαθητές
                                 </a>
-                                <a class="dropdown-item" href="index.php?action=listMezedakia">
-                                    <i class="fa fa-list text-secondary"></i> 2. Λίστα / Διαχείριση
-                                </a>
-                                <a class="dropdown-item" href="index.php?action=view_extension_requests">
-                                    <i class="fa fa-clock-o text-danger"></i> 3. Αιτήματα Παράτασης
-                                    <?php if ($pendingRequestsCount > 0): ?>
-                                        <span class="badge bg-danger rounded-pill ms-2"><?php echo $pendingRequestsCount; ?></span>
-                                    <?php endif; ?>
-                                </a>
-                                <a class="dropdown-item" href="index.php?action=manage_exercise_types">
-                                    <i class="fa fa-tags text-info"></i> 4. Διαχείριση Τύπων/Τεχνικών
-                                </a>
-                                <a class="dropdown-item" href="index.php?action=mezeBank">
-                                    <i class="fa fa-archive text-warning"></i> 5. Τράπεζα Μεζεδακίων (Κατάλογος)
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="index.php?action=fullReport">
-                                    <i class="fa fa-file-text-o text-success"></i> Συγκεντρωτικό Βαθμολόγιο
-                                </a>
-                            </div>
-                        </li>
+                                <ul class="dropdown-menu shadow border-success">
+                                    <li><a class="dropdown-item text-success fw-bold" href="index.php?action=viewStudentProfile"><i class="fa fa-address-card"></i> Καρτέλες Μαθητών</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-warning fw-bold" href="index.php?action=group_email_form"><i class="fa fa-envelope"></i> Email Ομάδων</a></li>
+                                    <li><a class="dropdown-item text-secondary fw-bold" href="index.php?action=mass_sms_form"><i class="fa fa-mobile-phone"></i> Μαζικό SMS</a></li>
+                                </ul>
+                            </li>
 
-                        <li class="nav-item ml-md-4">
-                            <a class="nav-link text-white border border-white rounded px-2" href="../index.php" target="_blank">
-                                <i class="fa fa-external-link"></i> Site Μαθητών
-                            </a>
-                        </li>
-                        <li class="nav-item ms-md-2 mt-2 mt-md-0">
-                            <a class="nav-link text-white border border-danger bg-danger rounded px-2" href="index.php?action=logout">
-                                <i class="fa fa-sign-out"></i> Έξοδος
-                            </a>
-                        </li>
-                    </ul>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa fa-tasks text-info"></i> Εργασίες
+                                </a>
+                                <ul class="dropdown-menu shadow border-info">
+                                    <li><a class="dropdown-item" href="index.php?action=assign_tasks"><i class="fa fa-plus"></i> Ανάθεση Εργασιών</a></li>
+                                    <li><a class="dropdown-item" href="index.php?action=list_all_tasks"><i class="fa fa-history"></i> Ιστορικό Εργασιών</a></li>
+                                </ul>
+                            </li>
 
-                    <hr class="border-secondary">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa fa-book text-light"></i> Θεωρία
+                                </a>
+                                <ul class="dropdown-menu shadow">
+                                    <li><a class="dropdown-item" href="index.php?action=add_theory"><i class="fa fa-plus-circle"></i> Νέα Ερώτηση</a></li>
+                                    <li><a class="dropdown-item" href="index.php?action=list_theory"><i class="fa fa-list"></i> Λίστα Θεωρίας</a></li>
+                                    <li><a class="dropdown-item" href="index.php?action=manage_books"><i class="fa fa-book"></i> Διαχείριση Βιβλίων</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="index.php?action=list_for_test"><i class="fa fa-file-text-o"></i> Δημιουργία Τεστ</a></li>
+                                </ul>
+                            </li>
 
-                    <form class="form-inline pb-3" action="index.php?action=setYear" method="post">
-                        <div class="input-group input-group-sm shadow-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text bg-dark text-white border-0"><i class="fa fa-calendar"></i> Σχολ. Έτος:</span>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" href="index.php?action=manage_announcements">
+                                    <i class="fa fa-bullhorn text-primary"></i> Ανακοινώσεις
+                                </a>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa fa-coffee text-warning"></i> Μεζεδάκια
+                                </a>
+                                <ul class="dropdown-menu shadow border-danger">
+                                    <li><a class="dropdown-item" href="index.php?action=addMezedaki"><i class="fa fa-plus-circle text-primary"></i> Νέα Εισαγωγή</a></li>
+                                    <li><a class="dropdown-item" href="index.php?action=listMezedakia"><i class="fa fa-list text-secondary"></i> Λίστα / Διαχείριση</a></li>
+                                    <li>
+                                        <a class="dropdown-item" href="index.php?action=view_extension_requests">
+                                            <i class="fa fa-clock-o text-danger"></i> Αιτήματα Παράτασης
+                                            <?php if ($pendingRequestsCount > 0): ?>
+                                                <span class="badge bg-danger rounded-pill ms-1"><?php echo $pendingRequestsCount; ?></span>
+                                            <?php endif; ?>
+                                        </a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="index.php?action=manage_exercise_types"><i class="fa fa-tags text-info"></i> Τύποι/Τεχνικές</a></li>
+                                    <li><a class="dropdown-item" href="index.php?action=mezeBank"><i class="fa fa-archive text-warning"></i> Τράπεζα Μεζεδακίων</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="index.php?action=fullReport"><i class="fa fa-file-text-o text-success"></i> Συγκεντρωτικό Βαθμολόγιο</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold" href="#" data-bs-toggle="dropdown">
+                                    <i class="fa fa-university text-info"></i> Σχολές
+                                </a>
+                                <ul class="dropdown-menu shadow border-info">
+                                    <li><a class="dropdown-item" href="index.php?action=allSchoolPreferences"><i class="fa fa-list text-info"></i> Προτιμήσεις Μαθητών</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="index.php?action=importSchools"><i class="fa fa-upload text-secondary"></i> Import / Διαχείριση</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-white-50" href="../index.php" target="_blank" title="Site Μαθητών">
+                                    <i class="fa fa-external-link"></i> Site
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+
+                    <!-- Persistent controls: outside collapse → never wrap on desktop -->
+                    <div class="d-flex align-items-center gap-1 ms-auto flex-shrink-0">
+                        <form action="index.php?action=setYear" method="post">
+                            <div class="input-group input-group-sm">
+                                <input type="number" name="exam_year"
+                                       class="form-control border-0 text-center fw-bold"
+                                       placeholder="<?php echo (date('m') >= 6 ? date('Y') + 1 : date('Y')); ?>"
+                                       value="<?php echo htmlspecialchars($userYear); ?>"
+                                       style="width:65px;" autocomplete="off" title="Σχολικό Έτος">
+                                <button class="btn btn-secondary btn-sm border-0 fw-bold text-success" type="submit">OK</button>
                             </div>
-                            <input type="number" name="exam_year" class="form-control border-0 text-center fw-bold"
-                                placeholder="π.χ. <?php echo (date('m') >= 6 ? date('Y') + 1 : date('Y')); ?>"
-                                value="<?php echo htmlspecialchars($userYear); ?>"
-                                style="width: 100px;"
-                                autocomplete="off">
-                            <div>
-                                <button class="btn btn-dark border-0 text-success fw-bold" type="submit">Ορισμός</button>
-                            </div>
-                        </div>
-                    </form>
+                        </form>
+                        <a class="btn btn-danger btn-sm" href="index.php?action=logout" title="Αποσύνδεση">
+                            <i class="fa fa-sign-out"></i>
+                        </a>
+                    </div>
+
+                    <button class="navbar-toggler ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar"
+                            aria-controls="adminNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
                 </div>
             </nav>
         <?php

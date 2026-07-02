@@ -1,8 +1,9 @@
 ﻿<?php
-        unset($_SESSION['student_id']);
-        unset($_SESSION['student_pass']);
-        $currentYear = $db->getCurrentTutorYear();
-        $students = $db->getTutorStudents($currentYear);
+        $loginError = false;
+        if (isset($_SESSION['login_error'])) {
+            $loginError = true;
+            unset($_SESSION['login_error']);
+        }
         $returnTo = isset($_GET['returnTo']) ? htmlspecialchars($_GET['returnTo']) : '';
     ?>
         <div class="container mt-5">
@@ -11,6 +12,9 @@
                     <h4 class="mb-0"><i class="fa fa-graduation-cap"></i> Σύνδεση</h4>
                 </div>
                 <div class="card-body p-4">
+                    <?php if ($loginError): ?>
+                    <div class="alert alert-danger text-center"><i class="fa fa-times-circle"></i> Λάθος email ή κωδικός. Δοκίμασε ξανά.</div>
+                    <?php endif; ?>
                     <p class="text-muted text-center mb-4">Πληκτρολογήστε το Email και τον προσωπικό σας κωδικό.</p>
                     <form action="index.php?action=showMyGrades<?php echo $returnTo ? '&returnTo=' . $returnTo : ''; ?>" method="POST" autocomplete="on" onsubmit="return true;">
                         <div class="mb-3">

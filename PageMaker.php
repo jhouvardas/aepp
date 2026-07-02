@@ -17,6 +17,12 @@ class PageMaker
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
             <link rel="icon" href="images/favicon.jpg" sizes="16x16" type="image/jpg">
+            <link rel="manifest" href="manifest.json">
+            <meta name="theme-color" content="#212529">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+            <meta name="apple-mobile-web-app-title" content="ΑΕΠΠ">
+            <link rel="apple-touch-icon" href="icon.php">
             <link rel="stylesheet" href="aepp.css?v=<?php echo @filemtime(__DIR__ . '/aepp.css'); ?>">
         </head>
 
@@ -32,28 +38,59 @@ class PageMaker
                     <i class="fa fa-code"></i> ΑΕΠΠ
                 </a>
 
+                <button id="pwaInstallBtn" class="btn btn-outline-warning btn-sm me-2 d-flex d-md-none align-items-center gap-1"
+                        onclick="pwaInstall()" title="Εγκατάσταση στην Αρχική Οθόνη">
+                    <i class="fa fa-download"></i> Εγκατάσταση
+                </button>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="collapsibleNavbar">
                     <ul class="navbar-nav">
+                        <?php if (isset($_SESSION['student_id'])): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="navbardropStudents" data-bs-toggle="dropdown">
+                                <i class="fa fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['student_name'] ?? 'Λογαριασμός'); ?>
+                            </a>
+                            <div class="dropdown-menu shadow border-warning">
+                                <a class="dropdown-item fw-bold text-warning" href="index.php?action=viewMezedakia">
+                                    <i class="fa fa-star"></i> Τα Μεζεδάκια μου
+                                </a>
+                                <a class="dropdown-item fw-bold text-info" href="index.php?action=showMyGrades">
+                                    <i class="fa fa-bar-chart"></i> Οι Βαθμοί μου
+                                </a>
+                                <a class="dropdown-item fw-bold text-success" href="index.php?action=announcements">
+                                    <i class="fa fa-bullhorn"></i> Ανακοινώσεις
+                                </a>
+                                <a class="dropdown-item fw-bold text-info" href="index.php?action=studentPreferences">
+                                    <i class="fa fa-university"></i> Σχολές Προτίμησης
+                                </a>
+                                <a class="dropdown-item" href="index.php?action=changePassword">
+                                    <i class="fa fa-key"></i> Αλλαγή Κωδικού
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-danger" href="index.php?action=studentLogout">
+                                    <i class="fa fa-sign-out"></i> Αποσύνδεση
+                                </a>
+                            </div>
+                        </li>
+                        <?php else: ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-warning fw-bold" href="#" id="navbardropStudents" data-bs-toggle="dropdown">
                                 <i class="fa fa-users"></i> Μαθητές
                             </a>
                             <div class="dropdown-menu shadow border-warning">
-                                <a class="dropdown-item fw-bold text-warning" href="index.php?action=viewMezedakia">
-                                    <i class="fa fa-star"></i> Μεζεδάκια
-                                </a>
-                                <a class="dropdown-item fw-bold text-info" href="index.php?action=myGrades">
-                                    <i class="fa fa-bar-chart"></i> Βαθμοί & Εργασίες
+                                <a class="dropdown-item fw-bold text-warning" href="index.php?action=myGrades">
+                                    <i class="fa fa-sign-in"></i> Σύνδεση
                                 </a>
                                 <a class="dropdown-item fw-bold text-success" href="index.php?action=announcements">
                                     <i class="fa fa-bullhorn"></i> Ανακοινώσεις
                                 </a>
                             </div>
                         </li>
+                        <?php endif; ?>
 
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbardropAlgos" data-bs-toggle="dropdown">
@@ -111,59 +148,62 @@ class PageMaker
         <?php
     }
 
-    public function displayMezeSuccess()
+    public function displayMezeSuccessWithSolution($mezeData)
     {
+        $hasSolution = !empty(trim(strip_tags($mezeData['mezeSolution'] ?? '', '<img><iframe><br>')))
+                    || !empty($mezeData['mezeSolutionImage']);
         ?>
-            <div class="container mt-5">
-                <div class="row justify-content-center">
-                    <div class="col-md-8 col-sm-12">
-                        <div class="card shadow border-0 text-center" style="border-radius: 20px;">
-                            <div class="card-body p-5">
-                                <div class="mb-4">
-                                    <i class="fa fa-check-circle text-success" style="font-size: 100px;"></i>
-                                </div>
-                                <h1 class="fw-bold">Έγινε!</h1>
-                                <p class="lead text-muted">Η λύση σου στάλθηκε επιτυχώς στον δάσκαλο.</p>
+        <div class="container mt-4 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow border-0 text-center mb-4" style="border-top: 4px solid #28a745;">
+                        <div class="card-body py-4">
+                            <i class="fa fa-check-circle text-success" style="font-size: 64px; animation: grow 0.6s ease-in-out;"></i>
+                            <h2 class="fw-bold mt-3">Υποβλήθηκε!</h2>
+                            <p class="text-muted mb-0">Η λύση σου στάλθηκε επιτυχώς στον δάσκαλο.</p>
+                        </div>
+                    </div>
 
-                                <div class="alert alert-success bg-light border-success mt-4">
-                                    <strong><i class="fa fa-info-circle"></i> Μπράβο!</strong>
-                                    Τώρα μπορείς να κλείσεις αυτό το παράθυρο ή να επιστρέψεις στην αρχική.
-                                </div>
-
-                                <div class="mt-4">
-                                    <a href="index.php" class="btn btn-primary btn-lg w-100 shadow d-grid">
-                                        <i class="fa fa-home"></i> Επιστροφή στην Αρχική
-                                    </a>
-                                </div>
+                    <?php if ($hasSolution): ?>
+                        <div class="card shadow border-success">
+                            <div class="card-header bg-success text-white fw-bold">
+                                <i class="fa fa-key"></i> Η Λύση
+                            </div>
+                            <div class="card-body bg-light">
+                                <?php if (!empty($mezeData['mezeSolutionImage'])): ?>
+                                    <div class="text-center mb-3">
+                                        <img src="images/mezedakia/<?php echo htmlspecialchars($mezeData['mezeSolutionImage']); ?>"
+                                             class="img-fluid rounded border border-success shadow-sm">
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty(trim(strip_tags($mezeData['mezeSolution'] ?? '')))): ?>
+                                    <div class="html-content-wrapper solution-text">
+                                        <?php echo str_replace('src="../images/', 'src="images/', $mezeData['mezeSolution']); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+                    <?php else: ?>
+                        <div class="alert alert-info text-center">
+                            <i class="fa fa-clock-o"></i> Η λύση θα αναρτηθεί από τον δάσκαλο σύντομα.
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="mt-4">
+                        <a href="index.php?action=viewMezedakia" class="btn btn-outline-primary w-100">
+                            <i class="fa fa-arrow-left"></i> Πίσω στα Μεζεδάκια
+                        </a>
                     </div>
                 </div>
             </div>
-
-            <style>
-                body {
-                    background: #f4f7f6;
-                }
-
-                .fa-check-circle {
-                    animation: grow 0.6s ease-in-out;
-                }
-
-                @keyframes grow {
-                    0% {
-                        transform: scale(0);
-                    }
-
-                    80% {
-                        transform: scale(1.2);
-                    }
-
-                    100% {
-                        transform: scale(1);
-                    }
-                }
-            </style>
+        </div>
+        <style>
+            @keyframes grow {
+                0%   { transform: scale(0); }
+                80%  { transform: scale(1.2); }
+                100% { transform: scale(1); }
+            }
+        </style>
         <?php
     }
 
@@ -357,6 +397,86 @@ class PageMaker
             </script>
             <!-- Bootstrap 5 JS Bundle για συμβατότητα με τα νέα Accordions -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+            <!-- PWA Install -->
+            <script>
+                var _pwaPrompt = null;
+
+                window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault();
+                    _pwaPrompt = e;
+                });
+
+                window.addEventListener('appinstalled', function() {
+                    _pwaPrompt = null;
+                    var btn = document.getElementById('pwaInstallBtn');
+                    if (btn) btn.style.display = 'none';
+                });
+
+                function pwaInstall() {
+                    var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                    if (_pwaPrompt) {
+                        _pwaPrompt.prompt();
+                        _pwaPrompt.userChoice.then(function() { _pwaPrompt = null; });
+                    } else if (isIOS) {
+                        new bootstrap.Modal(document.getElementById('iosInstallModal')).show();
+                    } else {
+                        new bootstrap.Modal(document.getElementById('androidInstallModal')).show();
+                    }
+                }
+
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', function() {
+                        navigator.serviceWorker.register('sw.js');
+                    });
+                }
+            </script>
+
+            <!-- Modal οδηγιών για Android -->
+            <div class="modal fade" id="androidInstallModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-dark text-white">
+                            <h5 class="modal-title"><i class="fa fa-android fa-lg me-2"></i> Εγκατάσταση στο Android</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted small mb-3">Χρησιμοποίησε <strong>Chrome</strong> για την καλύτερη εμπειρία.</p>
+                            <ol class="ps-3">
+                                <li class="mb-3">Πάτα τις <strong>3 τελείες</strong> <span class="badge bg-secondary">⋮</span> στην επάνω δεξιά γωνία του Chrome</li>
+                                <li class="mb-3">Πάτα <strong>«Προσθήκη στην αρχική οθόνη»</strong></li>
+                                <li>Πάτα <strong>«Προσθήκη»</strong></li>
+                            </ol>
+                            <div class="alert alert-success small mb-0">
+                                <i class="fa fa-check-circle"></i> Η εφαρμογή θα εμφανιστεί σαν κανονική εφαρμογή στην αρχική οθόνη σου!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal οδηγιών για iOS -->
+            <div class="modal fade" id="iosInstallModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-dark text-white">
+                            <h5 class="modal-title"><i class="fa fa-mobile fa-lg me-2"></i> Εγκατάσταση στο iPhone / iPad</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted small mb-3">Βεβαιώσου ότι χρησιμοποιείς <strong>Safari</strong> (όχι Chrome/Firefox) για να λειτουργήσει.</p>
+                            <ol class="ps-3">
+                                <li class="mb-3">Πάτα το κουμπί <strong>Κοινοποίηση</strong> <span class="badge bg-secondary"><i class="fa fa-share-square-o"></i></span> στο κάτω μέρος της οθόνης (Safari)</li>
+                                <li class="mb-3">Σκρολ κάτω στη λίστα και πάτα <strong>«Προσθήκη στην οθόνη Αφετηρίας»</strong></li>
+                                <li>Πάτα <strong>«Προσθήκη»</strong> στην επάνω δεξιά γωνία</li>
+                            </ol>
+                            <div class="alert alert-success small mb-0">
+                                <i class="fa fa-check-circle"></i> Η εφαρμογή θα εμφανιστεί σαν κανονική εφαρμογή στην αρχική οθόνη σου!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </body>
 
         </html>
@@ -522,6 +642,9 @@ class PageMaker
 
             $userYear = $db->getCurrentTutorYear();
 
+            // Preload των υποβληθέντων meze IDs για αποφυγή N+1 queries
+            $submittedIds = $studentId ? $db->getStudentSubmittedMezeIds($studentId) : [];
+
             echo '<div class="accordion" id="mezedakiaAccordion">';
             $isFirst = true;
             $mezeCount = 0;
@@ -534,10 +657,11 @@ class PageMaker
                 $solDate = new DateTime($row['solutionDate']);
                 $isPastDeadline = ($now > $solDate);
 
+                $hasSubmitted = in_array($mId, $submittedIds);
                 $canSubmit    = false;
                 $hasExtension = false;
 
-                if ($studentId) {
+                if ($studentId && !$hasSubmitted) {
                     if (!$isPastDeadline) {
                         $canSubmit = true;
                     } else {
@@ -634,15 +758,19 @@ class PageMaker
                                             <?php $fm->studentSubmissionForm($studentId, $mId); ?>
                                         </div>
                                     </div>
+                                <?php elseif ($hasSubmitted): ?>
+                                    <div class="alert alert-success py-2 small text-center mb-0">
+                                        <i class="fa fa-check-circle me-1"></i> <strong>Έχεις υποβάλει λύση.</strong> Δες την απάντηση παρακάτω.
+                                    </div>
                                 <?php else: ?>
-                                    <div class="alert alert-secondary py-2 small text-center">
+                                    <div class="alert alert-secondary py-2 small text-center mb-0">
                                         <i class="fa fa-lock me-1"></i> Η προθεσμία υποβολής έληξε.
                                     </div>
                                 <?php endif; ?>
 
                                 <?php
                                 $hasSolution = (!empty(trim(strip_tags($row['mezeSolution'], '<img><iframe><br>'))) || !empty($row['mezeSolutionImage']));
-                                $canShowSolution = $db->canShowMezeSolution($mId, $userYear);
+                                $canShowSolution = $db->canShowMezeSolution($mId, $userYear, $studentId);
                                 if ($hasSolution && $canShowSolution): ?>
                                     <div id="accMeze<?php echo $mId; ?>" class="mt-3">
                                         <button class="btn btn-success w-100 btn-sm font-weight-bold shadow-sm" data-bs-toggle="collapse" data-bs-target="#sol<?php echo $mId; ?>">

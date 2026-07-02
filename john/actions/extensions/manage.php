@@ -52,7 +52,8 @@ switch ($action) {
 
         case 'toggleGroupDeadline':
             if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['meze_id']) && isset($_POST['group_id'])) {
-                $db->toggleGroupDeadline($_POST['meze_id'], $_POST['group_id']);
+                $deadline = !empty($_POST['deadline']) ? $_POST['deadline'] : null;
+                $db->toggleGroupDeadline($_POST['meze_id'], $_POST['group_id'], $deadline);
                 $mezeId = (int)$_POST['meze_id'];
                 if (isset($_POST['source']) && $_POST['source'] === 'edit_page') {
                     echo "<script>window.location.href='index.php?action=editMezedaki&id=$mezeId&status=group_deadline_toggled';</script>";
